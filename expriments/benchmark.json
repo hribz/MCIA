@@ -1,0 +1,16 @@
+[
+    {
+        "project": "hribz/ica-demo",
+        "build_type": "cmake",
+        "shallow": "613c263de57c489dbae6e45f9eed76a7a2490ff5",
+        "config_options": {
+            "CHANGE_ALL": ["ON", "OFF"],
+            "GLOBAL_CONSTANT": ["ON", "OFF"],
+            "VIRTUAL_FUNCTION": ["ON", "OFF"],
+            "RECORD_FIELD": ["ON", "OFF"],
+            "FEATURE_UPGRADE": ["ON", "OFF"],
+            "COMMON_CHANGE": ["ON", "OFF"],
+            "COMPLEX_FUNC": ["ON", "OFF"]
+        }
+    }
+]
