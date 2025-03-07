@@ -24,18 +24,24 @@ def remake_dir(path: Path, debug_TAG=None):
     os.makedirs(path)
 
 def run(cmd, cwd, tag) -> bool:
-    makedir(cwd)
-    try:
-        logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
-        process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, check=True)
-        process.wait()
+    logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
+    if not os.path.exists(cwd):
+        logger.error(f"[{tag}] Please make sure {cwd} exists!")
+        return False
+    env = dict(os.environ)
+    env['CC'] = 'clang-18'
+    env['CXX'] = 'clang++-18'
+    process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
+    return_code = process.wait()
+    if return_code == 0:
         return True
-    except subprocess.CalledProcessError as e:
+    else:
+        # Do something
         return False
     
 def run_without_check(cmd, cwd, tag) -> bool:
     makedir(cwd)
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
     process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None)
-    process.wait()
-    return process.returncode == 0
+    return_code = process.wait()
+    return return_code == 0

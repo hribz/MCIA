@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 from git import Repo
 
 from project import *
@@ -39,44 +40,65 @@ def parse_options(options, build_type):
     ret = []
     if build_type == BuildType.CMake:
         ret = [
-            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"])
+            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"], OptionType.options)
         ]
-    for option, values in enumerate(options):
-        ret.append(Option(option, values))
+    for option in options:
+        ret.append(Option(option['key'], option['values'], OptionType.getType(option['kind']), option.get('conflict'), option.get('combination')))
     return ret
 
-def handle_project(projects):
+def get_if_exists(dict, key, default=None):
+    return dict[key] if key in dict else default
+
+def handle_project(projects, opts):
     pwd = os.path.abspath(".")
     projects_root_dir = os.path.join(pwd, "expriments")
 
     for project in projects:
         repo_name = project['project']
         build_type = BuildType.getType(project['build_type'])
+        out_of_tree = get_if_exists(project, 'out_of_tree', True)
+        # The options cannot be changed in this environment.
+        constant_options = get_if_exists(project, 'constant_options', [])
         commit = project['shallow']
-        options = project['config_options'
-                          ]
+        options = project['config_options']
         repo_dir = os.path.join(projects_root_dir, repo_name)
+
+        if opts.repo and opts.repo != repo_name and opts.repo != os.path.basename(repo_dir):
+            continue
+
         if not clone_project(repo_name, repo_dir):
             continue
         if not checkout_target_commit(repo_dir, commit):
             continue
-        build_dir = f"{repo_dir}_build"
+        build_dir = f"{repo_dir}_build" if out_of_tree else repo_dir
         workspace = f"{repo_dir}_workspace"
-        p = Project(workspace=workspace,
+        logger.start_log(workspace)
+        p = Project(src_dir=repo_dir,
+                    workspace=workspace,
                     build_dir=build_dir,
                     options=parse_options(options, build_type),
-                    build_type=build_type)
+                    build_type=build_type,
+                    constant_options=constant_options,
+                    opts = opts)
         p.process_every_configuraion()
 
 class MCArgumentParser():
     def __init__(self):
         self.parser = argparse.ArgumentParser()
-        pass
+        self.parser.add_argument('--repo', type=str, dest='repo', help='Only analyse specific repos.')
+        self.parser.add_argument('--verbose', action='store_true', dest='verbose', help='Record debug information.')
+        self.parser.add_argument('--cc', type=str, dest='cc', default='clang-18', help='Customize the C compiler for configure & build.')
+        self.parser.add_argument('--cxx', type=str, dest='cxx', default='clang++-18', help='Customize the C++ compiler for configure & build.')
+        self.parser.add_argument('--preprocess-only', dest='prep_only', action='store_true', help='Only preprocess and diff')
+    
+    def parse_args(self, args):
+        return self.parser.parse_args(args)
 
-def main():
+def main(args):
     parser = MCArgumentParser()
-    projects = json.load('expriments/benchmark.json')
-    handle_project(projects)
+    opts = parser.parse_args(args)
+    projects = json.load(open('expriments/cleaned_options.json', 'r'))
+    handle_project(projects, opts)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

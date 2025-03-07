@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.vscode
+# MCIA ignore files
+expriments
+!expriments/benchmark.json
+!expriments/config_options.json
+!expriments/script/

@@ -35,7 +35,7 @@ class Logger(object):
             logger.addHandler(sh)
             self.__loggers.update({level: logger})
         
-    def start_log(self, timestamp, workspace):
+    def start_log(self, workspace):
         ensure_dir(workspace)
         debug_file = "{}/debug.log".format(workspace)
         info_file = "{}/info.log".format(workspace)

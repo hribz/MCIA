@@ -2,15 +2,43 @@
     {
         "project": "hribz/ica-demo",
         "build_type": "cmake",
-        "shallow": "613c263de57c489dbae6e45f9eed76a7a2490ff5",
+        "out_of_tree": true,
+        "language": "C++",
+        "shallow": "master",
         "config_options": {
-            "CHANGE_ALL": ["ON", "OFF"],
-            "GLOBAL_CONSTANT": ["ON", "OFF"],
-            "VIRTUAL_FUNCTION": ["ON", "OFF"],
-            "RECORD_FIELD": ["ON", "OFF"],
-            "FEATURE_UPGRADE": ["ON", "OFF"],
-            "COMMON_CHANGE": ["ON", "OFF"],
-            "COMPLEX_FUNC": ["ON", "OFF"]
+            "CHANGE_ALL": ["1", "0"],
+            "GLOBAL_CONSTANT": ["1", "0"],
+            "VIRTUAL_FUNCTION": ["1", "0"],
+            "RECORD_FIELD": ["1", "0"],
+            "FEATURE_UPGRADE": ["1", "0"],
+            "COMMON_CHANGE": ["1", "0"],
+            "COMPLEX_FUNC": ["1", "0"]
+        }
+    },
+    {
+        "project": "FFmpeg/FFmpeg",
+        "build_type": "autoconf",
+        "out_of_tree": false,
+        "language": "C",
+        "shallow": "954d55c2a4244b366ae97d09546ba8ce2534892b",
+        "constant_options": ["--disable-x86asm", "--cc=clang-18", "--cxx=clang++-18"],
+        "config_options": {
+            "--disable-all": [],
+            "--enable-gray": []
+        }
+    },
+    {
+        "project": "sqlite/sqlite",
+        "build_type": "autoconf",
+        "out_of_tree": false,
+        "language": "C",
+        "shallow": "version-3.41.0",
+        "config_options": {
+            "--disable-libtool-lock": [],
+            "--with-pic": [],
+            "--enable-debug": [],
+            "--with-readline-lib": [],
+            "--disable-amalgamation": []
         }
     }
 ]

@@ -1,0 +1,3048 @@
+[
+   {
+      "project": "hribz/ica-demo",
+      "build_type": "cmake",
+      "out_of_tree": true,
+      "language": "C++",
+      "shallow": "master",
+      "config_options": [
+         {
+            "key": "CHANGE_ALL",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Change all",
+            "confidence": 0.8,
+            "reason": "The option is set to 0, which typically implies a negative or disabling behavior in configuration options."
+         },
+         {
+            "key": "CMAKE_BUILD_TYPE",
+            "values": [
+               "None",
+               "Debug",
+               "Release",
+               "RelWithDebInfo",
+               "MinSizeRel"
+            ],
+            "kind": "options",
+            "description": "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel ...",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from predefined options, which directly affects the build configuration."
+         },
+         {
+            "key": "COMMON_CHANGE",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Some common change",
+            "confidence": 0.8,
+            "reason": "The option is set to 0, which typically implies disabling a feature when using BOOL type options."
+         },
+         {
+            "key": "COMPLEX_FUNC",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Complex function",
+            "confidence": 1.0,
+            "reason": "The option is set to 0, which typically disables the feature when using BOOL type in CMake."
+         },
+         {
+            "key": "FEATURE_UPGRADE",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Change feature upgrade",
+            "confidence": 0.9,
+            "reason": "The option is set to 0, which typically implies disabling the feature when using BOOL type options."
+         },
+         {
+            "key": "GLOBAL_CONSTANT",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Change global constants",
+            "confidence": 0.9,
+            "reason": "The option is set to 0, which typically implies disabling or turning off a feature, aligning with the negative type."
+         },
+         {
+            "key": "RECORD_FIELD",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Change class/struct fields",
+            "confidence": 0.9,
+            "reason": "The option is set to 0, which typically disables the feature described by the option."
+         },
+         {
+            "key": "VIRTUAL_FUNCTION",
+            "values": [
+               "0",
+               "1"
+            ],
+            "kind": "negative",
+            "description": "Change virtual functions",
+            "confidence": 1.0,
+            "reason": "The option disables virtual functions when set to 0, which is a negative action."
+         }
+      ]
+   },
+   {
+      "project": "FFmpeg/FFmpeg",
+      "build_type": "autoconf",
+      "out_of_tree": false,
+      "language": "C",
+      "shallow": "954d55c2a4244b366ae97d09546ba8ce2534892b",
+      "constant_options": [
+         "--disable-x86asm",
+         "--cc=clang-18",
+         "--cxx=clang++-18"
+      ],
+      "ignore_options": [
+         "--enable-cuda-nvcc",
+         "--nvcc",
+         "--enable-decklink",
+         "--enable-libaribcaption",
+         "--enable-libiec61883",
+         "--enable-libgsm",
+         "--enable-libilbc",
+         "--enable-libklvanc",
+         "--enable-libkvazaar",
+         "--enable-libcelt",
+         "--enable-libflite",
+         "--enable-libnpp",
+         "--enable-libopenvino",
+         "--enable-libquirc",
+         "--enable-libsrt",
+         "--enable-libtensorflow",
+         "--enable-libtorch",
+         "--enable-libuavs3d",
+         "--enable-libvmaf",
+         "--enable-libvvenc",
+         "--enable-libxavs",
+         "--enable-libxevd",
+         "--enable-libxeve",
+         "--enable-libxvid",
+         "--enable-mediacodec",
+         "--enable-mmal",
+         "--enable-omx",
+         "--enable-rkmpp",
+         "--enable-vapoursynth",
+         "--enable-liblc3",
+         "--enable-liblensfun",
+         "--enable-liblcevc-dec",
+         "--enable-libopencv",
+         "--enable-libsvtav1",
+         "--enable-omx-rpi",
+         "--enable-libxcb-shm",
+         "--enable-libxcb-shape",
+         "--enable-libxcb-xfixes",
+         "--enable-mediafoundation",
+         "--disable-pthreads",
+         "--disable-w32threads",
+         "--disable-os2threads",
+         "--enable-hardcoded-tables"
+      ],
+      "config_options": [
+         {
+            "key": "--disable-logging",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "do not log configure debug information",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables logging when set, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--fatal-warnings",
+            "values": [],
+            "kind": "negative",
+            "description": "fail if any configure warning is generated",
+            "confidence": 1.0,
+            "reason": "The option causes the build to fail when warnings are generated, which is a negative effect on the build process."
+         },
+         {
+            "key": "--enable-rpath",
+            "values": [],
+            "kind": "positive",
+            "description": "use rpath to allow installing libraries in paths not part of the dynamic linker search path use rpath when linking programs (USE WITH CARE)",
+            "confidence": 1.0,
+            "reason": "The option enables the use of rpath, which is a feature that allows specifying additional library search paths during linking. This is a positive action as it enables a specific functionality."
+         },
+         {
+            "key": "--enable-nonfree",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "allow use of nonfree code, the resulting libs and binaries will be unredistributable",
+            "confidence": 1.0,
+            "reason": "The option enables the use of nonfree code when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-small",
+            "values": [],
+            "kind": "positive",
+            "description": "optimize for size instead of speed",
+            "confidence": 1.0,
+            "reason": "The option --enable-small is a positive option because it enables the feature of optimizing for size instead of speed when turned on."
+         },
+         {
+            "key": "--disable-runtime-cpudetect",
+            "values": [],
+            "kind": "negative",
+            "description": "disable detecting CPU capabilities at runtime (smaller binary)",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-gray",
+            "values": [],
+            "kind": "positive",
+            "description": "enable full grayscale support (slower color)",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (grayscale support) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--disable-swscale-alpha",
+            "values": [],
+            "kind": "negative",
+            "description": "disable alpha channel support in swscale",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (alpha channel support in swscale) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-all",
+            "values": [],
+            "kind": "negative",
+            "description": "disable building components, libraries and programs",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables features, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-autodetect",
+            "values": [
+               "no"
+            ],
+            "kind": "negative",
+            "description": "disable automatically detected external libraries",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-programs",
+            "values": [],
+            "kind": "negative",
+            "description": "do not build command line programs",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the building of command line programs, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-ffmpeg",
+            "values": [],
+            "kind": "negative",
+            "description": "disable ffmpeg build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-ffplay",
+            "values": [],
+            "kind": "negative",
+            "description": "disable ffplay build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the build of ffplay when turned on or set to 1."
+         },
+         {
+            "key": "--disable-ffprobe",
+            "values": [],
+            "kind": "negative",
+            "description": "disable ffprobe build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the build of ffprobe when turned on."
+         },
+         {
+            "key": "--disable-doc",
+            "values": [],
+            "kind": "negative",
+            "description": "do not build documentation",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the building of documentation, which is a negative action."
+         },
+         {
+            "key": "--disable-htmlpages",
+            "values": [],
+            "kind": "negative",
+            "description": "do not build HTML documentation pages",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the building of HTML documentation pages, which aligns with the 'negative' classification rule."
+         },
+         {
+            "key": "--disable-manpages",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "do not build man documentation pages",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the building of man documentation pages when set to 1."
+         },
+         {
+            "key": "--disable-podpages",
+            "values": [],
+            "kind": "negative",
+            "description": "do not build POD documentation pages",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-txtpages",
+            "values": [],
+            "kind": "negative",
+            "description": "do not build text documentation pages",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the building of text documentation pages when turned on or set to 1."
+         },
+         {
+            "key": "--disable-avdevice",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libavdevice build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (libavdevice build) when turned on."
+         },
+         {
+            "key": "--disable-avcodec",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libavcodec build",
+            "confidence": 1.0,
+            "reason": "The option disables a feature (libavcodec build) when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-avformat",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libavformat build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (libavformat build) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-swresample",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable libswresample build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-swscale",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libswscale build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (libswscale build) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-postproc",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libpostproc build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (libpostproc build) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-avfilter",
+            "values": [],
+            "kind": "negative",
+            "description": "disable libavfilter build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (libavfilter) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-pthreads",
+            "values": [],
+            "kind": "negative",
+            "description": "disable pthreads [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the pthreads feature when turned on or set to 1."
+         },
+         {
+            "key": "--disable-w32threads",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Win32 threads [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Win32 threads) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-os2threads",
+            "values": [],
+            "kind": "negative",
+            "description": "disable OS/2 threads [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-os2threads' explicitly disables a feature (OS/2 threads), which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-network",
+            "values": [],
+            "kind": "negative",
+            "description": "disable network support [no]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-dwt",
+            "values": [],
+            "kind": "negative",
+            "description": "disable DWT code",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-error-resilience",
+            "values": [],
+            "kind": "negative",
+            "description": "disable error resilience code",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-lsp",
+            "values": [],
+            "kind": "negative",
+            "description": "disable LSP code",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-faan",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable floating point AAN (I)DCT code",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-iamf",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable support for Immersive Audio Model",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-pixelutils",
+            "values": [],
+            "kind": "negative",
+            "description": "disable pixel utils in libavutil",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-everything",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all components listed below",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables all components, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-encoders",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all encoders",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-decoders",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all decoders",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-hwaccels",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all hwaccels",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables features when turned on, matching the definition of a negative option."
+         },
+         {
+            "key": "--disable-muxers",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all muxers",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-demuxers",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all demuxers",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-parsers",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all parsers",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, aligning with the definition of a negative option."
+         },
+         {
+            "key": "--disable-bsfs",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all bitstream filters",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-protocols",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all protocols",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables features when turned on, aligning with the negative classification."
+         },
+         {
+            "key": "--disable-indevs",
+            "values": [],
+            "kind": "negative",
+            "description": "disable input devices",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (input devices) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-outdevs",
+            "values": [],
+            "kind": "negative",
+            "description": "disable output devices",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-devices",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all devices",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables features, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-filters",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all filters",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables features, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-alsa",
+            "values": [],
+            "kind": "negative",
+            "description": "disable ALSA support [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (ALSA support) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-appkit",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable Apple AppKit framework [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Apple AppKit framework) when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-avfoundation",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Apple AVFoundation framework [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-avfoundation' explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--enable-avisynth",
+            "values": [],
+            "kind": "positive",
+            "combination": [
+               "--enable-gpl"
+            ],
+            "description": "enable reading of AviSynth script files [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-avisynth is used to enable a feature (reading AviSynth script files), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--disable-bzlib",
+            "values": [],
+            "kind": "negative",
+            "description": "disable bzlib [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-bzlib' explicitly disables the bzlib feature when turned on, which aligns with the 'negative' classification rule."
+         },
+         {
+            "key": "--disable-coreimage",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Apple CoreImage framework [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--enable-chromaprint",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable audio fingerprinting with chromaprint",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (audio fingerprinting with chromaprint) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-frei0r",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable frei0r video filtering",
+            "confidence": 1.0,
+            "reason": "The option --enable-frei0r is used to enable the frei0r video filtering feature, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-gcrypt",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "conflict": [
+               "--enable-openssl",
+               "--enable-librtmp",
+               "--enable-gmp"
+            ],
+            "description": "enable gcrypt, needed for rtmp(t)e support if openssl, librtmp or gmp is not used",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (gcrypt) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-gmp",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-openssl",
+               "--enable-librtmp"
+            ],
+            "description": "enable gmp, needed for rtmp(t)e support if openssl or librtmp is not used [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-gmp' is used to enable the gmp feature, which is a positive action as it activates a specific functionality."
+         },
+         {
+            "key": "--enable-gnutls",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "conflict": [
+               "--enable-openssl",
+               "--enable-libtls",
+               "--enable-mbedtls"
+            ],
+            "description": "enable gnutls, needed for https support if openssl, libtls or mbedtls is not used",
+            "confidence": 1.0,
+            "reason": "The option enables the gnutls feature, which is a positive action."
+         },
+         {
+            "key": "--disable-iconv",
+            "values": [],
+            "kind": "negative",
+            "description": "disable iconv [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-iconv' explicitly disables the iconv feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-jni",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "combination": [
+               "--target-os=android"
+            ],
+            "description": "enable JNI support",
+            "confidence": 1.0,
+            "reason": "The option enables JNI support when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-ladspa",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable LADSPA audio filtering",
+            "confidence": 1.0,
+            "reason": "The option --enable-ladspa is used to enable a feature (LADSPA audio filtering), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-lcms2",
+            "values": [],
+            "kind": "positive",
+            "description": "enable ICC profile support via LittleCMS 2 [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-lcms2 is used to enable a feature (ICC profile support via LittleCMS 2), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libaom",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AV1 video encoding/decoding via libaom",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AV1 video encoding/decoding via libaom) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libaribb24",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "combination": [
+               "--enable-version3"
+            ],
+            "description": "enable ARIB text and caption decoding via libaribb24",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (ARIB text and caption decoding) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libaribcaption",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable ARIB text and caption decoding via libaribcaption",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (ARIB text and caption decoding) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libass",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libass subtitles rendering, needed for subtitles and ass filter",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libass' is explicitly described as enabling a feature (libass subtitles rendering), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libbluray",
+            "values": [],
+            "kind": "positive",
+            "description": "enable BluRay reading using libbluray [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (BluRay reading using libbluray) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libbs2b",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable bs2b DSP library",
+            "confidence": 1.0,
+            "reason": "The option is named --enable-libbs2b, which implies enabling the feature when turned on."
+         },
+         {
+            "key": "--enable-libcaca",
+            "values": [],
+            "kind": "positive",
+            "description": "enable textual display using libcaca [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-libcaca is used to enable a feature (textual display using libcaca) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libcelt",
+            "values": [],
+            "kind": "positive",
+            "description": "enable CELT decoding via libcelt [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-libcelt is used to enable a feature (CELT decoding via libcelt), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libcdio",
+            "values": [],
+            "kind": "positive",
+            "description": "enable audio CD grabbing with libcdio [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (audio CD grabbing with libcdio) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libcodec2",
+            "values": [],
+            "kind": "positive",
+            "description": "enable codec2 en/decoding using libcodec2 [no]",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of codec2 en/decoding when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libdav1d",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AV1 decoding via libdav1d",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AV1 decoding via libdav1d) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libdavs2",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AVS2 decoding via libdavs2",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AVS2 decoding via libdavs2) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libdc1394",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable IIDC-1394 grabbing using libdc1394 and libraw1394",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (IIDC-1394 grabbing) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libdvdnav",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable libdvdnav, needed for DVD demuxing",
+            "confidence": 1.0,
+            "reason": "The option enables the feature 'libdvdnav' when turned on, which is a positive action."
+         },
+         {
+            "key": "--enable-libdvdread",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libdvdread, needed for DVD demuxing [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libdvdread' is used to enable the libdvdread feature, which is a positive action as it activates a specific functionality required for DVD demuxing."
+         },
+         {
+            "key": "--enable-libfdk-aac",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AAC de/encoding via libfdk-aac",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AAC de/encoding via libfdk-aac) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libflite",
+            "values": [],
+            "kind": "positive",
+            "description": "enable flite (voice synthesis) support via libflite [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libflite' is used to enable a feature (flite support via libflite), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libfontconfig",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libfontconfig, useful for drawtext filter [no]",
+            "confidence": 1.0,
+            "reason": "The option enables the feature 'libfontconfig' when turned on, which is a positive action."
+         },
+         {
+            "key": "--enable-libfreetype",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libfreetype, needed for drawtext filter",
+            "confidence": 1.0,
+            "reason": "The option enables the libfreetype feature, which is a positive action."
+         },
+         {
+            "key": "--enable-libfribidi",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libfribidi, improves drawtext filter",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (libfribidi) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libharfbuzz",
+            "values": [],
+            "kind": "positive",
+            "description": "enable libharfbuzz, needed for drawtext filter [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libharfbuzz' is used to enable the libharfbuzz feature, which is a positive action as it activates a specific functionality."
+         },
+         {
+            "key": "--enable-libglslang",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-libshaderc"
+            ],
+            "description": "enable GLSL->SPIRV compilation via libglslang",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (GLSL->SPIRV compilation) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libgme",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Game Music Emu via libgme",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Game Music Emu via libgme) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libgsm",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable GSM de/encoding via libgsm",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (GSM de/encoding via libgsm) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libiec61883",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable iec61883 via libiec61883",
+            "confidence": 1.0,
+            "reason": "The option --enable-libiec61883 is used to enable a feature (iec61883 via libiec61883), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libilbc",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable iLBC de/encoding via libilbc",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (iLBC de/encoding via libilbc) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libjack",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable JACK audio sound server",
+            "confidence": 1.0,
+            "reason": "The option enables the JACK audio sound server when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-libjxl",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable JPEG XL de/encoding via libjxl",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (JPEG XL de/encoding via libjxl) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libklvanc",
+            "values": [
+               "yes",
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Kernel Labs VANC processing",
+            "confidence": 1.0,
+            "reason": "The option --enable-libklvanc is used to enable a specific feature (Kernel Labs VANC processing), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libkvazaar",
+            "values": [],
+            "kind": "positive",
+            "description": "enable HEVC encoding via libkvazaar [no]",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of HEVC encoding via libkvazaar when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-liblc3",
+            "values": [],
+            "kind": "positive",
+            "description": "enable LC3 de/encoding via liblc3 [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-liblc3 is used to enable the feature of LC3 de/encoding via liblc3, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-liblcevc-dec",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable LCEVC decoding via liblcevc-dec",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (LCEVC decoding) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-liblensfun",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable lensfun lens correction",
+            "confidence": 1.0,
+            "reason": "The option --enable-liblensfun is used to enable the lensfun lens correction feature, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libmodplug",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable ModPlug via libmodplug",
+            "confidence": 1.0,
+            "reason": "The option is used to enable a feature (ModPlug via libmodplug) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libmp3lame",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable MP3 encoding via libmp3lame",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (MP3 encoding via libmp3lame) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopencore-amrnb",
+            "values": [],
+            "kind": "positive",
+            "description": "enable AMR-NB de/encoding via libopencore-amrnb [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AMR-NB de/encoding via libopencore-amrnb) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopencore-amrwb",
+            "values": [],
+            "kind": "positive",
+            "description": "enable AMR-WB decoding via libopencore-amrwb",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AMR-WB decoding) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopencv",
+            "values": [],
+            "kind": "positive",
+            "description": "enable video filtering via libopencv",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (video filtering via libopencv) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopenh264",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable H.264 encoding via OpenH264",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (H.264 encoding via OpenH264) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopenjpeg",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable JPEG 2000 encoding via OpenJPEG",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (JPEG 2000 encoding via OpenJPEG) when turned on, which aligns with the 'positive' classification."
+         },
+         {
+            "key": "--enable-libopenmpt",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable decoding tracked files via libopenmpt",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (decoding tracked files via libopenmpt) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopenvino",
+            "values": [],
+            "kind": "positive",
+            "description": "enable OpenVINO as a DNN module backend for DNN based filters like dnn_processing",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (OpenVINO as a DNN module backend) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libopus",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Opus de/encoding via libopus [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Opus de/encoding via libopus) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libplacebo",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable libplacebo library",
+            "confidence": 1.0,
+            "reason": "The option is named --enable-libplacebo, which indicates that it enables the libplacebo library when turned on."
+         },
+         {
+            "key": "--enable-libpulse",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Pulseaudio input via libpulse",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Pulseaudio input via libpulse) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libqrencode",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable QR encode generation via libqrencode",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (QR encode generation via libqrencode) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libquirc",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable QR decoding via libquirc",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (QR decoding via libquirc) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-librabbitmq",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable RabbitMQ library",
+            "confidence": 1.0,
+            "reason": "The option enables the RabbitMQ library when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-librav1e",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AV1 encoding via rav1e",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AV1 encoding via rav1e) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-librist",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable RIST via librist",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (RIST via librist) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-librsvg",
+            "values": [],
+            "kind": "positive",
+            "description": "enable SVG rasterization via librsvg [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (SVG rasterization via librsvg) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-librubberband",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable rubberband needed for rubberband filter",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (librubberband) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-librtmp",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable RTMP[E] support via librtmp",
+            "confidence": 1.0,
+            "reason": "The option enables RTMP support when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-libshaderc",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-libglslang"
+            ],
+            "description": "enable GLSL->SPIRV compilation via libshaderc [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (GLSL->SPIRV compilation via libshaderc) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libshine",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable fixed-point MP3 encoding via libshine",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (fixed-point MP3 encoding via libshine) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libsmbclient",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Samba protocol via libsmbclient [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-libsmbclient is used to enable a feature (Samba protocol via libsmbclient), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libsnappy",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Snappy compression, needed for hap encoding",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Snappy compression) when turned on, which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--enable-libsoxr",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Include libsoxr resampling [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libsoxr' is used to enable the inclusion of libsoxr resampling, which aligns with the 'positive' classification as it activates a feature when turned on."
+         },
+         {
+            "key": "--enable-libspeex",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Speex de/encoding via libspeex",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Speex de/encoding) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libsrt",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Haivision SRT protocol via libsrt",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Haivision SRT protocol via libsrt) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libssh",
+            "values": [],
+            "kind": "positive",
+            "description": "enable SFTP protocol via libssh [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (SFTP protocol via libssh) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libsvtav1",
+            "values": [],
+            "kind": "positive",
+            "description": "enable AV1 encoding via SVT [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AV1 encoding via SVT) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libtensorflow",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable TensorFlow as a DNN module backend for DNN based filters like sr",
+            "confidence": 1.0,
+            "reason": "The option is prefixed with '--enable', which typically indicates a positive feature enabling."
+         },
+         {
+            "key": "--enable-libtesseract",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Tesseract, needed for ocr filter",
+            "confidence": 1.0,
+            "reason": "The option enables the Tesseract feature, which is a positive action."
+         },
+         {
+            "key": "--enable-libtheora",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Theora encoding via libtheora",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Theora encoding via libtheora) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libtls",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-openssl",
+               "--enable-gnutls",
+               "--enable-mbedtls"
+            ],
+            "description": "enable LibreSSL (via libtls), needed for https support if openssl, gnutls or mbedtls is not used",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (LibreSSL via libtls) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libtorch",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Torch as one DNN backend",
+            "confidence": 1.0,
+            "reason": "The option --enable-libtorch is used to enable a feature (Torch as a DNN backend), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libtwolame",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable MP2 encoding via libtwolame",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (MP2 encoding via libtwolame) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libuavs3d",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AVS3 decoding via libuavs3d",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AVS3 decoding via libuavs3d) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libv4l2",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable libv4l2/v4l-utils",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libv4l2' is used to enable the feature libv4l2/v4l-utils, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libvidstab",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable video stabilization using vid.stab",
+            "confidence": 1.0,
+            "reason": "The option --enable-libvidstab is used to enable a feature (video stabilization using vid.stab), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libvmaf",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable vmaf filter via libvmaf",
+            "confidence": 1.0,
+            "reason": "The option enables the vmaf filter when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-libvo-amrwbenc",
+            "values": [],
+            "kind": "positive",
+            "description": "enable AMR-WB encoding via libvo-amrwbenc [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AMR-WB encoding) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libvorbis",
+            "values": [
+               "yes",
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Vorbis en/decoding via libvorbis, native implementation exists",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Vorbis en/decoding via libvorbis) when set to 'yes' or '1', which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libvpx",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable VP8 and VP9 de/encoding via libvpx",
+            "confidence": 1.0,
+            "reason": "The option enables the feature when turned on, as indicated by 'enable' in the option name and the description."
+         },
+         {
+            "key": "--enable-libvvenc",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable H.266/VVC encoding via vvenc",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (H.266/VVC encoding via vvenc) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libwebp",
+            "values": [],
+            "kind": "positive",
+            "description": "enable WebP encoding via libwebp [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-libwebp is used to enable the feature of WebP encoding via libwebp, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libx264",
+            "values": [],
+            "kind": "positive",
+            "description": "enable H.264 encoding via x264 [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (H.264 encoding via x264) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libx265",
+            "values": [],
+            "kind": "positive",
+            "description": "enable HEVC encoding via x265 [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (HEVC encoding via x265) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxeve",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable EVC encoding via libxeve",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (EVC encoding via libxeve) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxevd",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable EVC decoding via libxevd",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (EVC decoding via libxevd) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxavs",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AVS encoding via xavs",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AVS encoding via xavs) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxavs2",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable AVS2 encoding via xavs2",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (AVS2 encoding via xavs2) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxcb",
+            "values": [],
+            "kind": "positive",
+            "description": "enable X11 grabbing using XCB [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libxcb' is used to enable a feature (X11 grabbing using XCB), which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--enable-libxcb-shm",
+            "values": [],
+            "kind": "positive",
+            "description": "enable X11 grabbing shm communication [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option is prefixed with '--enable', which typically indicates that the feature is enabled when the option is turned on or set to 1."
+         },
+         {
+            "key": "--enable-libxcb-xfixes",
+            "values": [],
+            "kind": "positive",
+            "description": "enable X11 grabbing mouse rendering [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libxcb-xfixes' is a typical positive option that enables a feature when turned on, as indicated by the 'enable' prefix."
+         },
+         {
+            "key": "--enable-libxcb-shape",
+            "values": [],
+            "kind": "positive",
+            "description": "enable X11 grabbing shape rendering [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libxcb-shape' is used to enable a specific feature (X11 grabbing shape rendering), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxvid",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Xvid encoding via xvidcore, native MPEG-4/Xvid encoder exists [no]",
+            "confidence": 1.0,
+            "reason": "The option --enable-libxvid is used to enable a feature (Xvid encoding via xvidcore), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libxml2",
+            "values": [],
+            "kind": "positive",
+            "description": "enable XML parsing using the C library libxml2, needed for dash and imf demuxing support",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (XML parsing using libxml2) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libzimg",
+            "values": [],
+            "kind": "positive",
+            "description": "enable z.lib, needed for zscale filter [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libzimg' is used to enable the feature 'z.lib', which is required for the 'zscale filter'. This matches the definition of a positive option, as it enables a feature when turned on."
+         },
+         {
+            "key": "--enable-libzmq",
+            "values": [],
+            "kind": "positive",
+            "description": "enable message passing via libzmq [no]",
+            "confidence": 1.0,
+            "reason": "The option '--enable-libzmq' is used to enable a feature (message passing via libzmq), which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--enable-libzvbi",
+            "values": [],
+            "kind": "positive",
+            "description": "enable teletext support via libzvbi [no]",
+            "confidence": 1.0,
+            "reason": "The option enables teletext support via libzvbi when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-lv2",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable LV2 audio filtering",
+            "confidence": 1.0,
+            "reason": "The option --enable-lv2 is used to enable the LV2 audio filtering feature, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--disable-lzma",
+            "values": [],
+            "kind": "negative",
+            "description": "disable lzma [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-lzma' explicitly disables the lzma feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-decklink",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Blackmagic DeckLink I/O support",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Blackmagic DeckLink I/O support) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-mbedtls",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-openssl",
+               "--enable-gnutls",
+               "--enable-libtls"
+            ],
+            "description": "enable mbedTLS, needed for https support if openssl, gnutls or libtls is not used [no]",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (mbedTLS) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-mediacodec",
+            "values": [
+               "no",
+               "yes"
+            ],
+            "kind": "positive",
+            "description": "enable Android MediaCodec support",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Android MediaCodec support) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-mediafoundation",
+            "values": [
+               "1",
+               "auto"
+            ],
+            "kind": "positive",
+            "description": "enable encoding via MediaFoundation",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (encoding via MediaFoundation) when turned on or set to 1, which matches the definition of a positive option."
+         },
+         {
+            "key": "--disable-metal",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Apple Metal framework [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Apple Metal framework) when turned on or set to 1."
+         },
+         {
+            "key": "--enable-libmysofa",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable libmysofa, needed for sofalizer filter",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (libmysofa) when turned on, which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--enable-openal",
+            "values": [],
+            "kind": "positive",
+            "description": "enable OpenAL 1.1 capture support",
+            "confidence": 1.0,
+            "reason": "The option '--enable-openal' is used to enable a feature (OpenAL 1.1 capture support), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-opencl",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable OpenCL processing",
+            "confidence": 1.0,
+            "reason": "The option --enable-opencl enables OpenCL processing when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-opengl",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable OpenGL rendering",
+            "confidence": 1.0,
+            "reason": "The option enables OpenGL rendering when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-openssl",
+            "values": [],
+            "kind": "positive",
+            "conflict": [
+               "--enable-gnutls",
+               "--enable-libtls",
+               "--enable-mbedtls"
+            ],
+            "description": "enable openssl, needed for https support if gnutls, libtls or mbedtls is not used [no]",
+            "confidence": 1.0,
+            "reason": "The option enables the OpenSSL feature, which is a positive action."
+         },
+         {
+            "key": "--enable-pocketsphinx",
+            "values": [],
+            "kind": "positive",
+            "description": "enable PocketSphinx, needed for asr filter",
+            "confidence": 1.0,
+            "reason": "The option enables the PocketSphinx feature, which is a positive action."
+         },
+         {
+            "key": "--disable-sndio",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable sndio support [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-schannel",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SChannel SSP, needed for TLS support on Windows if openssl and gnutls are not used [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SChannel SSP) when turned on, aligning with the definition of a negative option."
+         },
+         {
+            "key": "--disable-sdl2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable sdl2 [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-sdl2' explicitly disables the SDL2 feature when set, aligning with the negative option type."
+         },
+         {
+            "key": "--disable-securetransport",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Secure Transport, needed for TLS support on OSX if openssl and gnutls are not used [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option disables a feature (Secure Transport) when turned on, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--enable-vapoursynth",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable VapourSynth demuxer",
+            "confidence": 1.0,
+            "reason": "The option --enable-vapoursynth is used to enable the VapourSynth demuxer, which is a feature activation, hence classified as positive."
+         },
+         {
+            "key": "--disable-xlib",
+            "values": [],
+            "kind": "negative",
+            "description": "disable xlib [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-xlib' explicitly disables the xlib feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-zlib",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable zlib [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (zlib) when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-amf",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable AMF video encoding code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-audiotoolbox",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Apple AudioToolbox code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option '--disable-audiotoolbox' explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--enable-cuda-nvcc",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Nvidia CUDA compiler",
+            "confidence": 1.0,
+            "reason": "The option is prefixed with '--enable', which typically indicates that the feature is enabled when the option is turned on or set to 1."
+         },
+         {
+            "key": "--disable-cuda-llvm",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable CUDA compilation using clang [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (CUDA compilation using clang) when set to 1."
+         },
+         {
+            "key": "--disable-cuvid",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Nvidia CUVID support [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-d3d11va",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Microsoft Direct3D 11 video acceleration code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-d3d12va",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Microsoft Direct3D 12 video acceleration code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-dxva2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Microsoft DirectX 9 video acceleration code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-ffnvcodec",
+            "values": [],
+            "kind": "negative",
+            "description": "disable dynamically linked Nvidia code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (dynamically linked Nvidia code) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-libdrm",
+            "values": [],
+            "kind": "negative",
+            "description": "disable DRM code (Linux) [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--enable-libvpl",
+            "values": [
+               "yes",
+               "no"
+            ],
+            "kind": "positive",
+            "conflict": [
+               "--enable-libmfx"
+            ],
+            "description": "enable Intel oneVPL code via libvpl if libmfx is not used",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Intel oneVPL code via libvpl) when set to 'yes' or '1', which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-libmfx",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "conflict": [
+               "--enable-libvpl"
+            ],
+            "description": "enable Intel MediaSDK (AKA Quick Sync Video) code via libmfx",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Intel MediaSDK) when turned on, which matches the definition of a positive option."
+         },
+         {
+            "key": "--enable-libnpp",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Nvidia Performance Primitives-based code",
+            "confidence": 1.0,
+            "reason": "The option --enable-libnpp is used to enable a feature (Nvidia Performance Primitives-based code), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-mmal",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Broadcom Multi-Media Abstraction Layer (Raspberry Pi) via MMAL",
+            "confidence": 1.0,
+            "reason": "The option '--enable-mmal' is used to enable a feature, which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--disable-nvdec",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable Nvidia video decoding acceleration (via hwaccel) [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, aligning with the definition of a negative option."
+         },
+         {
+            "key": "--disable-nvenc",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Nvidia video encoding code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--enable-omx",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable OpenMAX IL code",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (OpenMAX IL code) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-omx-rpi",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable OpenMAX IL code for Raspberry Pi",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (OpenMAX IL code for Raspberry Pi) when turned on."
+         },
+         {
+            "key": "--enable-rkmpp",
+            "values": [
+               "yes",
+               "no"
+            ],
+            "kind": "positive",
+            "description": "enable Rockchip Media Process Platform code",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (Rockchip Media Process Platform code) when set to 'yes' or '1', which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--disable-v4l2-m2m",
+            "values": [],
+            "kind": "negative",
+            "description": "disable V4L2 mem2mem code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, matching the negative type criteria."
+         },
+         {
+            "key": "--disable-vaapi",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Video Acceleration API (mainly Unix/Intel) code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-vdpau",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable Nvidia Video Decode and Presentation API for Unix code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-videotoolbox",
+            "values": [],
+            "kind": "negative",
+            "description": "disable VideoToolbox code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, matching the negative type."
+         },
+         {
+            "key": "--disable-vulkan",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Vulkan code [autodetect]",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Vulkan code) when turned on or set to 1."
+         },
+         {
+            "key": "--enable-vulkan-static",
+            "values": [
+               "no"
+            ],
+            "kind": "positive",
+            "description": "statically link to libvulkan",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of statically linking to libvulkan when turned on."
+         },
+         {
+            "key": "--arch",
+            "values": [
+               "ARCH"
+            ],
+            "kind": "options",
+            "description": "select architecture",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from predefined architecture options, which affects the compilation results."
+         },
+         {
+            "key": "--cpu",
+            "values": [],
+            "kind": "options",
+            "description": "select the minimum required CPU (affects instruction selection, may crash on older CPUs)",
+            "confidence": 1.0,
+            "reason": "The option allows selecting a value from predefined options (CPU types), which affects the compilation results by influencing instruction selection."
+         },
+         {
+            "key": "--enable-cross-compile",
+            "values": [],
+            "kind": "positive",
+            "description": "assume a cross-compiler is used",
+            "confidence": 1.0,
+            "reason": "The option enables the use of a cross-compiler, which is a feature activation."
+         },
+         {
+            "key": "--target-os",
+            "values": [
+               "OS"
+            ],
+            "kind": "options",
+            "description": "compiler targets OS",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from predefined options (OS), which affects the compilation target."
+         },
+         {
+            "key": "--toolchain",
+            "values": [
+               "gcc-asan",
+               "clang-asan",
+               "gcc-msan",
+               "clang-msan",
+               "gcc-tsan",
+               "clang-tsan",
+               "gcc-usan",
+               "clang-usan",
+               "valgrind-massif",
+               "valgrind-memcheck",
+               "msvc",
+               "icl",
+               "gcov",
+               "llvm-cov",
+               "hardened"
+            ],
+            "kind": "options",
+            "description": "set tool defaults according to NAME",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from a predefined list of toolchain options, which affects the compilation environment and tooling used."
+         },
+         {
+            "key": "--windres",
+            "values": [
+               "WINDRES",
+               "windres"
+            ],
+            "kind": "options",
+            "description": "use windows resource compiler WINDRES [windres]",
+            "confidence": 1.0,
+            "reason": "The option allows choosing between predefined values (WINDRES or windres) to specify the Windows resource compiler."
+         },
+         {
+            "key": "--x86asmexe",
+            "values": [
+               "EXE"
+            ],
+            "kind": "options",
+            "description": "use nasm-compatible assembler EXE [nasm]",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from a predefined set (EXE), which is typical for options type."
+         },
+         {
+            "key": "--stdc",
+            "values": [
+               "c17"
+            ],
+            "kind": "options",
+            "description": "use C standard STDC",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from a predefined set (e.g., c17), which fits the 'options' type."
+         },
+         {
+            "key": "--stdcxx",
+            "values": [
+               "c++11"
+            ],
+            "kind": "options",
+            "description": "use C standard STDCXX",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from predefined options, specifically the C++ standard to use."
+         },
+         {
+            "key": "--objcc",
+            "values": [
+               "OCC"
+            ],
+            "kind": "options",
+            "description": "use ObjC compiler OCC [gcc]",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a specific Objective-C compiler (OCC) from predefined options, similar to selecting a value from a predefined list."
+         },
+         {
+            "key": "--nvcc",
+            "values": [
+               "NVCC",
+               "clang"
+            ],
+            "kind": "options",
+            "description": "Choose the Nvidia CUDA compiler, either NVCC or clang.",
+            "confidence": 1.0,
+            "reason": "The option allows choosing between predefined values (NVCC or clang), which fits the 'options' classification."
+         },
+         {
+            "key": "--metalcc",
+            "values": [
+               "METALCC"
+            ],
+            "kind": "options",
+            "description": "use metal compiler METALCC [xcrun -sdk macosx metal]",
+            "confidence": 1.0,
+            "reason": "The option allows specifying a metal compiler from a predefined list of options, which affects the compilation process."
+         },
+         {
+            "key": "--metallib",
+            "values": [
+               "METALLIB"
+            ],
+            "kind": "options",
+            "description": "use metal linker METALLIB [xcrun -sdk macosx metallib]",
+            "confidence": 1.0,
+            "reason": "The option allows specifying a metal linker, which is a choice from predefined options (e.g., specifying the linker to use)."
+         },
+         {
+            "key": "--doxygen",
+            "values": [
+               "DOXYGEN"
+            ],
+            "kind": "options",
+            "description": "use DOXYGEN to generate API doc [doxygen]",
+            "confidence": 1.0,
+            "reason": "The option enables the use of DOXYGEN to generate API documentation, which is a feature activation."
+         },
+         {
+            "key": "--optflags",
+            "values": [],
+            "kind": "options",
+            "description": "override optimization-related compiler flags",
+            "confidence": 1.0,
+            "reason": "The option allows specifying optimization-related compiler flags, which implies choosing from predefined or custom values to affect the compilation process."
+         },
+         {
+            "key": "--enable-pic",
+            "values": [],
+            "kind": "positive",
+            "description": "build position-independent code",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of building position-independent code, which is a positive action."
+         },
+         {
+            "key": "--enable-thumb",
+            "values": [],
+            "kind": "positive",
+            "description": "compile for Thumb instruction set",
+            "confidence": 1.0,
+            "reason": "The option enables the Thumb instruction set when turned on, which is a feature activation."
+         },
+         {
+            "key": "--enable-lto",
+            "values": [
+               "arg"
+            ],
+            "kind": "positive",
+            "description": "use link-time optimization",
+            "confidence": 1.0,
+            "reason": "The option enables link-time optimization when turned on, which is a feature enhancement."
+         },
+         {
+            "key": "--disable-symver",
+            "values": [],
+            "kind": "negative",
+            "description": "disable symbol versioning",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--enable-hardcoded-tables",
+            "values": [],
+            "kind": "positive",
+            "description": "use hardcoded tables instead of runtime generation",
+            "confidence": 1.0,
+            "reason": "The option '--enable-hardcoded-tables' is prefixed with '--enable', which typically indicates that it enables a feature when turned on, aligning with the 'positive' classification."
+         },
+         {
+            "key": "--disable-safe-bitstream-reader",
+            "values": [],
+            "kind": "negative",
+            "description": "disable buffer boundary checking in bitreaders (faster, but may crash)",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a safety feature, which aligns with the 'negative' classification as it disables functionality when turned on."
+         },
+         {
+            "key": "--sws-max-filter-size",
+            "values": [
+               "N"
+            ],
+            "kind": "options",
+            "description": "the max filter size swscale uses [256]",
+            "confidence": 1.0,
+            "reason": "This option allows the user to choose a value (N) from a predefined range, affecting the behavior of the swscale feature."
+         },
+         {
+            "key": "--disable-asm",
+            "values": [],
+            "kind": "negative",
+            "description": "disable all assembly optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (assembly optimizations), making it a negative option."
+         },
+         {
+            "key": "--disable-altivec",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AltiVec optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AltiVec optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-vsx",
+            "values": [],
+            "kind": "negative",
+            "description": "disable VSX optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (VSX optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-power8",
+            "values": [],
+            "kind": "negative",
+            "description": "disable POWER8 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (POWER8 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-amd3dnow",
+            "values": [],
+            "kind": "negative",
+            "description": "disable 3DNow! optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (3DNow! optimizations) when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-amd3dnowext",
+            "values": [],
+            "kind": "negative",
+            "description": "disable 3DNow! extended optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-mmx",
+            "values": [],
+            "kind": "negative",
+            "description": "disable MMX optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (MMX optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-mmxext",
+            "values": [],
+            "kind": "negative",
+            "description": "disable MMXEXT optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (MMXEXT optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-sse",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSE optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSE optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-sse2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSE2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSE2 optimizations) when set, aligning with the negative option type definition."
+         },
+         {
+            "key": "--disable-sse3",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSE3 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSE3 optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-ssse3",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSSE3 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSSE3 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-sse4",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSE4 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSE4 optimizations) when turned on, aligning with the definition of a negative option."
+         },
+         {
+            "key": "--disable-sse42",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SSE4.2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SSE4.2 optimizations) when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-avx",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AVX optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AVX optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-xop",
+            "values": [],
+            "kind": "negative",
+            "description": "disable XOP optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (XOP optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-fma3",
+            "values": [],
+            "kind": "negative",
+            "description": "disable FMA3 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (FMA3 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-fma4",
+            "values": [],
+            "kind": "negative",
+            "description": "disable FMA4 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (FMA4 optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-avx2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AVX2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AVX2 optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-avx512",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AVX-512 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AVX-512 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-avx512icl",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AVX-512ICL optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AVX-512ICL optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-aesni",
+            "values": [],
+            "kind": "negative",
+            "description": "disable AESNI optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (AESNI optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-armv5te",
+            "values": [],
+            "kind": "negative",
+            "description": "disable armv5te optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (armv5te optimizations) when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-armv6",
+            "values": [],
+            "kind": "negative",
+            "description": "disable armv6 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (armv6 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-armv6t2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable armv6t2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (armv6t2 optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-vfp",
+            "values": [],
+            "kind": "negative",
+            "description": "disable VFP optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (VFP optimizations) when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-neon",
+            "values": [],
+            "kind": "negative",
+            "description": "disable NEON optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (NEON optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-dotprod",
+            "values": [],
+            "kind": "negative",
+            "description": "disable DOTPROD optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (DOTPROD optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-i8mm",
+            "values": [],
+            "kind": "negative",
+            "description": "disable I8MM optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, matching the definition of a negative option."
+         },
+         {
+            "key": "--disable-sve",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SVE optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SVE optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-sve2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable SVE2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (SVE2 optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-inline-asm",
+            "values": [],
+            "kind": "negative",
+            "description": "disable use of inline assembly",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (use of inline assembly) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-x86asm",
+            "values": [],
+            "kind": "negative",
+            "description": "disable use of standalone x86 assembly",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, matching the definition of a negative option."
+         },
+         {
+            "key": "--disable-mipsdsp",
+            "values": [],
+            "kind": "negative",
+            "description": "disable MIPS DSP ASE R1 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (MIPS DSP ASE R1 optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-mipsdspr2",
+            "values": [],
+            "kind": "negative",
+            "description": "disable MIPS DSP ASE R2 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-msa",
+            "values": [],
+            "kind": "negative",
+            "description": "disable MSA optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (MSA optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-mipsfpu",
+            "values": [],
+            "kind": "negative",
+            "description": "disable floating point MIPS optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature, which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-mmi",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Loongson MMI optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Loongson MMI optimizations) when turned on or set to 1."
+         },
+         {
+            "key": "--disable-lsx",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Loongson LSX optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Loongson LSX optimizations) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-lasx",
+            "values": [],
+            "kind": "negative",
+            "description": "disable Loongson LASX optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (Loongson LASX optimizations) when turned on."
+         },
+         {
+            "key": "--disable-rvv",
+            "values": [],
+            "kind": "negative",
+            "description": "disable RISC-V Vector optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which matches the definition of a negative option."
+         },
+         {
+            "key": "--disable-fast-unaligned",
+            "values": [],
+            "kind": "negative",
+            "description": "consider unaligned accesses slow",
+            "confidence": 1.0,
+            "reason": "The option disables a feature (fast unaligned accesses) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-simd128",
+            "values": [],
+            "kind": "negative",
+            "description": "disable WebAssembly simd128 optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (simd128 optimizations) when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-debug",
+            "values": [],
+            "kind": "negative",
+            "description": "disable debugging symbols",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables debugging symbols, which is a negative action."
+         },
+         {
+            "key": "--enable-debug",
+            "values": [
+               "LEVEL"
+            ],
+            "kind": "options",
+            "description": "set the debug level []",
+            "confidence": 1.0,
+            "reason": "The option allows setting a debug level, indicating that it chooses a value from predefined options."
+         },
+         {
+            "key": "--disable-optimizations",
+            "values": [],
+            "kind": "negative",
+            "description": "disable compiler optimizations",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables optimizations, which is a negative action."
+         },
+         {
+            "key": "--enable-extra-warnings",
+            "values": [],
+            "kind": "positive",
+            "description": "enable more compiler warnings",
+            "confidence": 1.0,
+            "reason": "The option enables additional compiler warnings, which is a feature activation."
+         },
+         {
+            "key": "--disable-stripping",
+            "values": [],
+            "kind": "negative",
+            "description": "disable stripping of executables and shared libraries",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (stripping), which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--assert-level",
+            "values": [
+               "0",
+               "1",
+               "2"
+            ],
+            "kind": "options",
+            "description": "0(default), 1 or 2, amount of assertion testing, 2 causes a slowdown at runtime.",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a value from predefined options (0, 1, or 2), which affects the amount of assertion testing and runtime performance."
+         },
+         {
+            "key": "--enable-memory-poisoning",
+            "values": [],
+            "kind": "positive",
+            "description": "fill heap uninitialized allocated space with arbitrary data",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of filling uninitialized allocated space with arbitrary data, which is a feature activation."
+         },
+         {
+            "key": "--valgrind",
+            "values": [
+               "VALGRIND"
+            ],
+            "kind": "options",
+            "description": "run \"make fate\" tests through valgrind to detect memory leaks and errors, using the specified valgrind binary. Cannot be combined with --target-exec",
+            "confidence": 1.0,
+            "reason": "The option allows choosing a specific valgrind binary, which implies selecting from predefined options."
+         },
+         {
+            "key": "--enable-ftrapv",
+            "values": [],
+            "kind": "positive",
+            "description": "Trap arithmetic overflows",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (trapping arithmetic overflows) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-neon-clobber-test",
+            "values": [],
+            "kind": "positive",
+            "description": "check NEON registers for clobbering (should be used only for debugging purposes)",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (checking NEON registers for clobbering) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-xmm-clobber-test",
+            "values": [],
+            "kind": "positive",
+            "description": "check XMM registers for clobbering (Win64-only; should be used only for debugging purposes)",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (checking XMM registers for clobbering) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-random",
+            "values": [],
+            "kind": "positive",
+            "description": "randomly enable/disable components",
+            "confidence": 1.0,
+            "reason": "The option '--enable-random' implies enabling a feature (randomly enabling/disabling components), which aligns with the 'positive' classification."
+         },
+         {
+            "key": "--disable-random",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "Disables the random feature when set to 1.",
+            "confidence": 1.0,
+            "reason": "The option '--disable-random' explicitly disables a feature when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-random",
+            "values": [
+               "LIST"
+            ],
+            "kind": "positive",
+            "description": "randomly enable/disable specific components or features based on the provided list",
+            "confidence": 0.9,
+            "reason": "The option '--enable-random' suggests enabling features randomly, which aligns with the 'positive' classification as it enables functionality."
+         },
+         {
+            "key": "--disable-valgrind-backtrace",
+            "values": [],
+            "kind": "negative",
+            "description": "do not print a backtrace under Valgrind (only applies to --disable-optimizations builds)",
+            "confidence": 1.0,
+            "reason": "The option disables a feature (printing a backtrace under Valgrind) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-ossfuzz",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable building fuzzer tool",
+            "confidence": 1.0,
+            "reason": "The option enables the building of a fuzzer tool, which is a feature activation."
+         },
+         {
+            "key": "--libfuzzer",
+            "values": [
+               "PATH"
+            ],
+            "kind": "options",
+            "description": "path to libfuzzer",
+            "confidence": 1.0,
+            "reason": "The option allows specifying a path to libfuzzer, which implies choosing a value from a predefined set of options (in this case, a path)."
+         },
+         {
+            "key": "--enable-linux-perf",
+            "values": [],
+            "kind": "positive",
+            "description": "enable Linux Performance Monitor API",
+            "confidence": 1.0,
+            "reason": "The option '--enable-linux-perf' is a typical positive option as it enables a feature when turned on."
+         },
+         {
+            "key": "--enable-macos-kperf",
+            "values": [],
+            "kind": "positive",
+            "description": "enable macOS kperf (private) API",
+            "confidence": 1.0,
+            "reason": "The option is prefixed with '--enable', which typically indicates that the feature is enabled when the option is specified."
+         },
+         {
+            "key": "--disable-large-tests",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "disable tests that use a large amount of memory",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (large tests) when set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-ptx-compression",
+            "values": [],
+            "kind": "negative",
+            "description": "don't compress CUDA PTX code even when possible",
+            "confidence": 1.0,
+            "reason": "The option '--disable-ptx-compression' explicitly disables a feature (PTX compression), which aligns with the 'negative' classification."
+         },
+         {
+            "key": "--disable-version-tracking",
+            "values": [],
+            "kind": "negative",
+            "description": "don't include the git/release version in the build",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (version tracking) when turned on, which aligns with the definition of a negative option."
+         }
+      ]
+   },
+   {
+      "project": "sqlite/sqlite",
+      "build_type": "autoconf",
+      "out_of_tree": false,
+      "language": "C",
+      "shallow": "version-3.41.0",
+      "config_options": [
+         {
+            "key": "--no-create",
+            "values": [],
+            "kind": "negative",
+            "description": "do not create output files",
+            "confidence": 1.0,
+            "reason": "The option '--no-create' disables the creation of output files, which aligns with the 'negative' classification as it turns off a feature."
+         },
+         {
+            "key": "--enable-shared",
+            "values": [
+               "yes",
+               "no",
+               "PKGS"
+            ],
+            "kind": "positive",
+            "description": "build shared libraries [default=yes]",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of building shared libraries when set to 'yes' or 'PKGS'. The default value is 'yes', indicating that it is a positive option."
+         },
+         {
+            "key": "--enable-static",
+            "values": [
+               "yes",
+               "no",
+               "PKGS"
+            ],
+            "kind": "positive",
+            "description": "build static libraries [default=yes]",
+            "confidence": 1.0,
+            "reason": "The option enables the feature of building static libraries when set to 'yes' or 'PKGS', which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-fast-install",
+            "values": [
+               "yes",
+               "no",
+               "PKGS"
+            ],
+            "kind": "positive",
+            "description": "optimize for fast installation [default=yes]",
+            "confidence": 1.0,
+            "reason": "The option enables optimization for fast installation when turned on, which aligns with the 'positive' classification."
+         },
+         {
+            "key": "--disable-libtool-lock",
+            "values": [],
+            "kind": "negative",
+            "description": "avoid locking (might break parallel builds)",
+            "confidence": 1.0,
+            "reason": "The option disables a feature (libtool locking) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-largefile",
+            "values": [],
+            "kind": "negative",
+            "description": "omit support for large files",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (support for large files), which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-threadsafe",
+            "values": [],
+            "kind": "negative",
+            "description": "Disable mutexing",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (thread safety) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-releasemode",
+            "values": [],
+            "kind": "positive",
+            "description": "Support libtool link to release mode",
+            "confidence": 1.0,
+            "reason": "The option '--enable-releasemode' suggests enabling a feature (release mode support), which aligns with the 'positive' classification."
+         },
+         {
+            "key": "--enable-tempstore",
+            "values": [
+               "never",
+               "no",
+               "yes",
+               "always"
+            ],
+            "kind": "options",
+            "description": "Use an in-ram database for temporary tables",
+            "confidence": 1.0,
+            "reason": "The option allows choosing from predefined values (never, no, yes, always) to configure the behavior of using an in-ram database for temporary tables."
+         },
+         {
+            "key": "--disable-tcl",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "do not build TCL extension",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables the TCL extension when set, aligning with the negative classification."
+         },
+         {
+            "key": "--enable-editline",
+            "values": [],
+            "kind": "positive",
+            "description": "enable BSD editline support",
+            "confidence": 1.0,
+            "reason": "The option '--enable-editline' is a classic positive option that enables a specific feature (BSD editline support) when turned on."
+         },
+         {
+            "key": "--disable-readline",
+            "values": [],
+            "kind": "negative",
+            "description": "disable readline support",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which matches the definition of a negative option."
+         },
+         {
+            "key": "--enable-debug",
+            "values": [],
+            "kind": "positive",
+            "description": "enable debugging & verbose explain",
+            "confidence": 1.0,
+            "reason": "The option '--enable-debug' is explicitly stated to enable debugging and verbose explanations, which aligns with the 'positive' classification as it enables a feature."
+         },
+         {
+            "key": "--disable-amalgamation",
+            "values": [],
+            "kind": "negative",
+            "description": "Disable the amalgamation and instead build all files separately",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (amalgamation) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-load-extension",
+            "values": [
+               1
+            ],
+            "kind": "negative",
+            "description": "Disable loading of external extensions",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on or set to 1, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-math",
+            "values": [],
+            "kind": "negative",
+            "description": "Disable math functions",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature (math functions) when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--disable-json",
+            "values": [],
+            "kind": "negative",
+            "description": "Disable JSON functions",
+            "confidence": 1.0,
+            "reason": "The option explicitly disables a feature when turned on, which aligns with the definition of a negative option."
+         },
+         {
+            "key": "--enable-all",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable FTS4, FTS5, Geopoly, RTree, Sessions",
+            "confidence": 1.0,
+            "reason": "The option explicitly enables multiple features, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-memsys5",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable MEMSYS5",
+            "confidence": 1.0,
+            "reason": "The option '--enable-memsys5' is a typical positive option as it enables a feature when turned on."
+         },
+         {
+            "key": "--enable-memsys3",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable MEMSYS3",
+            "confidence": 1.0,
+            "reason": "The option --enable-memsys3 is used to enable the MEMSYS3 feature, which aligns with the positive option type as it activates a feature when turned on."
+         },
+         {
+            "key": "--enable-fts3",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the FTS3 extension",
+            "confidence": 1.0,
+            "reason": "The option enables a feature when turned on, as indicated by 'enable' and the description."
+         },
+         {
+            "key": "--enable-fts4",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the FTS4 extension",
+            "confidence": 1.0,
+            "reason": "The option enables a feature (FTS4 extension) when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-fts5",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the FTS5 extension",
+            "confidence": 1.0,
+            "reason": "The option enables a feature when turned on, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-update-limit",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the UPDATE/DELETE LIMIT clause",
+            "confidence": 1.0,
+            "reason": "The option enables a specific feature, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-geopoly",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the GEOPOLY extension",
+            "confidence": 1.0,
+            "reason": "The option '--enable-geopoly' is used to enable a feature (GEOPOLY extension), which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-rtree",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the RTREE extension",
+            "confidence": 1.0,
+            "reason": "The option '--enable-rtree' explicitly states that it enables the RTREE extension, which aligns with the definition of a positive option."
+         },
+         {
+            "key": "--enable-session",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable the SESSION extension",
+            "confidence": 1.0,
+            "reason": "The option '--enable-session' is used to enable a feature, which aligns with the definition of a 'positive' option."
+         },
+         {
+            "key": "--enable-gcov",
+            "values": [],
+            "kind": "positive",
+            "description": "Enable coverage testing using gcov",
+            "confidence": 1.0,
+            "reason": "The option --enable-gcov is used to turn on coverage testing, which is a feature that is enabled when the option is set."
+         },
+         {
+            "key": "--with-pic",
+            "values": [
+               "try to use only PIC/non-PIC objects"
+            ],
+            "kind": "options",
+            "description": "try to use only PIC/non-PIC objects [default=use both]",
+            "confidence": 1.0,
+            "reason": "The option allows choosing between PIC and non-PIC objects, which is a choice from predefined options."
+         },
+         {
+            "key": "--with-gnu-ld",
+            "values": [
+               "yes",
+               "no"
+            ],
+            "kind": "positive",
+            "description": "assume the C compiler uses GNU ld [default=no]",
+            "confidence": 0.9,
+            "reason": "The option enables the assumption that the C compiler uses GNU ld when set to 'yes', which is a feature activation."
+         },
+         {
+            "key": "--with-wasi-sdk",
+            "values": [
+               "DIR"
+            ],
+            "kind": "positive",
+            "description": "directory containing the WASI SDK. Triggers cross-compile to WASM.",
+            "confidence": 1.0,
+            "reason": "The option enables cross-compilation to WASM by specifying the directory containing the WASI SDK, which is a feature-enabling action."
+         },
+         {
+            "key": "--with-readline-lib",
+            "values": [],
+            "kind": "positive",
+            "description": "specify readline library",
+            "confidence": 1.0,
+            "reason": "This option is used to specify the location of the readline library, which does not directly affect the compilation of source files but rather the linking process."
+         }
+      ]
+   }
+]
