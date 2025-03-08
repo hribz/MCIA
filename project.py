@@ -16,7 +16,6 @@ class GlobalConfig:
     cmake = 'cmake'
     bear = 'bear'
     icebear = 'icebear'
-    inc_level = 'func'
     build_jobs = '16'
 
     def __init__(self):
@@ -179,7 +178,7 @@ class Configuration:
         cmd.extend(['-f', self.compile_database])
         cmd.extend(['-o', self.cache_path])
         cmd.extend(['-j', GlobalConfig.build_jobs])
-        cmd.extend(['--inc', GlobalConfig.inc_level])
+        cmd.extend(['--inc', self.opts.inc])
         cmd.extend(['--analyzers', 'clangsa'])
         cmd.extend(['-c', self.cache_file])
         cmd.extend(['--cc', self.opts.cc])
@@ -363,10 +362,97 @@ class Project:
             icebear_cmd = config.icebear_cmd(not_update_cache=True)
         run(icebear_cmd, config.cache_path, "IceBear Preprocess")
 
+    def reports_analysis(self, config1: Configuration, config2: Configuration):
+        if config1 == config2:
+            logger.debug(f"[Report Analysis] {config1.tag} is same as {config2.tag}")
+        
+        class Report:
+            def __init__(self, file, report):
+                self.file = file
+                self.report = report
+
+            def __eq__(self, value):
+                return self.file == value.file and self.report == value.report
+            
+            def __hash__(self):
+                return hash((self.file, self.report))
+
+        def get_reports(analyzer, config: Configuration):
+            reports_dir = os.path.join(config.cache_path, analyzer)
+            if analyzer == 'csa':
+                reports_dir = os.path.join(reports_dir, 'csa-reports/version')
+            
+            def get_file_list(dir, file_pattern='*'):
+                assert os.path.exists(dir)
+                path = Path(dir)
+                ret = []
+                for abs_report in path.rglob(file_pattern):
+                    # is_file(): the path of the report
+                    # is_dir() and ...: empty direcotry, means correspond file doesn't have report.
+                    if abs_report.is_file() or (abs_report.is_dir() and not os.listdir(abs_report)):
+                        ret.append('/' + str(abs_report.relative_to(dir)))
+                return ret
+            
+            file_list = get_file_list(reports_dir)
+            file_to_reports = {}
+            for file in file_list:
+                if os.path.isfile(os.path.join(reports_dir, file[1:])):
+                    # file with reports.
+                    origin_file, report = os.path.split(file)
+                    if origin_file not in file_to_reports:
+                        file_to_reports[origin_file] = set()
+                    file_to_reports[origin_file].add(Report(origin_file, report))
+                else:
+                    # file doesn't have reports.
+                    file_to_reports[file] = set()
+            return file_to_reports
+        
+        def diff_reports(reports1, reports2):
+            file_to_diff = {}
+            diff_num = 0
+            for file, reports in reports2.items():
+                if file in reports1:
+                    diff = reports - reports1[file]
+                    if len(diff) > 0:
+                        file_to_diff[file] = {
+                            # This field exists meaning that this file also be analyzed in baseline.
+                            config1.tag: sorted([i.report for i in reports1[file]]),
+                            config2.tag: sorted([i.report for i in diff])
+                        }
+                        diff_num += len(diff)
+                else:
+                    # If this file doesn't have reports, don't record it.
+                    if len(reports) > 0:
+                        file_to_diff[file] = {
+                            config2.tag: sorted([i.report for i in reports])
+                        }
+                        diff_num += len(reports)
+            return file_to_diff, diff_num
+
+        analyzers = ['csa']
+        all_diff = {}
+        for analyzer in analyzers:
+            all_diff[analyzer] = {}
+            reports1 = get_reports(analyzer, config1)
+            reports2 = get_reports(analyzer, config2)
+            diff, diff_num = diff_reports(reports1, reports2)
+            if len(diff) > 0:
+                all_diff[analyzer] = {
+                    f'{config1.tag} number': sum([len(v) for k, v in reports1.items()]),
+                    f'{config2.tag} number': sum([len(v) for k, v in reports2.items()]),
+                    'diff number': diff_num,
+                    'file to diff': diff
+                }
+            logger.info(f"[Reports Analysis] Find {diff_num} new reports in {config2.tag}")
+
+        with open(os.path.join(config2.cache_path, 'new_reports.json'), 'w') as f:
+            json.dump(all_diff, f, indent=4, sort_keys=True)
+
     def process_every_configuraion(self):
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
-            self.configure(config)
-            self.parse_makefile(config)
-            self.icebear(config)
+            # self.configure(config)
+            # self.parse_makefile(config)
+            # self.icebear(config)
+            self.reports_analysis(self.baseline, config)
         pass

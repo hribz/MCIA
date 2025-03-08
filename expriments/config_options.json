@@ -153,7 +153,8 @@
          "--disable-pthreads",
          "--disable-w32threads",
          "--disable-os2threads",
-         "--enable-hardcoded-tables"
+         "--enable-hardcoded-tables",
+         "--enable-vulkan-static"
       ],
       "config_options": [
          {

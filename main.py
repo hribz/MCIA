@@ -71,7 +71,7 @@ def handle_project(projects, opts):
         if not checkout_target_commit(repo_dir, commit):
             continue
         build_dir = f"{repo_dir}_build" if out_of_tree else repo_dir
-        workspace = f"{repo_dir}_workspace"
+        workspace = f"{repo_dir}_workspace/{opts.inc}"
         logger.start_log(workspace)
         p = Project(src_dir=repo_dir,
                     workspace=workspace,
@@ -90,6 +90,8 @@ class MCArgumentParser():
         self.parser.add_argument('--cc', type=str, dest='cc', default='clang-18', help='Customize the C compiler for configure & build.')
         self.parser.add_argument('--cxx', type=str, dest='cxx', default='clang++-18', help='Customize the C++ compiler for configure & build.')
         self.parser.add_argument('--preprocess-only', dest='prep_only', action='store_true', help='Only preprocess and diff')
+        self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func'], default='func',
+                                 help='Incremental analysis mode: noinc, file, func')
     
     def parse_args(self, args):
         return self.parser.parse_args(args)

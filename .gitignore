@@ -172,7 +172,7 @@ cython_debug/
 
 .vscode
 # MCIA ignore files
-expriments
+expriments/*
 !expriments/benchmark.json
 !expriments/config_options.json
 !expriments/script/
