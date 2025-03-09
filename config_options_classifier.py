@@ -18,40 +18,59 @@ class ConfigClassifier:
         
     def _generate_prompt(self, config_item: Dict) -> str:
         return f"""
-I will provide some configuration options from C/C++ projects, please classify them according to follow rules:
+You are given a configuration option definition along with its comment. A configuration option refers to one of the selectable parameters in the configuration (configure) process of a C/C++ project (for example, "cmake -DWITH_CLP" or "./configure --enable-all"). These options can affect file compilation by changing which files are compiled, modifying macro definitions, altering third-party library dependencies, etc.
 
-## option type
-1. positive: Enable some features when it is turn on or set to 1 (e.g. --enable-foo, WITH_FOO=1)
-2. negative: Disable some features when it is turn on or set to 1 (e.g. --disable-foo, WITHOUT_FOO=1)
-3. options: Choose value from predefined options (e.g. BUILD_TYPE=Debug/Release)
-4. ignore: Options that do not affect the compilation results of source files. (e.g. --prefix, --libdir)
+Your task is to extract and classify the configuration option according to the following steps:
 
-## The option to classify
-{ config_item }
+1. **Extract the Key:**
+   - Identify the configuration option's name (key) from the definition.
+   - If there are equivalent names (for example, "--xxx" and "-x"), only keep the long form (i.e., the one starting with “--”).
 
-## Output JSON
-{{
-    "key": "--enable-foo",
-    "values": [],
-    "kind": "positive",
-    "description": "the description of this option",
-    "confidence": "0-1",
-    "reason": "the reason of classification"
-}}
-field explaination:
-key: name of the option, only reserve --xxx if there are alias names
-values: all potential values, only consider this field when there is = (e.g. --xxx=no)
-kind: positive|negative|options|ignore
+2. **Determine the Values:**
+   - If the configuration option is in the form "--xxx=yy", then it requires a value and you should extract the potential values.
+   - If the configuration option is simply "--xxx", then its presence means it is enabled; in this case, set the "values" to an empty list ([]).
+   - For other cases, use your judgment to determine the possible values.
+
+3. **Classify the Option (Kind):**
+   - Classify the configuration option into one of four types:
+     - **"positive"**: A positive switch where enabling it may add functionalities or include third-party libraries (e.g., "--enable-openssl", "-DWITH_CLP=ON").
+     - **"negative"**: A negative switch that disables functionalities (e.g., "--disable-gmp").
+     - **"options"**: An option type that supports multiple possible values.
+     - **"ignore"**: If the configuration option is irrelevant to file compilation or does not meet the criteria. Note: the config options determine how to link libraries or specify directory are also should be ignore.
+   - Use the key and comment to decide the correct type.
+
+4. **Identify Constraint Relationships:**
+   - Look for any implicit relationships mentioned in the comment:
+     - If the option cannot be enabled simultaneously with other options, add a "conflict" field containing a list of conflicting option keys.
+     - If the option must be enabled together with other options, add a "combination" field containing a list of those related option keys.
+
+5. **Additional Fields:**
+   - Include a **"description"** field that contains the configuration option's comment.
+   - Include a **"confidence"** field to indicate your confidence level in the classification.
+   - Include a **"reason"** field that explains your reasoning for the classification.
+
+6. **Output Format:**
+   - Your final output should be a JSON object with the following fields:
+     - **key**: The configuration option name.
+     - **values**: The possible values (or an empty list if not applicable).
+     - **kind**: One of "positive", "negative", "options", or "ignore".
+     - **conflict**: A list of conflicting option keys (if any).
+     - **combination**: A list of option keys that must be enabled together (if any).
+     - **description**: The comment associated with the configuration option.
+     - **confidence**: Your confidence level in the classification (0-1).
+     - **reason**: The explanation behind your classification.
+
+Return only the JSON text in your answer without any additional commentary.
 """
 
     def classify_item(self, config_item: Dict) -> Dict:
         response = self.client.chat.completions.create(
             model=os.getenv("MODEL"),
-            messages=[{
-                "role": "user",
-                "content": self._generate_prompt(config_item)
-            }],
-            temperature=0.3
+            messages=[
+                {"role": "system", "content": self._generate_prompt(config_item)},
+                {"role": "user", "content": config_item}
+            ],
+            temperature=0
         )
         return self._parse_response(response.choices[0].message.content)
 
@@ -270,8 +289,7 @@ def handle_project(projects, opts, classifier: ResilientClassifier):
         results = []
         for (idx, item) in enumerate(config_items):
             classification = classifier.classify_item(item)
-            if classification["kind"] != "ignore":
-                results.append(classification)
+            results.append(classification)
 
             if idx % 3 == 0:
                 classifier._print_debug(f"Progress: {idx}/{len(config_items)} ({idx/len(config_items):.0%})")

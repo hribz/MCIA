@@ -451,8 +451,8 @@ class Project:
     def process_every_configuraion(self):
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
-            # self.configure(config)
-            # self.parse_makefile(config)
-            # self.icebear(config)
+            self.configure(config)
+            self.parse_makefile(config)
+            self.icebear(config)
             self.reports_analysis(self.baseline, config)
         pass

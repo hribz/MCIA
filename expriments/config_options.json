@@ -2886,10 +2886,10 @@
          {
             "key": "--disable-amalgamation",
             "values": [],
-            "kind": "negative",
+            "kind": "positive",
             "description": "Disable the amalgamation and instead build all files separately",
             "confidence": 1.0,
-            "reason": "The option explicitly disables a feature (amalgamation) when turned on, which aligns with the definition of a negative option."
+            "reason": "The option explicitly disables a feature (amalgamation) when turned on, which aligns with the definition of a negative option, but all files will be compiled when this option turn on, so this is a positive option."
          },
          {
             "key": "--disable-load-extension",

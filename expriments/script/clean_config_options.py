@@ -1,6 +1,6 @@
 import json
 
-origin_json = '../config_options.json'
+origin_json = '../config_options_DeepSeek-V2.5.json'
 output_json = '../cleaned_options.json'
 
 origin_config = json.load(open(origin_json, 'r'))
@@ -14,6 +14,7 @@ for project in origin_config:
     # remove ignore options
     if 'ignore_options' in project:
         config = [option for option in config if option['key'] not in project['ignore_options']]
+    config = [option for option in config if option['kind'] != 'ignore']
 
     # clean unneccessary values
     for option in config:
