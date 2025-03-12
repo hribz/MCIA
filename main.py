@@ -40,7 +40,7 @@ def parse_options(options, build_type):
     ret = []
     if build_type == BuildType.CMake:
         ret = [
-            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"], OptionType.options)
+            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"], OptionType.options, None, None)
         ]
     for option in options:
         ret.append(Option(option['key'], option['values'], OptionType.getType(option['kind']), option.get('conflict'), option.get('combination')))
@@ -61,6 +61,7 @@ def handle_project(projects, opts):
         constant_options = get_if_exists(project, 'constant_options', [])
         commit = project['shallow']
         options = project['config_options']
+        prerequisites = get_if_exists(project, 'prerequisites', [])
         repo_dir = os.path.join(projects_root_dir, repo_name)
 
         if opts.repo and opts.repo != repo_name and opts.repo != os.path.basename(repo_dir):
@@ -79,7 +80,8 @@ def handle_project(projects, opts):
                     options=parse_options(options, build_type),
                     build_type=build_type,
                     constant_options=constant_options,
-                    opts = opts)
+                    opts = opts,
+                    prerequisites=prerequisites)
         p.process_every_configuraion()
 
 class MCArgumentParser():

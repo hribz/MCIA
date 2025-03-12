@@ -37,11 +37,20 @@ def run(cmd, cwd, tag) -> bool:
         return True
     else:
         # Do something
+        logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nstdout: {process.stdout}\nstderr: {process.stderr}")
         return False
     
 def run_without_check(cmd, cwd, tag) -> bool:
     makedir(cwd)
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
-    process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None)
+    if not os.path.exists(cwd):
+        logger.error(f"[{tag}] Please make sure {cwd} exists!")
+        return False
+    env = dict(os.environ)
+    env['CC'] = 'clang-18'
+    env['CXX'] = 'clang++-18'
+    process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
     return_code = process.wait()
+    if return_code != 0:
+        logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nstdout: {process.stdout}\nstderr: {process.stderr}")
     return return_code == 0

@@ -135,8 +135,8 @@ class Configuration:
         if self.build_type == BuildType.CMake:
             cmd.extend([
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-                "CMAKE_C_COMPILER=clang-18",
-                "CMAKE_CXX_COMPILER=clang++-18"
+                "-DCMAKE_C_COMPILER=clang-18",
+                "-DCMAKE_CXX_COMPILER=clang++-18"
             ])
         for option in self.options:
             if self.build_type == BuildType.CMake:
@@ -192,7 +192,7 @@ class Configuration:
         return cmd
 
 class Project:
-    def __init__(self, src_dir, workspace, build_dir, options, build_type, constant_options: List[str], opts):
+    def __init__(self, src_dir, workspace, build_dir, options, build_type, constant_options: List[str], opts, prerequisites):
         self.src_dir = src_dir     # The directory to store source code.
         self.project_name = os.path.basename(self.src_dir)
         logger.TAG = self.project_name
@@ -205,6 +205,7 @@ class Project:
         # it's a str list, just consider it as initial option_cmd.
         self.constant_options = constant_options
         self.opts = opts
+        self.prerequisites = prerequisites # The commands need to be executed before building the project.
         self.create_dir()
         self.configuation_sampling()
 
@@ -263,6 +264,10 @@ class Project:
         # Default as baseline
         self.baseline = default_configuration
         self.config_list = [default_configuration, all_positive_configuration, all_negative_configuration]
+
+    def execute_prerequisites(self, config: Configuration) -> bool:
+        for prerequisite in self.prerequisites:
+            return run(prerequisite, config.build_path, "Prerequisite")
 
     def configure(self, config: Configuration) -> bool:
         return run(config.config_cmd(), config.build_path, "Configure Script")            
@@ -451,7 +456,11 @@ class Project:
     def process_every_configuraion(self):
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
-            self.configure(config)
+            self.execute_prerequisites(config)
+            config_status = self.configure(config)
+            if not config_status:
+                logger.error(f"[Configure {config.tag}] Configure failed! Stop subsequent jobs.")
+                continue
             self.parse_makefile(config)
             self.icebear(config)
             self.reports_analysis(self.baseline, config)

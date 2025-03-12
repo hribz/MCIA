@@ -18,7 +18,10 @@ class ConfigClassifier:
         
     def _generate_prompt(self, config_item: Dict) -> str:
         return f"""
-You are given a configuration option definition along with its comment. A configuration option refers to one of the selectable parameters in the configuration (configure) process of a C/C++ project (for example, "cmake -DWITH_CLP" or "./configure --enable-all"). These options can affect file compilation by changing which files are compiled, modifying macro definitions, altering third-party library dependencies, etc.
+You are a C/C++ developer with rich experience in project building. You will be given a configuration option definition along with its comment. A configuration option refers to one of the selectable parameters in the configuration (configure) process of a C/C++ project (for example, "cmake -DWITH_CLP" or "./configure --enable-all"). These options can affect file compilation by changing which files are compiled, modifying macro definitions, altering third-party library dependencies, etc.
+
+Here is the configuration option definition:
+{config_item}
 
 Your task is to extract and classify the configuration option according to the following steps:
 
@@ -26,19 +29,21 @@ Your task is to extract and classify the configuration option according to the f
    - Identify the configuration option's name (key) from the definition.
    - If there are equivalent names (for example, "--xxx" and "-x"), only keep the long form (i.e., the one starting with “--”).
 
-2. **Determine the Values:**
-   - If the configuration option is in the form "--xxx=yy", then it requires a value and you should extract the potential values.
-   - If the configuration option is simply "--xxx", then its presence means it is enabled; in this case, set the "values" to an empty list ([]).
-   - For other cases, use your judgment to determine the possible values.
-
-3. **Classify the Option (Kind):**
+2. **Classify the Option (Kind):**
    - Classify the configuration option into one of four types:
      - **"positive"**: A positive switch where enabling it may add functionalities or include third-party libraries (e.g., "--enable-openssl", "-DWITH_CLP=ON").
      - **"negative"**: A negative switch that disables functionalities (e.g., "--disable-gmp").
      - **"options"**: An option type that supports multiple possible values.
      - **"ignore"**: If the configuration option is irrelevant to file compilation or does not meet the criteria. Note: the config options determine how to link libraries or specify directory are also should be ignore.
-   - Use the key and comment to decide the correct type.
+   - Use the key and comment to decide the correct type, you should **not** classify according to the default value.
 
+3. **Determine the Values:**
+   - If the configuration option is in the form "xxx=yy", then it requires a value and you should extract the potential values: 
+    - If it's a switch type option, the potential values maybe ["1", "0"], ["ON", "OFF"], ["yes", "no"] and so on,
+    - If it's an options type option, the potential values maybe ["yy", ...], you should try to find other values in the comment or by your knowledge.
+   - If the configuration option is simply "xxx", then its presence means it is enabled; in this case, set the "values" to an empty list ([]).
+   - For other cases, use your judgment to determine the possible values.
+   
 4. **Identify Constraint Relationships:**
    - Look for any implicit relationships mentioned in the comment:
      - If the option cannot be enabled simultaneously with other options, add a "conflict" field containing a list of conflicting option keys.
@@ -67,8 +72,7 @@ Return only the JSON text in your answer without any additional commentary.
         response = self.client.chat.completions.create(
             model=os.getenv("MODEL"),
             messages=[
-                {"role": "system", "content": self._generate_prompt(config_item)},
-                {"role": "user", "content": config_item}
+                {"role": "user", "content": self._generate_prompt(config_item)}
             ],
             temperature=0
         )
@@ -91,7 +95,7 @@ class EnhancedConfigClassifier(ConfigClassifier):
     def __init__(self):
         super().__init__()
         self.counter = 0
-        self.start_time = None
+        self.start_time = time.time()
         
     def _print_debug(self, message: str, level: str = "INFO"):
         colors = {
@@ -223,6 +227,11 @@ class ConfigExtractor:
             capture_output=True,
             text=True
         )
+        
+        if result.returncode != 0:
+            print(result.stderr)
+            return []
+        
         items = []
         current_desc = []
         
@@ -316,7 +325,7 @@ def main(args):
     load_dotenv()
     parser = MCArgumentParser()
     opts = parser.parse_args(args)
-    projects = json.load(open('expriments/config_options.json', 'r'))
+    projects = json.load(open('expriments/benchmark.json', 'r'))
     classifier = ResilientClassifier()
     handle_project(projects, opts, classifier)
 
