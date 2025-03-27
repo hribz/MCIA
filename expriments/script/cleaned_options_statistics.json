@@ -1,0 +1,92 @@
+{
+    "hribz/ica-demo": {
+        "all": 8,
+        "positive": 5,
+        "negative": 0,
+        "ignore": 0,
+        "options": 3,
+        "conflict": 0,
+        "combine": 0
+    },
+    "FFmpeg/FFmpeg": {
+        "all": 243,
+        "positive": 102,
+        "negative": 124,
+        "ignore": 0,
+        "options": 17,
+        "conflict": 10,
+        "combine": 3
+    },
+    "sqlite/sqlite": {
+        "all": 29,
+        "positive": 18,
+        "negative": 9,
+        "ignore": 0,
+        "options": 2,
+        "conflict": 0,
+        "combine": 0
+    },
+    "vim/vim": {
+        "all": 47,
+        "positive": 12,
+        "negative": 21,
+        "ignore": 0,
+        "options": 14,
+        "conflict": 0,
+        "combine": 0
+    },
+    "php/php-src": {
+        "all": 157,
+        "positive": 96,
+        "negative": 38,
+        "ignore": 0,
+        "options": 23,
+        "conflict": 5,
+        "combine": 0
+    },
+    "curl/curl": {
+        "all": 213,
+        "positive": 104,
+        "negative": 94,
+        "ignore": 0,
+        "options": 15,
+        "conflict": 0,
+        "combine": 0
+    },
+    "ruby/ruby": {
+        "all": 67,
+        "positive": 29,
+        "negative": 13,
+        "ignore": 0,
+        "options": 25,
+        "conflict": 0,
+        "combine": 0
+    },
+    "opencv/opencv": {
+        "all": 174,
+        "positive": 165,
+        "negative": 3,
+        "ignore": 0,
+        "options": 6,
+        "conflict": 0,
+        "combine": 0
+    },
+    "protocolbuffers/protobuf": {
+        "all": 34,
+        "positive": 30,
+        "negative": 4,
+        "ignore": 0,
+        "options": 0,
+        "conflict": 0,
+        "combine": 0
+    },
+    "tesseract-ocr/tesseract": {
+        "all": 15,
+        "positive": 9,
+        "negative": 5,
+        "ignore": 0,
+        "options": 1,
+        "conflict": 0,
+        "combine": 0
+    }
+}
