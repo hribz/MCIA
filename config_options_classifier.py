@@ -18,23 +18,23 @@ class ConfigClassifier:
         
     def _generate_prompt(self, config_item: Dict) -> str:
         return f"""
-You are a C/C++ developer with rich experience in project building. You will be given a configuration option definition along with its comment. A configuration option refers to one of the selectable parameters in the configuration (configure) process of a C/C++ project (for example, "cmake -DWITH_CLP" or "./configure --enable-all"). These options can affect file compilation by changing which files are compiled, modifying macro definitions, altering third-party library dependencies, etc.
+You are a C/C++ developer with rich experience in building {config_item['project']}. You will be given a configuration option definition along with its comment. A configuration option refers to one of the selectable parameters in the configuration (configure) process of a C/C++ project (for example, "cmake -DWITH_CLP" or "./configure --enable-all"). These options can affect file compilation by changing which files are compiled, modifying macro definitions, altering third-party library dependencies, etc.
 
 Here is the configuration option definition:
-{config_item}
+{config_item['option']}
 
 Your task is to extract and classify the configuration option according to the following steps:
 
 1. **Extract the Key:**
    - Identify the configuration option's name (key) from the definition.
-   - If there are equivalent names (for example, "--xxx" and "-x"), only keep the long form (i.e., the one starting with “--”).
+   - If there are equivalent names (for example, "--xxx" and "-x"), only keep the one starting with “--”.
 
 2. **Classify the Option (Kind):**
    - Classify the configuration option into one of four types:
      - **"positive"**: A positive switch where enabling it may add functionalities or include third-party libraries (e.g., "--enable-openssl", "-DWITH_CLP=ON").
      - **"negative"**: A negative switch that disables functionalities (e.g., "--disable-gmp").
      - **"options"**: An option type that supports multiple possible values.
-     - **"ignore"**: If the configuration option is irrelevant to file compilation or does not meet the criteria. Note: the config options determine how to link libraries or specify directory are also should be ignore.
+     - **"ignore"**: If the configuration option is irrelevant to file compilation or used to link libraries or specify directory, they should be ignore.
    - Use the key and comment to decide the correct type, you should **not** classify according to the default value.
 
 3. **Determine the Values:**
@@ -220,6 +220,17 @@ class ResilientClassifier(EnhancedConfigClassifier):
         }
 
 class ConfigExtractor:
+    base_ignore_options = {
+       "autoconf": [
+            "--help", "--version", "--quiet", "--silent", "--cache-file", 
+            "--config-cache", "--no-create", "--srcdir", "--prefix", "--exec-prefix",
+            "--build", "--host", "--disable-FEATURE", "--enable-FEATURE", "--with-PACKAGE",
+            "--without-PACKAGE", "--enable-shared", "--enable-static", "--enable-warnings",
+            "--disable-option-checking", "--enable-silent-rules", "--enable-werror",
+            "--enable-symbol-hiding"
+        ]
+    }
+
     @staticmethod
     def from_cmake(build_dir, src_dir) -> List[Dict]:
         result = subprocess.run(
@@ -238,7 +249,7 @@ class ConfigExtractor:
         for line in result.stdout.split("\n"):
             if line.startswith("//"):
                 current_desc.append(line[3:].strip())
-            elif match := re.match(r"^([A-Za-z_]+):([A-Z]+)=(.+)$", line.strip()):
+            elif match := re.match(r"^([A-Za-z_0-9]+):([A-Za-z_0-9]+)=(.+)$", line.strip()):
                 items.append({
                     "option": line.strip(),
                     "description": " ".join(current_desc)
@@ -257,6 +268,8 @@ class ConfigExtractor:
         items = []
 
         in_option = False
+        autoconf_ignore = ConfigExtractor.base_ignore_options['autoconf']
+        ignore_this = False
         for line in result.stdout.split("\n"):
             line = line.strip()
             if len(line) == 0 or line.endswith(":"):
@@ -264,9 +277,16 @@ class ConfigExtractor:
                 continue
             elif line.startswith("-"):
                 in_option = True
-                items.append(line)
+                ignore_this = False
+                for ig in autoconf_ignore:
+                    if re.search(ig, line):
+                        ignore_this = True
+                        break
+                if not ignore_this:
+                    items.append(line)
             elif len(items)>0 and in_option:
-                items[-1] += f" {line}"
+                if not ignore_this:
+                    items[-1] += f" {line}"
         return items
 
 def get_if_exists(dict, key, default=None):
@@ -279,6 +299,7 @@ def handle_project(projects, opts, classifier: ResilientClassifier):
 
     for project in projects:
         repo_name = project['project']
+        project_name = repo_name.split("/")[-1]
         build_type = BuildType.getType(project['build_type'])
         out_of_tree = get_if_exists(project, 'out_of_tree', True)
         repo_dir = os.path.join(projects_root_dir, repo_name)
@@ -297,7 +318,7 @@ def handle_project(projects, opts, classifier: ResilientClassifier):
         # classification.
         results = []
         for (idx, item) in enumerate(config_items):
-            classification = classifier.classify_item(item)
+            classification = classifier.classify_item({'project': project_name, 'option': item})
             results.append(classification)
 
             if idx % 3 == 0:
