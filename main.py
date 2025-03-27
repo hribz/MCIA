@@ -36,14 +36,15 @@ def checkout_target_commit(repo_dir: str, commit: str) -> bool:
         logger.error(f"error while checking out commit.\n{e}")
         return False
 
-def parse_options(options, build_type):
+def parse_options(options, switch_values, build_type):
     ret = []
     if build_type == BuildType.CMake:
         ret = [
-            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"], OptionType.options, None, None)
+            Option("CMAKE_BUILD_TYPE", ["Release", "Debug"], None, OptionType.options, None, None, None)
         ]
     for option in options:
-        ret.append(Option(option['key'], option['values'], OptionType.getType(option['kind']), option.get('conflict'), option.get('combination')))
+        switch_values_of_this_option = switch_values.get(option['kind'], None) if switch_values else None
+        ret.append(Option(option['key'], option['values'], switch_values_of_this_option, OptionType.getType(option['kind']), option.get('conflict'), option.get('combination'), option.get('on_value')))
     return ret
 
 def get_if_exists(dict, key, default=None):
@@ -55,33 +56,43 @@ def handle_project(projects, opts):
 
     for project in projects:
         repo_name = project['project']
+        repo_dir = os.path.join(projects_root_dir, repo_name)
+        if opts.repo and opts.repo != repo_name and opts.repo != os.path.basename(repo_dir):
+            continue
+
         build_type = BuildType.getType(project['build_type'])
         out_of_tree = get_if_exists(project, 'out_of_tree', True)
         # The options cannot be changed in this environment.
         constant_options = get_if_exists(project, 'constant_options', [])
         commit = project['shallow']
         options = project['config_options']
+        switch_values = get_if_exists(project, 'switch_values')
         prerequisites = get_if_exists(project, 'prerequisites', [])
-        repo_dir = os.path.join(projects_root_dir, repo_name)
-
-        if opts.repo and opts.repo != repo_name and opts.repo != os.path.basename(repo_dir):
-            continue
+        dry_run = get_if_exists(project, 'dry_run', False)
+        must_make = get_if_exists(project, 'make', False)
+        must_gcc = get_if_exists(project, 'gcc', False)
+        env = get_if_exists(project, 'env', {})
 
         if not clone_project(repo_name, repo_dir):
             continue
         if not checkout_target_commit(repo_dir, commit):
             continue
         build_dir = f"{repo_dir}_build" if out_of_tree else repo_dir
-        workspace = f"{repo_dir}_workspace/{opts.inc}"
+        workspace_tag = opts.tag if opts.tag else opts.inc
+        workspace = f"{repo_dir}_workspace/{workspace_tag}"
         logger.start_log(workspace)
         p = Project(src_dir=repo_dir,
                     workspace=workspace,
                     build_dir=build_dir,
-                    options=parse_options(options, build_type),
+                    options=parse_options(options, switch_values, build_type),
                     build_type=build_type,
                     constant_options=constant_options,
                     opts = opts,
-                    prerequisites=prerequisites)
+                    prerequisites=prerequisites,
+                    dry_run=dry_run,
+                    must_make=must_make,
+                    must_gcc=must_gcc,
+                    extra_env=env)
         p.process_every_configuraion()
 
 class MCArgumentParser():
@@ -94,6 +105,7 @@ class MCArgumentParser():
         self.parser.add_argument('--preprocess-only', dest='prep_only', action='store_true', help='Only preprocess and diff')
         self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func'], default='func',
                                  help='Incremental analysis mode: noinc, file, func')
+        self.parser.add_argument('--tag', type=str, dest='tag', help='Tag of this analysis.')
     
     def parse_args(self, args):
         return self.parser.parse_args(args)
@@ -101,6 +113,7 @@ class MCArgumentParser():
 def main(args):
     parser = MCArgumentParser()
     opts = parser.parse_args(args)
+    logger.verbose = opts.verbose
     projects = json.load(open('expriments/cleaned_options.json', 'r'))
     handle_project(projects, opts)
 
