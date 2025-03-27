@@ -23,14 +23,11 @@ def remake_dir(path: Path, debug_TAG=None):
         shutil.rmtree(path)
     os.makedirs(path)
 
-def run(cmd, cwd, tag) -> bool:
+def run(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
     if not os.path.exists(cwd):
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
-    env = dict(os.environ)
-    env['CC'] = 'clang-18'
-    env['CXX'] = 'clang++-18'
     process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
     return_code = process.wait()
     if return_code == 0:
@@ -40,15 +37,12 @@ def run(cmd, cwd, tag) -> bool:
         logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nstdout: {process.stdout}\nstderr: {process.stderr}")
         return False
     
-def run_without_check(cmd, cwd, tag) -> bool:
+def run_without_check(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     makedir(cwd)
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
     if not os.path.exists(cwd):
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
-    env = dict(os.environ)
-    env['CC'] = 'clang-18'
-    env['CXX'] = 'clang++-18'
     process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
     return_code = process.wait()
     if return_code != 0:
