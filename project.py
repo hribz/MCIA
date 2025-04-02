@@ -12,6 +12,8 @@ from utils import *
 from logger import logger
 import compiledb
 
+from project_info import *
+
 class GlobalConfig:
     cmake = 'cmake'
     bear = 'bear'
@@ -32,161 +34,43 @@ class GlobalConfig:
 
 global_config = GlobalConfig()
 
-class BuildType(Enum):
-    CMake = auto()
-    AutoConf = auto()
-    Unknown = auto()
-
-    @staticmethod
-    def getType(build_type: str):
-        if build_type == 'cmake':
-            return BuildType.CMake
-        elif build_type == 'autoconf':
-            return BuildType.AutoConf
-        else:
-            return BuildType.Unknown
-
-class OptionType(Enum):
-    positive = auto()
-    negative = auto()
-    options = auto()
-
-    @staticmethod
-    def getType(option_type: str):
-        if option_type == 'positive':
-            return OptionType.positive
-        elif option_type == 'negative':
-            return OptionType.negative
-        else:
-            return OptionType.options
-
-class Option:
-    on_value_set = {'yes', '1', 'on'}
-    off_value_set = {'no', '0', 'off'}
-
-    def __init__(self, option, values, switch_values, kind: OptionType, conflict, combination, on_value):
-        self.option = option # The name of the config option.
-        self.values = values # Possible values of the option, the first element is default value.
-        # If this option is a switch, the values of the switch when turn on/off.
-        # {"on": "yes", "off": "no"}
-        self.switch_values = switch_values
-        self.kind = kind     # The kind of the option, determine how to turn on/off it.
-        # Options cannot be turn on if this option is turn on.
-        self.conflict = set(conflict) if conflict else set()
-        # Option must be turn on if this option is tuen on.
-        # ["key=value", ...]
-        self.combination = combination if combination else []
-
-        if self.switch_values:
-            self.on_value = self.switch_values.get('on')
-            self.off_value = self.switch_values.get('off')
-        else:
-            # No provided values, try to guess from the option.
-            self.on_value = '1'
-            self.off_value = '0'
-            for value in self.values:
-                value = str(value)
-                if value.lower() in self.on_value_set:
-                    self.on_value = value
-                elif value.lower() in self.off_value_set:
-                    self.off_value = value
-        if on_value:
-            # Override default on value by specific on value.
-            self.on_value = on_value
-
-    def is_switch(self):
-        return self.kind == OptionType.positive or self.kind == OptionType.negative
-
-    def turn_on(self):
-        if self.is_switch() and self.switch_values:
-            if self.on_value is None:
-                # This option shouldn't appear in the command line.
-                return None
-            elif self.on_value == "":
-                # This option doesn't have value.
-                return self.option
-            else:
-                return f"{self.option}={self.on_value}"
-        if len(self.values) > 0:
-            # --enable-foo=yes
-            return f"{self.option}={self.on_value}"
-        # --enable-foo
-        return self.option
-    
-    def turn_off(self):
-        if self.is_switch() and self.switch_values:
-            if self.off_value is None:
-                # This option shouldn't appear in the command line.
-                return None
-            elif self.off_value == "":
-                # This option doesn't have value.
-                return self.option
-            else:
-                return f"{self.option}={self.off_value}"
-        if len(self.values) > 0:
-            # --enable-foo=no
-            return f"{self.option}={self.off_value}"
-        # empty
-        return None
-    
-    def positive(self):
-        # value and turn on/off
-        if self.kind == OptionType.positive:
-            return self.turn_on(), True
-        elif self.kind == OptionType.negative:
-            return self.turn_off(), False
-        else:
-            return None, False
-    
-    def negative(self):
-        # value and turn on/off
-        if self.kind == OptionType.positive:
-            return self.turn_off(), False
-        elif self.kind == OptionType.negative:
-            return self.turn_on(), True
-        else:
-            return None, False
-
 class Configuration:
-    def __init__(self, build_type, options, src_path, build_path, workspace, constant_options: List[str], tag, opts):
-        self.options: List[str] = options
-        self.build_type = build_type
-        self.src_path = src_path
-        self.build_path = build_path
+    def __init__(self, workspace, tag, opts, config_options, project_info: ProjectInfo):
+        self.project_info = project_info
         self.workspace = workspace
         self.tag = tag
         self.opts = opts
+        self.config_options = config_options
         self.cache_path = os.path.join(self.workspace, self.tag)
         self.cache_file = os.path.join(self.workspace, 'cache.txt')
         makedir(self.cache_path)
-        self.constant_options = constant_options
         self.compile_database = os.path.join(self.cache_path, "compile_commands.json")
 
     def option_cmd(self):
-        cmd = self.constant_options.copy()
-        if self.build_type == BuildType.CMake:
+        cmd = self.project_info.constant_options.copy()
+        if self.project_info.build_type == BuildType.CMake:
             cmd.extend([
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "-DCMAKE_C_COMPILER=clang-18",
                 "-DCMAKE_CXX_COMPILER=clang++-18"
             ])
-        for option in self.options:
-            if self.build_type == BuildType.CMake:
+        for option in self.config_options:
+            if self.project_info.build_type == BuildType.CMake:
                 option = f"-D{option}"
             cmd.append(option)
         return cmd
 
     def config_cmd(self):
         cmd = []
-        if self.build_type == BuildType.CMake:
+        if self.project_info.build_type == BuildType.CMake:
             cmd = [GlobalConfig.cmake]
-            cmd.extend(["-S", self.src_path])
-            cmd.extend(["-B", self.build_path])
-        elif self.build_type == BuildType.AutoConf:
+            cmd.extend(["-S", self.project_info.src_dir])
+            cmd.extend(["-B", self.project_info.build_dir])
+        elif self.project_info.build_type == BuildType.AutoConf:
             # Some projects should customize compiler by --cc/cxx, some projects don't support
             # these parameters, so we specify them in config_options.json.
-            cmd = [f'{self.src_path}/configure']
-            # cmd.append(f"--prefix={self.build_path}")
+            cmd = [f'{self.project_info.src_dir}/configure']
+            # cmd.append(f"--prefix={self.project_info.build_dir}")
         option_cmd = self.option_cmd()
         cmd.extend(option_cmd)
         # record options
@@ -195,15 +79,17 @@ class Configuration:
     
     def build_cmd(self):
         cmd = []
-        if self.build_type == BuildType.CMake:
+        if self.project_info.build_type == BuildType.CMake:
             cmd = ["cmake"]
-            cmd.extend(["--build", f"{self.build_path}"])
+            cmd.extend(["--build", f"{self.project_info.build_dir}"])
             cmd.append(f"-j{GlobalConfig.build_jobs}")
-        elif self.build_type == BuildType.AutoConf:
+        elif self.project_info.build_type == BuildType.AutoConf:
             cmd = ['make', f"-j{GlobalConfig.build_jobs}"]
+        if self.project_info.ignore_make_error:
+            cmd.append("-i")
         return cmd
     
-    def icebear_cmd(self, not_update_cache=False):
+    def icebear_cmd(self, update_cache):
         cmd = [GlobalConfig.icebear]
         cmd.extend(['-f', self.compile_database])
         cmd.extend(['-o', self.cache_path])
@@ -213,51 +99,39 @@ class Configuration:
         cmd.extend(['-c', self.cache_file])
         cmd.extend(['--cc', self.opts.cc])
         cmd.extend(['--cxx', self.opts.cxx])
+        cmd.append(f'--file-identifier={self.opts.file_identifier}')
         if self.opts.verbose:
             cmd.extend(['--verbose'])
         if self.opts.prep_only:
             cmd.append('--preprocess-only')
-        if not_update_cache:
+        if not update_cache:
             cmd.append('--not-update-cache')
         return cmd
 
 class Project:
-    def __init__(self, src_dir, workspace, build_dir, options, build_type, constant_options: List[str], opts, prerequisites, dry_run, must_make, must_gcc, extra_env):
-        self.src_dir = src_dir     # The directory to store source code.
+    def __init__(self, workspace, opts, project_info: ProjectInfo):
+        self.src_dir = project_info.src_dir     # The directory to store source code.
         self.project_name = os.path.basename(self.src_dir)
         logger.TAG = self.project_name
-        self.workspace = workspace # The directory to store cache and analysis results. 
-        self.build_dir = build_dir # The directory to build project.
+        self.workspace = workspace # The directory to store cache and analysis results.
         self.config_list: List[Configuration] = []
-        self.config_options: List[Option] = options
-        self.build_type = build_type
-        # The options cannot be changed in this environment, 
-        # it's a str list, just consider it as initial option_cmd.
-        self.constant_options = constant_options
         self.opts = opts
-        self.prerequisites = prerequisites # The commands need to be executed before building the project.
-        if self.build_type == BuildType.CMake:
-            self.prerequisites.extend([
-                ['rm', 'CMakeCache.txt']
-            ])
-        self.dry_run = dry_run
-        self.must_make = must_make # This project must built before analysis.
-        self.must_gcc = must_gcc   # This project must built through gcc.
+        self.project_info = project_info
         self.env = dict(os.environ)
-        if not self.must_gcc:
+        if not project_info.must_gcc:
             self.env['CC'] = 'clang-18'
             self.env['CXX'] = 'clang++-18'
-        if extra_env:
-            self.env.update(extra_env)
+        if project_info.env:
+            self.env.update(project_info.env)
         self.create_dir()
         self.configuation_sampling()
 
     def create_dir(self):
-        makedir(self.build_dir)
+        makedir(self.project_info.build_dir)
         makedir(self.workspace)
 
     def create_configuration(self, options, workspace, tag):
-        return Configuration(self.build_type, options, self.src_dir, self.build_dir, workspace, self.constant_options, tag, self.opts)
+        return Configuration(workspace, tag, self.opts, options, self.project_info)
     
     def get_different_kind_configuration(self, kind: OptionType, tag):
         options = []
@@ -274,7 +148,7 @@ class Project:
                     option_to_idx[ops[0]] = len(options)
                     options.append(op)
         
-        for option in self.config_options:
+        for option in self.project_info.options:
             if kind == OptionType.positive:
                 op, state = option.positive()
                 if state and option.option == '--enable-all':
@@ -321,24 +195,28 @@ class Project:
         self.config_list = [self.baseline] + [config for config in all_config if config != self.baseline]
 
     def execute_prerequisites(self, config: Configuration) -> bool:
-        for prerequisite in self.prerequisites:
-            return run(prerequisite, config.build_path, "Prerequisite", self.env)
+        for prerequisite in self.project_info.prerequisites:
+            return run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
 
     def configure(self, config: Configuration) -> bool:
         configure_script = commands_to_shell_script(config.config_cmd())
         logger.info(f"[Configure Script] {configure_script}")
-        if not os.path.exists(config.build_path):
-            logger.error(f"[Configure Script] Please make sure {config.build_path} exists!")
+        if not os.path.exists(config.project_info.build_dir):
+            logger.error(f"[Configure Script] Please make sure {config.project_info.build_dir} exists!")
             return False
         process = subprocess.run(
             config.config_cmd(),
-            cwd=config.build_path,
+            cwd=config.project_info.build_dir,
             env=self.env,
             text=True
         )
         logger.info(f"[Configure Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
         if process.returncode != 0:
             logger.info(f"[Configure Failed] {configure_script}")
+
+        if self.project_info.build_type == BuildType.CMake:
+            shutil.copy(os.path.join(config.project_info.build_dir, "compile_commands.json"), config.compile_database)
+
         return process.returncode == 0
         
     def build(self, config: Configuration) -> bool:
@@ -351,7 +229,7 @@ class Project:
         logger.info(f"[Building] {commands_to_shell_script(cmd)}")
         process = subprocess.run(
             cmd,
-            cwd=config.build_path,
+            cwd=config.project_info.build_dir,
             env=self.env,
             capture_output=True,
             text=True
@@ -362,7 +240,7 @@ class Project:
         return process.returncode == 0
 
     def build_clean(self, config: Configuration):
-        run_without_check(["make", "clean"], config.build_path, "Make Clean")
+        run_without_check(["make", "clean"], config.project_info.build_dir, "Make Clean")
 
     def parse_makefile(self, config: Configuration):
         if self.build_type == BuildType.CMake:
@@ -370,7 +248,6 @@ class Project:
             # compiledb doesn't perserve the "", so we use CMake's compile_commands.json.
             # TODO: compiledb support -DXXX="long long"?
             logger.info(f"[Parse Makefile] Use compile_commands.json generated by CMake")
-            shutil.copy(os.path.join(config.build_path, "compile_commands.json"), config.compile_database)
             return True
 
         # Get compile_commands.json without build by parse "make -n -B -i".
@@ -382,7 +259,7 @@ class Project:
             ['make', '-n', '-i'],
             capture_output=True,
             text=True,
-            cwd=config.build_path,
+            cwd=config.project_info.build_dir,
             env=self.env
         )
         # compiledb arguments:
@@ -395,7 +272,7 @@ class Project:
         subprocess.run(compiledb_cmd, 
             capture_output=True, 
             text=True, 
-            cwd=config.build_path, 
+            cwd=config.project_info.build_dir, 
             input=make_n.stdout,
             timeout=60 # Set timeout to avoid make execute recursively.
         )
@@ -489,7 +366,7 @@ class Project:
                 r'\b(make|info|warning)\b',  # Ignore Makefile function(e.g. $(info ...))
                 r'^\s*\$\('              # Ignore variable expansion(e.g. $(RM) file.o)
             ]
-            dir_stack = [config.build_path]
+            dir_stack = [config.project_info.build_dir]
             
             for cmd in commands:
                 skip = False
@@ -529,18 +406,18 @@ class Project:
                         logger.info(f"[FAILED!] {cmd}\nError: {e}")
             return True
         
-        if self.dry_run:
+        if self.project_info.dry_run:
             logger.info(f"[DRY RUN] {config.tag}")
             make_n_commands = filter_commands(make_n.stdout)
             return dry_run(make_n_commands)
-
         return True
 
     def icebear(self, config: Configuration):
         if config == self.baseline:
-            icebear_cmd = config.icebear_cmd(not_update_cache=False)
+            icebear_cmd = config.icebear_cmd(update_cache=True)
         else:
-            icebear_cmd = config.icebear_cmd(not_update_cache=True)
+            # Only record one config as baseline cache.
+            icebear_cmd = config.icebear_cmd(update_cache=False)
         run(icebear_cmd, config.cache_path, "IceBear Preprocess")
 
     def reports_analysis(self, config1: Configuration, config2: Configuration):
@@ -633,13 +510,13 @@ class Project:
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             self.execute_prerequisites(config)
-            if self.must_make:
+            if self.project_info.must_make:
                 self.build_clean(config)
             process_status = self.configure(config)
             if not process_status:
                 logger.error(f"[Configure {config.tag}] Configure failed! Stop subsequent jobs.")
                 break
-            if self.must_make:
+            if self.project_info.must_make:
                 self.build(config)
             else:
                 process_status = self.parse_makefile(config)

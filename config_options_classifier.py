@@ -270,12 +270,23 @@ class ConfigExtractor:
         in_option = False
         autoconf_ignore = ConfigExtractor.base_ignore_options['autoconf']
         ignore_this = False
+        
+        option_empty_col = -1
+
         for line in result.stdout.split("\n"):
-            line = line.strip()
-            if len(line) == 0 or line.endswith(":"):
+            strip_line = line.strip()
+            if len(strip_line) == 0 or strip_line.endswith(":"):
                 in_option = False
                 continue
-            elif line.startswith("-"):
+            elif strip_line.startswith("-"):
+                dash_idx = line.find('-')
+                if option_empty_col == -1:
+                    option_empty_col = dash_idx
+                if dash_idx != option_empty_col:
+                    # This still comment.
+                    if not ignore_this:
+                        items[-1] += f" {strip_line}"
+                    continue
                 in_option = True
                 ignore_this = False
                 for ig in autoconf_ignore:
@@ -283,10 +294,10 @@ class ConfigExtractor:
                         ignore_this = True
                         break
                 if not ignore_this:
-                    items.append(line)
+                    items.append(strip_line)
             elif len(items)>0 and in_option:
                 if not ignore_this:
-                    items[-1] += f" {line}"
+                    items[-1] += f" {strip_line}"
         return items
 
 def get_if_exists(dict, key, default=None):

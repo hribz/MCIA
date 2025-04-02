@@ -11549,7 +11549,7 @@
             "negative": {"on": "ON", "off": "OFF"}
         },
         "ignore_options": [
-            ""
+            "ABSL_BUILD_MONOLITHIC_SHARED_LIBS"
         ],
         "constant_options": [
             "-DGTEST_HAS_ABSL=OFF",
@@ -12038,6 +12038,9 @@
             "positive": {"on": "ON", "off": "OFF"},
             "negative": {"on": "ON", "off": "OFF"}
         },
+        "ignore_options": [
+            "SW_BUILD"
+        ],
         "config_options": [
             {
                 "key": "BUILD_TESTS",
@@ -12238,6 +12241,14 @@
         "out_of_tree": false,
         "language": "C",
         "shallow": "94783addfc476e3ae3012da80723b6020b1f629c",
+        "make": true,
+        "switch_values": {
+            "positive": {"on": "yes", "off": "no"},
+            "negative": {"on": ""}
+        },
+        "ignore_options": [
+            "--with-TERM"
+        ],
         "config_options": [
             {
                 "key": "--bindir",
@@ -12577,6 +12588,13 @@
             "positive": {"on": "ON", "off": "OFF"},
             "negative": {"on": "ON", "off": "OFF"}
         },
+        "ignore_options": [
+            "ABSL_BUILD_MONOLITHIC_SHARED_LIBS"
+        ],
+        "constant_options": [
+            "-Dprotobuf_FORCE_FETCH_DEPENDENCIES=ON",
+            "-Dprotobuf_LOCAL_DEPENDENCIES_ONLY=OFF"
+        ],
         "config_options": [
             {
                 "key": "ABSL_BUILD_MONOLITHIC_SHARED_LIBS",
@@ -13254,9 +13272,12 @@
                     "ON",
                     "OFF"
                 ],
-                "kind": "negative",
+                "kind": "positive",
                 "description": "Build tests",
                 "confidence": 1.0,
+                "conflict": [
+                    "utf8_range_ENABLE_TESTS"
+                ],
                 "reason": "The option disables the building of tests, which is a negative functionality."
             },
             {
@@ -13388,6 +13409,9 @@
                 "kind": "positive",
                 "description": "Build test suite",
                 "confidence": 1.0,
+                "conflict": [
+                    "protobuf_BUILD_TESTS"
+                ],
                 "reason": "The option enables the test suite, which is a positive functionality addition."
             }
         ]
@@ -13416,6 +13440,9 @@
             "positive": {"on": "ON", "off": "OFF"},
             "negative": {"on": "ON", "off": "OFF"}
         },
+        "ignore_options": [
+            "BUILD_FOR_FUZZING"
+        ],
         "config_options": [
             {
                 "key": "BUILD_BENCH",
@@ -13951,11 +13978,10 @@
         ]
     },
     {
-        "project": "axTLS/axTLS",
+        "project": "axTLS/axtls-code",
         "build_type": "kconfig",
         "out_of_tree": false,
-        "language": "C",
-        "shallow": "2.1.5"
+        "language": "C"
     },
     {
         "project": "mirror/busybox",
@@ -13977,6 +14003,14 @@
         "out_of_tree": false,
         "language": "C",
         "shallow": "v2.13.6",
+        "make": true,
+        "switch_values": {
+            "positive": {"on": "", "off": "no"},
+            "negative": {"on": ""}
+        },
+        "ignore_options": [
+            "--with-pic"
+        ],
         "config_options": [
             {
                 "key": "--bindir",
@@ -14452,14 +14486,6 @@
                 "reason": "The option '--with-regexps' is a positive switch as it enables regular expressions support, which likely adds functionality to the project."
             },
             {
-                "key": "--with-relaxng",
-                "values": [],
-                "kind": "positive",
-                "description": "RELAX NG support (on)",
-                "confidence": 1.0,
-                "reason": "The option '--with-relaxng' is a positive switch as it enables RELAX NG support, which likely involves adding functionalities or including third-party libraries."
-            },
-            {
                 "key": "--with-sax1",
                 "values": [],
                 "kind": "positive",
@@ -14597,6 +14623,1718 @@
                 "confidence": 1.0,
                 "reason": "The option is used to specify a directory or path, which does not directly affect file compilation or include/exclude functionalities. It is more related to environment configuration."
             }
+        ]
+    },
+    {
+        "project": "apache/httpd",
+        "build_type": "autoconf",
+        "out_of_tree": false,
+        "language": "C",
+        "shallow": "303ca688472ff3769740a9a24b9b928383893ee1",
+        "make": true,
+        "ignore make error": true,
+        "switch_values": {
+            "positive": {"on": ""},
+            "negative": {"on": ""}
+        },
+        "ignore_options": [
+            "--enable-layout",
+            "--with-port",
+            "--with-sslport",
+            "--enable-dtrace",
+            "--enable-socache-dc",
+            "--enable-serf",
+            "--enable-privileges",
+            "--enable-bsd-makefiles",
+            "--enable-hook-probes"
+        ],
+        "constant_options": [
+        ],
+        "env": {
+        },
+        "config_options": [
+           {
+              "key": "--bindir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "user executables [EPREFIX/bin]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for user executables, which does not directly affect file compilation or include/exclude functionalities."
+           },
+           {
+              "key": "--sbindir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "system admin executables [EPREFIX/sbin]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for system admin executables, which is irrelevant to file compilation or third-party library inclusion."
+           },
+           {
+              "key": "--libexecdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "program executables [EPREFIX/libexec]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for program executables, which does not directly affect file compilation or include/exclude functionalities."
+           },
+           {
+              "key": "--sysconfdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "read-only single-machine data [PREFIX/etc]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for read-only single-machine data, which is not directly related to file compilation, enabling/disabling functionalities, or including third-party libraries."
+           },
+           {
+              "key": "--sharedstatedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "modifiable architecture-independent data [PREFIX/com]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for modifiable architecture-independent data, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--localstatedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "modifiable single-machine data [PREFIX/var]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for modifiable single-machine data, which is not directly related to file compilation or third-party library inclusion."
+           },
+           {
+              "key": "--runstatedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "modifiable per-process data [LOCALSTATEDIR/run]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for modifiable per-process data, which is not directly related to file compilation or third-party library inclusion. It is classified as 'ignore' because it does not affect the compilation process."
+           },
+           {
+              "key": "--libdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "object code libraries [EPREFIX/lib]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for object code libraries, which is irrelevant to file compilation or macro definitions."
+           },
+           {
+              "key": "--includedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "C header files [PREFIX/include]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for C header files, which does not directly affect file compilation or include functionalities. It is classified as 'ignore'."
+           },
+           {
+              "key": "--oldincludedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "C header files for non-gcc [/usr/include]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for C header files, which does not directly affect file compilation or include functionalities. It is more related to specifying a directory, hence classified as 'ignore'."
+           },
+           {
+              "key": "--datarootdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "read-only arch.-independent data root [PREFIX/share]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for data storage, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--datadir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "read-only architecture-independent data [DATAROOTDIR]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for read-only architecture-independent data, which does not directly affect file compilation or include/exclude functionalities. It is classified as 'ignore' because it is related to directory specification rather than compilation or functionality control."
+           },
+           {
+              "key": "--infodir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "info documentation [DATAROOTDIR/info]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for info documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--localedir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "locale-dependent data [DATAROOTDIR/locale]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for locale-dependent data, which is not directly related to file compilation or enabling/disabling functionalities."
+           },
+           {
+              "key": "--mandir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "man documentation [DATAROOTDIR/man]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for man documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--docdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "documentation root [DATAROOTDIR/doc/PACKAGE]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--htmldir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "html documentation [DOCDIR]",
+              "confidence": 1.0,
+              "reason": "The option '--htmldir' is used to specify a directory for HTML documentation, which does not affect file compilation or third-party library dependencies. Therefore, it is classified as 'ignore'."
+           },
+           {
+              "key": "--dvidir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "dvi documentation [DOCDIR]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for dvi documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--pdfdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "pdf documentation [DOCDIR]",
+              "confidence": 1.0,
+              "reason": "The option specifies a directory for PDF documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--psdir",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "ignore",
+              "description": "ps documentation [DOCDIR]",
+              "confidence": 1.0,
+              "reason": "The option '--psdir' is used to specify a directory for documentation, which is irrelevant to file compilation or linking libraries."
+           },
+           {
+              "key": "--target",
+              "values": [
+                 "TARGET"
+              ],
+              "kind": "options",
+              "description": "configure for building compilers for TARGET [HOST]",
+              "confidence": 1.0,
+              "reason": "The option '--target' allows specifying a target for building compilers, indicating it supports multiple possible values, thus classifying it as 'options'."
+           },
+           {
+              "key": "--enable-layout",
+              "values": [
+                 "LAYOUT"
+              ],
+              "kind": "options",
+              "description": "This option allows the user to specify a layout for the installation, which can affect file paths and directory structures.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-layout=LAYOUT' clearly supports multiple possible values (indicated by 'LAYOUT'), making it an 'options' type. The comment suggests it affects file paths and directory structures, which is relevant to the configuration process."
+           },
+           {
+              "key": "--enable-dtrace",
+              "values": [],
+              "kind": "positive",
+              "description": "Enable DTrace probes",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dtrace' is a positive switch as it enables DTrace probes, which likely adds functionality or includes a third-party library."
+           },
+           {
+              "key": "--enable-hook-probes",
+              "values": [],
+              "kind": "positive",
+              "description": "Enable APR hook probes",
+              "confidence": 1.0,
+              "reason": "The option '--enable-hook-probes' is a positive switch as it enables a feature (APR hook probes) which likely adds functionality or modifies behavior during compilation."
+           },
+           {
+              "key": "--enable-exception-hook",
+              "values": [],
+              "kind": "positive",
+              "description": "Enable fatal exception hook",
+              "confidence": 1.0,
+              "reason": "The option '--enable-exception-hook' is a positive switch as it enables a feature (fatal exception hook) which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-load-all-modules",
+              "values": [],
+              "kind": "positive",
+              "description": "Load all modules",
+              "confidence": 1.0,
+              "reason": "The option '--enable-load-all-modules' is a positive switch as it implies loading all modules, which likely adds functionalities or includes additional components."
+           },
+           {
+              "key": "--enable-maintainer-mode",
+              "values": [],
+              "kind": "positive",
+              "description": "Turn on debugging and compile time warnings and load all compiled modules",
+              "confidence": 1.0,
+              "reason": "The option '--enable-maintainer-mode' is a positive switch as it enables debugging, compile-time warnings, and loads all compiled modules, which are additional functionalities."
+           },
+           {
+              "key": "--enable-debugger-mode",
+              "values": [],
+              "kind": "positive",
+              "description": "Turn on debugging and compile time warnings and turn off optimization",
+              "confidence": 1.0,
+              "reason": "The option enables debugging features and compile-time warnings, which are additional functionalities, thus classifying it as 'positive'."
+           },
+           {
+              "key": "--enable-pie",
+              "values": [],
+              "kind": "positive",
+              "description": "Build httpd as a Position Independent Executable",
+              "confidence": 1.0,
+              "reason": "The option '--enable-pie' is a positive switch as it adds the functionality of building httpd as a Position Independent Executable, which is an enhancement to the build process."
+           },
+           {
+              "key": "--enable-reduced-exports",
+              "values": [],
+              "kind": "positive",
+              "description": "Reduce binary size if using shared APR libraries",
+              "confidence": 1.0,
+              "reason": "The option '--enable-reduced-exports' is a positive switch as it enables a feature (reducing binary size) that potentially adds functionality or modifies the compilation process."
+           },
+           {
+              "key": "--enable-modules",
+              "values": [
+                 "MODULE-LIST",
+                 "all",
+                 "most",
+                 "few",
+                 "none",
+                 "reallyall"
+              ],
+              "kind": "options",
+              "description": "Space-separated list of modules to enable | \"all\" | \"most\" | \"few\" | \"none\" | \"reallyall\"",
+              "confidence": 1.0,
+              "reason": "The option supports multiple possible values, including specific module lists and predefined sets like 'all', 'most', 'few', 'none', and 'reallyall', making it an 'options' type."
+           },
+           {
+              "key": "--enable-mods-shared",
+              "values": [
+                 "MODULE-LIST",
+                 "all",
+                 "most",
+                 "few",
+                 "reallyall"
+              ],
+              "kind": "options",
+              "description": "Space-separated list of shared modules to enable | \"all\" | \"most\" | \"few\" | \"reallyall\"",
+              "confidence": 1.0,
+              "reason": "The option supports multiple possible values, including specific module lists and predefined sets like 'all', 'most', 'few', and 'reallyall', making it an 'options' type."
+           },
+           {
+              "key": "--enable-mods-static",
+              "values": [
+                 "MODULE-LIST",
+                 "all",
+                 "most",
+                 "few",
+                 "reallyall"
+              ],
+              "kind": "options",
+              "description": "Space-separated list of static modules to enable | \"all\" | \"most\" | \"few\" | \"reallyall\"",
+              "confidence": 1.0,
+              "reason": "The option allows specifying multiple values for static modules, making it an 'options' type."
+           },
+           {
+              "key": "--enable-autht-jwt",
+              "values": [],
+              "kind": "positive",
+              "description": "RFC7519 JSON Web Token based authentication control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-autht-jwt' is a positive switch as it enables a feature (JSON Web Token based authentication control) which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--disable-autht-core",
+              "values": [],
+              "kind": "negative",
+              "description": "core token authentication module",
+              "confidence": 1.0,
+              "reason": "The option '--disable-autht-core' is a negative switch that disables the core token authentication module, as indicated by the 'disable' prefix."
+           },
+           {
+              "key": "--disable-authn-file",
+              "values": [],
+              "kind": "negative",
+              "description": "file-based authentication control",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authn-file' is a negative switch that disables file-based authentication control, which aligns with the 'negative' classification."
+           },
+           {
+              "key": "--enable-authn-dbm",
+              "values": [],
+              "kind": "positive",
+              "description": "DBM-based authentication control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authn-dbm' is a positive switch as it enables a feature (DBM-based authentication control) which likely involves adding functionality or including a third-party library."
+           },
+           {
+              "key": "--enable-authn-anon",
+              "values": [],
+              "kind": "positive",
+              "description": "anonymous user authentication control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authn-anon' is a positive switch as it enables anonymous user authentication, which likely adds functionality to the system."
+           },
+           {
+              "key": "--enable-authn-dbd",
+              "values": [],
+              "kind": "positive",
+              "description": "SQL-based authentication control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authn-dbd' is a positive switch as it enables SQL-based authentication control, which likely involves adding functionality or including a third-party library for SQL support."
+           },
+           {
+              "key": "--enable-authn-socache",
+              "values": [],
+              "kind": "positive",
+              "description": "Cached authentication control",
+              "confidence": 0.9,
+              "reason": "The option '--enable-authn-socache' is a positive switch as it likely enables a feature related to cached authentication control, which implies adding functionality rather than disabling it."
+           },
+           {
+              "key": "--disable-authn-core",
+              "values": [],
+              "kind": "negative",
+              "description": "core authentication module",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authn-core' is a negative switch that disables the core authentication module, as indicated by the 'disable' prefix."
+           },
+           {
+              "key": "--disable-authz-host",
+              "values": [],
+              "kind": "negative",
+              "description": "host-based authorization control",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authz-host' is a negative switch as it disables host-based authorization control, which is evident from the 'disable' prefix in the key."
+           },
+           {
+              "key": "--disable-authz-groupfile",
+              "values": [],
+              "kind": "negative",
+              "description": "'require group' authorization control",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authz-groupfile' is a negative switch that disables the 'require group' authorization control functionality."
+           },
+           {
+              "key": "--disable-authz-user",
+              "values": [],
+              "kind": "negative",
+              "description": "'require user' authorization control",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authz-user' is a negative switch that disables the 'require user' authorization control functionality."
+           },
+           {
+              "key": "--enable-authz-dbm",
+              "values": [],
+              "kind": "positive",
+              "description": "DBM-based authorization control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authz-dbm' is a positive switch as it enables a feature (DBM-based authorization control) which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--enable-authz-owner",
+              "values": [],
+              "kind": "positive",
+              "description": "'require file-owner' authorization control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authz-owner' is a positive switch as it enables a specific authorization control feature, which likely involves adding functionality or enabling a specific behavior in the system."
+           },
+           {
+              "key": "--enable-authz-dbd",
+              "values": [],
+              "kind": "positive",
+              "description": "SQL based authorization and Login/Session support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authz-dbd' is a positive switch as it enables SQL based authorization and Login/Session support, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--disable-authz-core",
+              "values": [],
+              "kind": "negative",
+              "description": "core authorization provider vector module",
+              "confidence": 1.0,
+              "reason": "The option '--disable-authz-core' is a negative switch that disables a core authorization provider vector module, which aligns with the 'negative' classification."
+           },
+           {
+              "key": "--enable-authnz-ldap",
+              "values": [],
+              "kind": "positive",
+              "description": "LDAP based authentication",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authnz-ldap' is a positive switch as it enables LDAP-based authentication, which likely involves adding functionality or including third-party libraries."
+           },
+           {
+              "key": "--enable-authnz-fcgi",
+              "values": [],
+              "kind": "positive",
+              "description": "FastCGI authorizer-based authentication and authorization",
+              "confidence": 1.0,
+              "reason": "The option '--enable-authnz-fcgi' is a positive switch as it enables FastCGI authorizer-based authentication and authorization, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--disable-access-compat",
+              "values": [],
+              "kind": "negative",
+              "description": "mod_access compatibility",
+              "confidence": 1.0,
+              "reason": "The option '--disable-access-compat' is a negative switch that disables mod_access compatibility, which aligns with the 'negative' classification."
+           },
+           {
+              "key": "--disable-auth-basic",
+              "values": [],
+              "kind": "negative",
+              "description": "basic authentication",
+              "confidence": 1.0,
+              "reason": "The option '--disable-auth-basic' is a negative switch that disables basic authentication functionality."
+           },
+           {
+              "key": "--disable-auth-bearer",
+              "values": [],
+              "kind": "negative",
+              "description": "bearer authentication",
+              "confidence": 1.0,
+              "reason": "The option '--disable-auth-bearer' is a negative switch that disables bearer authentication functionality."
+           },
+           {
+              "key": "--enable-auth-form",
+              "values": [],
+              "kind": "positive",
+              "description": "form authentication",
+              "confidence": 1.0,
+              "reason": "The option '--enable-auth-form' is a positive switch as it enables form authentication, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-auth-digest",
+              "values": [],
+              "kind": "positive",
+              "description": "RFC2617 Digest authentication",
+              "confidence": 1.0,
+              "reason": "The option '--enable-auth-digest' is a positive switch as it enables RFC2617 Digest authentication, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-allowmethods",
+              "values": [],
+              "kind": "positive",
+              "description": "restrict allowed HTTP methods",
+              "confidence": 0.9,
+              "reason": "The option '--enable-allowmethods' is a positive switch as it likely enables or restricts certain HTTP methods, which is a functionality-related feature."
+           },
+           {
+              "key": "--enable-allowhandlers",
+              "values": [],
+              "kind": "positive",
+              "description": "restrict allowed handlers",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionality. The comment suggests it restricts allowed handlers, implying it enables a specific restriction feature."
+           },
+           {
+              "key": "--enable-apreq",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache Request Filter",
+              "confidence": 1.0,
+              "reason": "The option '--enable-apreq' is a positive switch as it likely adds functionality related to the Apache Request Filter, which is a feature enhancement."
+           },
+           {
+              "key": "--enable-isapi",
+              "values": [],
+              "kind": "positive",
+              "description": "isapi extension support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-isapi' is a positive switch as it enables support for ISAPI extensions, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-file-cache",
+              "values": [],
+              "kind": "positive",
+              "description": "File cache",
+              "confidence": 0.9,
+              "reason": "The option '--enable-file-cache' is a positive switch as it likely enables a file caching mechanism, which would add functionality to the system."
+           },
+           {
+              "key": "--enable-cache",
+              "values": [],
+              "kind": "positive",
+              "description": "dynamic file caching. At least one storage management module (e.g. mod_cache_disk) is also necessary.",
+              "confidence": 1.0,
+              "reason": "The option enables dynamic file caching, which is a positive functionality addition. It also requires at least one storage management module, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-cache-disk",
+              "values": [],
+              "kind": "positive",
+              "description": "disk caching module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-cache-disk' is a positive switch as it enables a disk caching module, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-cache-socache",
+              "values": [],
+              "kind": "positive",
+              "description": "shared object caching module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-cache-socache' is a positive switch as it enables a shared object caching module, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-socache-shmcb",
+              "values": [],
+              "kind": "positive",
+              "description": "shmcb small object cache provider",
+              "confidence": 1.0,
+              "reason": "The option '--enable-socache-shmcb' is a positive switch as it enables a specific small object cache provider (shmcb), which likely adds functionality or includes a third-party library."
+           },
+           {
+              "key": "--enable-socache-dbm",
+              "values": [],
+              "kind": "positive",
+              "description": "dbm small object cache provider",
+              "confidence": 1.0,
+              "reason": "The option '--enable-socache-dbm' is a positive switch as it enables a specific functionality (dbm small object cache provider) which likely involves adding or enabling a feature or third-party library."
+           },
+           {
+              "key": "--enable-socache-memcache",
+              "values": [],
+              "kind": "positive",
+              "description": "memcache small object cache provider",
+              "confidence": 1.0,
+              "reason": "The option '--enable-socache-memcache' is a positive switch as it enables the use of memcache as a small object cache provider, which likely involves adding functionality or including a third-party library."
+           },
+           {
+              "key": "--enable-socache-redis",
+              "values": [],
+              "kind": "positive",
+              "description": "redis small object cache provider",
+              "confidence": 1.0,
+              "reason": "The option '--enable-socache-redis' is a positive switch as it enables the use of Redis as a small object cache provider, which likely involves adding functionality or including a third-party library."
+           },
+           {
+              "key": "--enable-socache-dc",
+              "values": [],
+              "kind": "positive",
+              "description": "distcache small object cache provider",
+              "confidence": 0.9,
+              "reason": "The option '--enable-socache-dc' is a positive switch as it enables a specific cache provider (distcache small object cache), which likely adds functionality or includes a third-party library."
+           },
+           {
+              "key": "--enable-so",
+              "values": [],
+              "kind": "positive",
+              "description": "DSO capability. This module will be automatically enabled unless you build all modules statically.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-so' is a positive switch that enables DSO (Dynamic Shared Object) capability, which adds functionality to the build process."
+           },
+           {
+              "key": "--enable-watchdog",
+              "values": [],
+              "kind": "positive",
+              "description": "Watchdog module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-watchdog' is a positive switch as it likely adds the Watchdog module functionality, which is indicated by the 'enable' prefix."
+           },
+           {
+              "key": "--enable-macro",
+              "values": [],
+              "kind": "positive",
+              "description": "Define and use macros in configuration files",
+              "confidence": 1.0,
+              "reason": "The option '--enable-macro' is a positive switch as it enables the use of macros in configuration files, which likely adds functionality."
+           },
+           {
+              "key": "--enable-dbd",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache DBD Framework",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dbd' is a positive switch as it enables the Apache DBD Framework, which likely adds functionality or includes a third-party library."
+           },
+           {
+              "key": "--enable-bucketeer",
+              "values": [],
+              "kind": "positive",
+              "description": "buckets manipulation filter. Useful only for developers and testing purposes.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-bucketeer' is a positive switch as it enables a specific functionality (buckets manipulation filter) which is useful for developers and testing purposes. It does not require any values and does not conflict with or require other options."
+           },
+           {
+              "key": "--enable-dumpio",
+              "values": [],
+              "kind": "positive",
+              "description": "I/O dump filter",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dumpio' is a positive switch as it likely enables a feature (I/O dump filter) that would not be present otherwise."
+           },
+           {
+              "key": "--enable-firehose",
+              "values": [],
+              "kind": "positive",
+              "description": "Firehose dump filter",
+              "confidence": 0.9,
+              "reason": "The option '--enable-firehose' is a positive switch as it suggests enabling a feature (Firehose dump filter) which likely involves adding functionality or including related code."
+           },
+           {
+              "key": "--enable-echo",
+              "values": [],
+              "kind": "positive",
+              "description": "ECHO server",
+              "confidence": 1.0,
+              "reason": "The option '--enable-echo' is a positive switch as it likely enables the ECHO server functionality, which is a feature addition."
+           },
+           {
+              "key": "--enable-example-hooks",
+              "values": [],
+              "kind": "positive",
+              "description": "Example hook callback handler module",
+              "confidence": 0.9,
+              "reason": "The option '--enable-example-hooks' suggests enabling a feature (example hook callback handler module), which aligns with the 'positive' classification."
+           },
+           {
+              "key": "--enable-case-filter",
+              "values": [],
+              "kind": "positive",
+              "description": "Example uppercase conversion filter",
+              "confidence": 1.0,
+              "reason": "The option '--enable-case-filter' is a positive switch as it suggests enabling a feature (uppercase conversion filter)."
+           },
+           {
+              "key": "--enable-case-filter-in",
+              "values": [],
+              "kind": "positive",
+              "description": "Example uppercase conversion input filter",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionality. The comment suggests it is an example filter for uppercase conversion, which implies it adds a feature."
+           },
+           {
+              "key": "--enable-example-ipc",
+              "values": [],
+              "kind": "positive",
+              "description": "Example of shared memory and mutex usage",
+              "confidence": 1.0,
+              "reason": "The option '--enable-example-ipc' is a positive switch as it likely adds functionality related to shared memory and mutex usage, which is indicated by the comment."
+           },
+           {
+              "key": "--enable-noloris",
+              "values": [],
+              "kind": "positive",
+              "description": "Module to mitigate Slowloris attacks",
+              "confidence": 1.0,
+              "reason": "The option '--enable-noloris' is a positive switch as it enables a module to mitigate Slowloris attacks, which implies adding functionality."
+           },
+           {
+              "key": "--enable-buffer",
+              "values": [],
+              "kind": "positive",
+              "description": "Filter Buffering",
+              "confidence": 0.9,
+              "reason": "The option '--enable-buffer' is a positive switch as it suggests enabling a feature related to buffering, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-data",
+              "values": [],
+              "kind": "positive",
+              "description": "RFC2397 data encoder",
+              "confidence": 1.0,
+              "reason": "The option '--enable-data' is a positive switch as it enables a specific functionality (RFC2397 data encoder) which likely involves adding or modifying code or including necessary libraries."
+           },
+           {
+              "key": "--enable-ratelimit",
+              "values": [],
+              "kind": "positive",
+              "description": "Output Bandwidth Limiting",
+              "confidence": 1.0,
+              "reason": "The option '--enable-ratelimit' is a positive switch as it likely enables a feature related to output bandwidth limiting, which is a functionality addition."
+           },
+           {
+              "key": "--disable-reqtimeout",
+              "values": [],
+              "kind": "negative",
+              "description": "Limit time waiting for request from client",
+              "confidence": 1.0,
+              "reason": "The option '--disable-reqtimeout' is a negative switch that disables a functionality related to limiting time waiting for a client request."
+           },
+           {
+              "key": "--enable-ext-filter",
+              "values": [],
+              "kind": "positive",
+              "description": "external filter module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-ext-filter' is a positive switch as it enables the external filter module, which likely adds functionality or includes a third-party library."
+           },
+           {
+              "key": "--enable-request",
+              "values": [],
+              "kind": "positive",
+              "description": "Request Body Filtering",
+              "confidence": 1.0,
+              "reason": "The option '--enable-request' is a positive switch as it implies enabling a feature related to request body filtering, which is likely to add functionality to the project."
+           },
+           {
+              "key": "--enable-include",
+              "values": [],
+              "kind": "positive",
+              "description": "Server Side Includes",
+              "confidence": 1.0,
+              "reason": "The option '--enable-include' is a positive switch as it likely enables Server Side Includes functionality, which is an addition to the server's capabilities."
+           },
+           {
+              "key": "--disable-filter",
+              "values": [],
+              "kind": "negative",
+              "description": "Smart Filtering",
+              "confidence": 1.0,
+              "reason": "The option '--disable-filter' is a negative switch that disables functionalities, as indicated by the 'disable' prefix."
+           },
+           {
+              "key": "--enable-reflector",
+              "values": [],
+              "kind": "positive",
+              "description": "Reflect request through the output filter stack",
+              "confidence": 0.9,
+              "reason": "The option '--enable-reflector' is a positive switch as it implies adding functionality by reflecting requests through the output filter stack."
+           },
+           {
+              "key": "--enable-substitute",
+              "values": [],
+              "kind": "positive",
+              "description": "response content rewrite-like filtering",
+              "confidence": 0.9,
+              "reason": "The option '--enable-substitute' is a positive switch as it enables a feature (response content filtering) which likely involves adding functionality or modifying compilation behavior."
+           },
+           {
+              "key": "--enable-sed",
+              "values": [],
+              "kind": "positive",
+              "description": "filter request and/or response bodies through sed",
+              "confidence": 1.0,
+              "reason": "The option '--enable-sed' is a positive switch as it adds functionality by enabling filtering through 'sed', which likely involves including or enabling a feature or third-party library."
+           },
+           {
+              "key": "--disable-charset-lite",
+              "values": [],
+              "kind": "negative",
+              "description": "character set translation. Enabled by default only on EBCDIC systems.",
+              "confidence": 1.0,
+              "reason": "The option '--disable-charset-lite' is a negative switch that disables character set translation, which is a functionality. It does not require any values and does not conflict with or require other options to be enabled together."
+           },
+           {
+              "key": "--enable-charset-lite",
+              "values": [],
+              "kind": "positive",
+              "description": "character set translation. Enabled by default only on EBCDIC systems.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-charset-lite' is a positive switch as it enables character set translation, which adds functionality. It does not require a value and does not conflict with or require other options."
+           },
+           {
+              "key": "--enable-deflate",
+              "values": [],
+              "kind": "positive",
+              "description": "Deflate transfer encoding support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-deflate' is a positive switch as it enables support for Deflate transfer encoding, which likely involves adding functionality or including necessary libraries."
+           },
+           {
+              "key": "--enable-xml2enc",
+              "values": [],
+              "kind": "positive",
+              "description": "i18n support for markup filters",
+              "confidence": 1.0,
+              "reason": "The option '--enable-xml2enc' is a positive switch as it adds i18n support for markup filters, which implies adding functionalities."
+           },
+           {
+              "key": "--enable-proxy-html",
+              "values": [],
+              "kind": "positive",
+              "description": "Fix HTML Links in a Reverse Proxy",
+              "confidence": 1.0,
+              "reason": "The option '--enable-proxy-html' is a positive switch as it adds functionality to fix HTML links in a reverse proxy scenario."
+           },
+           {
+              "key": "--enable-brotli",
+              "values": [],
+              "kind": "positive",
+              "description": "Brotli compression support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-brotli' is a positive switch that enables Brotli compression support, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--enable-crypto",
+              "values": [],
+              "kind": "positive",
+              "description": "Symmetrical encryption / decryption",
+              "confidence": 1.0,
+              "reason": "The option '--enable-crypto' is a positive switch as it likely adds symmetrical encryption/decryption functionalities, which implies the inclusion of related code or libraries."
+           },
+           {
+              "key": "--enable-http",
+              "values": [],
+              "kind": "positive",
+              "description": "HTTP protocol handling. The http module is a basic one that enables the server to function as an HTTP server. It is only useful to disable it if you want to use another protocol module instead. Don't disable this module unless you are really sure what you are doing. Note: This module will always be linked statically.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-http' is a positive switch as it enables the HTTP protocol handling functionality, which is essential for the server to function as an HTTP server. The comment does not mention any conflicts or required combinations, and the option does not require a value."
+           },
+           {
+              "key": "--disable-mime",
+              "values": [],
+              "kind": "negative",
+              "description": "mapping of file-extension to MIME. Disabling this module is normally not recommended.",
+              "confidence": 1.0,
+              "reason": "The option '--disable-mime' is a negative switch as it disables the functionality of mapping file extensions to MIME types, which is not recommended. There are no conflicting or combination relationships mentioned in the comment."
+           },
+           {
+              "key": "--enable-ldap",
+              "values": [],
+              "kind": "positive",
+              "description": "LDAP caching and connection pooling services",
+              "confidence": 1.0,
+              "combination": [
+                "--with-ldap"
+              ],
+              "reason": "The option '--enable-ldap' is a positive switch as it enables LDAP caching and connection pooling services, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--enable-journald",
+              "values": [],
+              "kind": "positive",
+              "description": "Journald support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-journald' is a positive switch as it likely adds support for Journald, a logging service, which implies the inclusion of related functionalities or libraries."
+           },
+           {
+              "key": "--enable-syslog",
+              "values": [],
+              "kind": "positive",
+              "description": "logging to syslog",
+              "confidence": 1.0,
+              "reason": "The option '--enable-syslog' is a positive switch as it enables logging to syslog, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-log-json",
+              "values": [],
+              "kind": "positive",
+              "description": "logging in jsonn",
+              "confidence": 0.9,
+              "reason": "The option '--enable-log-json' is a positive switch as it suggests enabling logging in JSON format, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-jansson-staticlib-deps",
+              "values": [],
+              "kind": "positive",
+              "description": "link mod_md with dependencies of libjansson's static libraries (as indicated by \"pkg-config --static\"). Must be specified in addition to --enable-md.",
+              "confidence": 1.0,
+              "reason": "The option enables linking with static libraries of libjansson, which adds functionality to mod_md. It is classified as 'positive' because it enables additional features. The comment explicitly states that it must be specified in addition to --enable-md, indicating a combination relationship."
+           },
+           {
+              "key": "--disable-log-config",
+              "values": [],
+              "kind": "negative",
+              "description": "logging configuration. You won't be able to log requests to the server without this module.",
+              "confidence": 1.0,
+              "reason": "The option '--disable-log-config' is a negative switch that disables logging functionality, as indicated by the 'disable' prefix and the comment."
+           },
+           {
+              "key": "--enable-log-debug",
+              "values": [],
+              "kind": "positive",
+              "description": "configurable debug logging",
+              "confidence": 1.0,
+              "reason": "The option '--enable-log-debug' is a positive switch as it enables debug logging, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-log-forensic",
+              "values": [],
+              "kind": "positive",
+              "description": "forensic logging",
+              "confidence": 1.0,
+              "reason": "The option '--enable-log-forensic' is a positive switch as it likely enables forensic logging functionality, which is an addition to the system."
+           },
+           {
+              "key": "--enable-logio",
+              "values": [],
+              "kind": "positive",
+              "description": "input and output logging",
+              "confidence": 1.0,
+              "reason": "The option '--enable-logio' is a positive switch as it enables input and output logging, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-lua",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache Lua Framework",
+              "confidence": 1.0,
+              "reason": "The option '--enable-lua' is a positive switch that likely adds functionality or includes a third-party library (Lua framework) in the Apache server."
+           },
+           {
+              "key": "--enable-luajit",
+              "values": [],
+              "kind": "positive",
+              "description": "Enable LuaJit Support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-luajit' is a positive switch as it enables support for LuaJit, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--disable-env",
+              "values": [],
+              "kind": "negative",
+              "description": "clearing/setting of ENV vars",
+              "confidence": 1.0,
+              "reason": "The option '--disable-env' is a negative switch as it implies disabling the functionality related to environment variable handling."
+           },
+           {
+              "key": "--enable-mime-magic",
+              "values": [],
+              "kind": "positive",
+              "description": "automagically determining MIME type",
+              "confidence": 1.0,
+              "reason": "The option '--enable-mime-magic' is a positive switch as it adds functionality for automatically determining MIME types."
+           },
+           {
+              "key": "--enable-cern-meta",
+              "values": [],
+              "kind": "positive",
+              "description": "CERN-type meta files",
+              "confidence": 1.0,
+              "reason": "The option '--enable-cern-meta' is a positive switch as it likely adds functionality related to CERN-type meta files, which implies inclusion or enhancement of features."
+           },
+           {
+              "key": "--enable-expires",
+              "values": [],
+              "kind": "positive",
+              "description": "Expires header control",
+              "confidence": 1.0,
+              "reason": "The option '--enable-expires' is a positive switch as it enables control over the Expires header, which likely adds functionality to the httpd server."
+           },
+           {
+              "key": "--disable-headers",
+              "values": [],
+              "kind": "negative",
+              "description": "HTTP header control",
+              "confidence": 1.0,
+              "reason": "The option '--disable-headers' is a negative switch that disables functionalities related to HTTP headers, as indicated by the 'disable' prefix and the comment."
+           },
+           {
+              "key": "--enable-ident",
+              "values": [],
+              "kind": "positive",
+              "description": "RFC 1413 identity check",
+              "confidence": 1.0,
+              "reason": "The option '--enable-ident' is a positive switch as it enables a specific functionality (RFC 1413 identity check) which likely involves adding or modifying code or including third-party libraries."
+           },
+           {
+              "key": "--enable-usertrack",
+              "values": [],
+              "kind": "positive",
+              "description": "user-session tracking",
+              "confidence": 1.0,
+              "reason": "The option '--enable-usertrack' is a positive switch as it likely adds functionality for user-session tracking, which is a feature enhancement."
+           },
+           {
+              "key": "--enable-unique-id",
+              "values": [],
+              "kind": "positive",
+              "description": "per-request unique ids",
+              "confidence": 1.0,
+              "reason": "The option '--enable-unique-id' is a positive switch as it likely adds functionality for generating per-request unique IDs, which is a feature enhancement."
+           },
+           {
+              "key": "--disable-setenvif",
+              "values": [],
+              "kind": "negative",
+              "description": "basing ENV vars on headers",
+              "confidence": 1.0,
+              "reason": "The option '--disable-setenvif' is a negative switch that disables the functionality of basing ENV variables on headers."
+           },
+           {
+              "key": "--disable-version",
+              "values": [],
+              "kind": "negative",
+              "description": "determining httpd version in config files",
+              "confidence": 1.0,
+              "reason": "The option '--disable-version' is a negative switch as it disables the functionality of determining the httpd version in config files."
+           },
+           {
+              "key": "--enable-remoteip",
+              "values": [],
+              "kind": "positive",
+              "description": "translate header contents to an apparent client remote_ip",
+              "confidence": 1.0,
+              "reason": "The option '--enable-remoteip' is a positive switch as it adds functionality by enabling the translation of header contents to an apparent client remote IP."
+           },
+           {
+              "key": "--enable-proxy",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-proxy' is a positive switch that enables the Apache proxy module, adding functionality to the project."
+           },
+           {
+              "key": "--enable-proxy-connect",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy CONNECT module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy CONNECT module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-ftp",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy FTP module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy FTP module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-http",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy HTTP module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy HTTP module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-fcgi",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy FastCGI module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy FastCGI module, which is a positive functionality addition. It also explicitly requires the '--enable-proxy' option to be enabled."
+           },
+           {
+              "key": "--enable-proxy-scgi",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy SCGI module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy SCGI module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-uwsgi",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy UWSGI module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a specific module (UWSGI proxy) in Apache, which is a positive addition of functionality. It also explicitly requires another option (--enable-proxy) to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-fdpass",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy to Unix Daemon Socket module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a specific module in Apache, which is a positive switch. It also requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-wstunnel",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy Websocket Tunnel module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a specific module (proxy Websocket Tunnel) which adds functionality to the Apache server. It is classified as 'positive' because enabling it adds features. The comment explicitly mentions that it requires '--enable-proxy' to be enabled, hence it is listed under 'combination'."
+           },
+           {
+              "key": "--enable-proxy-ajp",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy AJP module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables the Apache proxy AJP module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-balancer",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy BALANCER module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a specific module (BALANCER) in Apache, which is a positive switch. It also explicitly requires another option (--enable-proxy) to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-serf",
+              "values": [],
+              "kind": "positive",
+              "description": "Reverse proxy module using Serf",
+              "confidence": 1.0,
+              "reason": "The option '--enable-serf' is a positive switch as it enables a reverse proxy module using Serf, which likely involves adding functionalities or including third-party libraries."
+           },
+           {
+              "key": "--enable-proxy-express",
+              "values": [],
+              "kind": "positive",
+              "description": "mass reverse-proxy module. Requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a mass reverse-proxy module, which is a positive functionality addition. It also explicitly requires --enable-proxy to be enabled, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-hcheck",
+              "values": [],
+              "kind": "positive",
+              "description": "reverse-proxy health-check module. Requires --enable-proxy and --enable-watchdog.",
+              "confidence": 1.0,
+              "reason": "The option enables a module (reverse-proxy health-check) and requires other options to be enabled, which aligns with the 'positive' classification."
+           },
+           {
+              "key": "--enable-session",
+              "values": [],
+              "kind": "positive",
+              "description": "session module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-session' is a positive switch as it enables the session module, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-session-cookie",
+              "values": [],
+              "kind": "positive",
+              "description": "session cookie module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-session-cookie' is a positive switch as it enables a session cookie module, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-session-crypto",
+              "values": [],
+              "kind": "positive",
+              "description": "session crypto module",
+              "confidence": 1.0,
+              "combination": [
+                "--with-crypto"
+              ],
+              "reason": "The option '--enable-session-crypto' is a positive switch as it likely adds functionality related to session cryptography, as indicated by the comment 'session crypto module'."
+           },
+           {
+              "key": "--enable-session-dbd",
+              "values": [],
+              "kind": "positive",
+              "description": "session dbd module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-session-dbd' is a positive switch as it likely enables a session dbd module, adding functionality to the project."
+           },
+           {
+              "key": "--enable-slotmem-shm",
+              "values": [],
+              "kind": "positive",
+              "description": "slotmem provider that uses shared memory",
+              "confidence": 1.0,
+              "reason": "The option '--enable-slotmem-shm' is a positive switch as it enables a slotmem provider using shared memory, which likely adds functionality or includes a specific feature."
+           },
+           {
+              "key": "--enable-slotmem-plain",
+              "values": [],
+              "kind": "positive",
+              "description": "slotmem provider that uses plain memory",
+              "confidence": 1.0,
+              "reason": "The option '--enable-slotmem-plain' is a positive switch as it enables a specific slotmem provider using plain memory, which likely adds functionality or includes a specific implementation."
+           },
+           {
+              "key": "--enable-ssl",
+              "values": [],
+              "kind": "positive",
+              "description": "SSL/TLS support (mod_ssl)",
+              "confidence": 1.0,
+              "reason": "The option '--enable-ssl' is a positive switch that enables SSL/TLS support, which likely involves adding functionalities or including third-party libraries like mod_ssl."
+           },
+           {
+              "key": "--enable-ssl-staticlib-deps",
+              "values": [],
+              "kind": "positive",
+              "description": "link mod_ssl with dependencies of OpenSSL's static libraries (as indicated by \"pkg-config --static\"). Must be specified in addition to --enable-ssl.",
+              "confidence": 1.0,
+              "reason": "The option enables linking mod_ssl with OpenSSL's static libraries, which adds functionality. It must be used in conjunction with --enable-ssl, indicating a positive classification."
+           },
+           {
+              "key": "--enable-ssl-ct",
+              "values": [],
+              "kind": "positive",
+              "description": "Support for Certificate Transparency (RFC 6962)",
+              "confidence": 1.0,
+              "reason": "The option '--enable-ssl-ct' is a positive switch as it adds support for Certificate Transparency, which is a functionality enhancement."
+           },
+           {
+              "key": "--enable-optional-hook-export",
+              "values": [],
+              "kind": "positive",
+              "description": "example optional hook exporter",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionality or includes features. The comment does not suggest any conflicts or dependencies, and the option does not require a value."
+           },
+           {
+              "key": "--enable-optional-hook-import",
+              "values": [],
+              "kind": "positive",
+              "description": "example optional hook importer",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionality or includes a feature. The comment does not suggest any conflicts or dependencies, and the option does not require a value."
+           },
+           {
+              "key": "--enable-optional-fn-import",
+              "values": [],
+              "kind": "positive",
+              "description": "example optional function importer",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionalities or includes third-party libraries."
+           },
+           {
+              "key": "--enable-optional-fn-export",
+              "values": [],
+              "kind": "positive",
+              "description": "example optional function exporter",
+              "confidence": 0.9,
+              "reason": "The option starts with '--enable', which typically indicates a positive switch that adds functionalities or includes features. The comment suggests it is an example of an optional function exporter, which implies adding functionality."
+           },
+           {
+              "key": "--enable-dialup",
+              "values": [],
+              "kind": "positive",
+              "description": "rate limits static files to dialup modem speeds",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dialup' is a positive switch as it adds functionality by enabling rate limiting of static files to simulate dialup modem speeds."
+           },
+           {
+              "key": "--enable-policy",
+              "values": [],
+              "kind": "positive",
+              "description": "HTTP protocol compliance filters",
+              "confidence": 1.0,
+              "reason": "The option '--enable-policy' is a positive switch as it implies adding functionalities related to HTTP protocol compliance filters."
+           },
+           {
+              "key": "--enable-http2",
+              "values": [],
+              "kind": "positive",
+              "description": "HTTP/2 protocol handling in addition to HTTP protocol handling. Implemented by mod_http2. This module requires a libnghttp2 installation. See --with-nghttp2 on how to manage non-standard locations. This module is usually linked shared and requires loading.",
+              "confidence": 1.0,
+              "reason": "The option enables additional functionality (HTTP/2 protocol handling) and requires a third-party library (libnghttp2), which aligns with the 'positive' classification."
+           },
+           {
+              "key": "--enable-nghttp2-staticlib-deps",
+              "values": [],
+              "kind": "positive",
+              "description": "link mod_http2 with dependencies of libnghttp2's static libraries (as indicated by \"pkg-config --static\"). Must be specified in addition to --enable-http2.",
+              "confidence": 1.0,
+              "reason": "The option enables linking with static libraries of libnghttp2, which adds functionality to mod_http2. It is classified as 'positive' because it enhances the feature set. The comment explicitly states that it must be specified in addition to --enable-http2, indicating a combination relationship."
+           },
+           {
+              "key": "--enable-proxy-http2",
+              "values": [],
+              "kind": "positive",
+              "description": "HTTP/2 proxy module. This module requires a libnghttp2 installation. See --with-nghttp2 on how to manage non-standard locations. Also requires --enable-proxy.",
+              "confidence": 1.0,
+              "reason": "The option enables a new functionality (HTTP/2 proxy module) and requires another option (--enable-proxy) to be enabled, which aligns with the 'positive' classification."
+           },
+           {
+              "key": "--enable-md",
+              "values": [],
+              "kind": "positive",
+              "description": "Managed Domain handling",
+              "confidence": 1.0,
+              "reason": "The option '--enable-md' is a positive switch as it likely adds functionality related to Managed Domain handling, which is indicated by the comment."
+           },
+           {
+              "key": "--enable-curl-staticlib-deps",
+              "values": [],
+              "kind": "positive",
+              "description": "link mod_md with dependencies of libcurl's static libraries (as indicated by \"pkg-config --static\"). Must be specified in addition to --enable-md.",
+              "confidence": 1.0,
+              "reason": "The option enables linking with dependencies of libcurl's static libraries, which adds functionality. It must be used in conjunction with --enable-md, indicating a positive switch."
+           },
+           {
+              "key": "--enable-lbmethod-byrequests",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy Load balancing by request counting",
+              "confidence": 1.0,
+              "reason": "The option '--enable-lbmethod-byrequests' is a positive switch as it enables a specific load balancing method in Apache proxy, which adds functionality."
+           },
+           {
+              "key": "--enable-lbmethod-bytraffic",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy Load balancing by traffic counting",
+              "confidence": 1.0,
+              "reason": "The option '--enable-lbmethod-bytraffic' is a positive switch as it enables a specific load balancing method in Apache, which likely involves adding functionality or including related code."
+           },
+           {
+              "key": "--enable-lbmethod-bybusyness",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy Load balancing by busyness",
+              "confidence": 1.0,
+              "reason": "The option '--enable-lbmethod-bybusyness' is a positive switch as it enables a specific load balancing method in Apache proxy, adding functionality."
+           },
+           {
+              "key": "--enable-lbmethod-heartbeat",
+              "values": [],
+              "kind": "positive",
+              "description": "Apache proxy Load balancing from Heartbeats",
+              "confidence": 1.0,
+              "reason": "The option '--enable-lbmethod-heartbeat' is a positive switch as it enables a specific load balancing method in Apache, which likely involves adding functionality or including related libraries."
+           },
+           {
+              "key": "--enable-mpms-shared",
+              "values": [
+                 "list",
+                 "all"
+              ],
+              "kind": "options",
+              "description": "Space-separated list of MPM modules to enable for dynamic loading. MPM-LIST=list | \"all\"",
+              "confidence": 1.0,
+              "reason": "The option '--enable-mpms-shared' allows for multiple possible values ('list' and 'all'), making it an 'options' type. It does not disable functionalities, nor is it irrelevant to file compilation."
+           },
+           {
+              "key": "--enable-unixd",
+              "values": [],
+              "kind": "positive",
+              "description": "unix specific support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-unixd' is a positive switch as it enables Unix-specific support, which likely adds functionalities or includes Unix-specific code or libraries."
+           },
+           {
+              "key": "--enable-privileges",
+              "values": [],
+              "kind": "positive",
+              "description": "Per-virtualhost Unix UserIDs and enhanced security for Solaris",
+              "confidence": 0.9,
+              "reason": "The option '--enable-privileges' is a positive switch as it adds functionalities related to enhanced security and Unix UserIDs for Solaris, which implies it enables features rather than disabling them."
+           },
+           {
+              "key": "--enable-systemd",
+              "values": [],
+              "kind": "positive",
+              "description": "Systemd support",
+              "confidence": 1.0,
+              "reason": "The option '--enable-systemd' is a positive switch that likely adds Systemd support, which is a functionality enhancement."
+           },
+           {
+              "key": "--enable-heartbeat",
+              "values": [],
+              "kind": "positive",
+              "description": "Generates Heartbeats",
+              "confidence": 1.0,
+              "reason": "The option '--enable-heartbeat' is a positive switch as it implies adding functionality (generating heartbeats) when enabled."
+           },
+           {
+              "key": "--enable-heartmonitor",
+              "values": [],
+              "kind": "positive",
+              "description": "Collects Heartbeats",
+              "confidence": 1.0,
+              "reason": "The option '--enable-heartmonitor' is a positive switch as it implies adding functionality by collecting heartbeats."
+           },
+           {
+              "key": "--enable-dav",
+              "values": [],
+              "kind": "positive",
+              "description": "WebDAV protocol handling. --enable-dav also enables mod_dav_fs",
+              "confidence": 1.0,
+              "reason": "The option enables WebDAV protocol handling and implicitly enables mod_dav_fs, indicating it adds functionality, hence classified as 'positive'."
+           },
+           {
+              "key": "--disable-status",
+              "values": [],
+              "kind": "negative",
+              "description": "process/thread monitoring",
+              "confidence": 1.0,
+              "reason": "The option '--disable-status' is a negative switch that disables process/thread monitoring functionality."
+           },
+           {
+              "key": "--disable-autoindex",
+              "values": [],
+              "kind": "negative",
+              "description": "directory listing",
+              "confidence": 1.0,
+              "reason": "The option '--disable-autoindex' is a negative switch that disables the functionality of directory listing."
+           },
+           {
+              "key": "--enable-asis",
+              "values": [],
+              "kind": "positive",
+              "description": "as-is filetypes",
+              "confidence": 0.9,
+              "reason": "The option '--enable-asis' suggests enabling a feature related to 'as-is filetypes', which is typically a positive switch that adds functionality."
+           },
+           {
+              "key": "--enable-info",
+              "values": [],
+              "kind": "positive",
+              "description": "server information",
+              "confidence": 1.0,
+              "reason": "The option '--enable-info' is a positive switch as it likely enables server information functionality, which is a typical use case for such options."
+           },
+           {
+              "key": "--enable-suexec",
+              "values": [],
+              "kind": "positive",
+              "description": "set uid and gid for spawned processes",
+              "confidence": 1.0,
+              "reason": "The option '--enable-suexec' is a positive switch as it enables the functionality to set uid and gid for spawned processes, which likely involves adding or modifying code related to process management."
+           },
+           {
+              "key": "--enable-cgid",
+              "values": [],
+              "kind": "positive",
+              "description": "CGI scripts. Enabled by default with threaded MPMs",
+              "confidence": 1.0,
+              "reason": "The option '--enable-cgid' is a positive switch that enables CGI scripts, which adds functionality to the project."
+           },
+           {
+              "key": "--enable-cgi",
+              "values": [],
+              "kind": "positive",
+              "description": "CGI scripts. Enabled by default with non-threaded MPMs",
+              "confidence": 1.0,
+              "reason": "The option '--enable-cgi' is a positive switch that enables CGI scripts, which adds functionality to the server. The comment does not indicate any conflicts or required combinations."
+           },
+           {
+              "key": "--enable-dav-fs",
+              "values": [],
+              "kind": "positive",
+              "description": "DAV provider for the filesystem. --enable-dav also enables mod_dav_fs.",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dav-fs' is a positive switch that adds functionality related to the DAV provider for the filesystem. It also implies that '--enable-dav' must be enabled, as indicated by the comment."
+           },
+           {
+              "key": "--enable-dav-lock",
+              "values": [],
+              "kind": "positive",
+              "description": "DAV provider for generic locking",
+              "confidence": 1.0,
+              "reason": "The option '--enable-dav-lock' is a positive switch as it enables a DAV provider for generic locking, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-vhost-alias",
+              "values": [],
+              "kind": "positive",
+              "description": "mass virtual hosting module",
+              "confidence": 1.0,
+              "reason": "The option '--enable-vhost-alias' is a positive switch as it enables the mass virtual hosting module, which likely adds functionality to the httpd server."
+           },
+           {
+              "key": "--enable-negotiation",
+              "values": [],
+              "kind": "positive",
+              "description": "content negotiation",
+              "confidence": 0.9,
+              "reason": "The option '--enable-negotiation' is a positive switch as it likely enables content negotiation functionality, which is an addition to the system."
+           },
+           {
+              "key": "--disable-dir",
+              "values": [],
+              "kind": "negative",
+              "description": "directory request handling",
+              "confidence": 1.0,
+              "reason": "The option '--disable-dir' is a negative switch that disables directory request handling, as indicated by the 'disable' prefix."
+           },
+           {
+              "key": "--enable-imagemap",
+              "values": [],
+              "kind": "positive",
+              "description": "server-side imagemaps",
+              "confidence": 1.0,
+              "reason": "The option '--enable-imagemap' is a positive switch as it enables server-side imagemaps, which likely adds functionality to the server."
+           },
+           {
+              "key": "--enable-actions",
+              "values": [],
+              "kind": "positive",
+              "description": "Action triggering on requests",
+              "confidence": 1.0,
+              "reason": "The option '--enable-actions' is a positive switch as it implies adding functionality (action triggering on requests) when enabled."
+           },
+           {
+              "key": "--enable-speling",
+              "values": [],
+              "kind": "positive",
+              "description": "correct common URL misspellings",
+              "confidence": 1.0,
+              "reason": "The option '--enable-speling' is a positive switch as it adds functionality by correcting common URL misspellings, which implies it enables a feature."
+           },
+           {
+              "key": "--enable-userdir",
+              "values": [],
+              "kind": "positive",
+              "description": "mapping of requests to user-specific directories",
+              "confidence": 1.0,
+              "reason": "The option '--enable-userdir' is a positive switch as it enables the mapping of requests to user-specific directories, which likely adds functionality to the httpd server."
+           },
+           {
+              "key": "--disable-alias",
+              "values": [],
+              "kind": "negative",
+              "description": "mapping of requests to different filesystem parts",
+              "confidence": 1.0,
+              "reason": "The option '--disable-alias' is a negative switch that disables the functionality of mapping requests to different filesystem parts."
+           },
+           {
+              "key": "--enable-rewrite",
+              "values": [],
+              "kind": "positive",
+              "description": "rule based URL manipulation",
+              "confidence": 1.0,
+              "reason": "The option '--enable-rewrite' is a positive switch as it enables rule-based URL manipulation, which likely adds functionality to the project."
+           },
+           {
+              "key": "--enable-suexec-capabilities",
+              "values": [],
+              "kind": "positive",
+              "description": "Use Linux capability bits not setuid root suexec",
+              "confidence": 1.0,
+              "reason": "The option '--enable-suexec-capabilities' is a positive switch as it enables the use of Linux capability bits instead of setuid root for suexec, which adds a functionality."
+           },
+           {
+              "key": "--enable-v4-mapped",
+              "values": [],
+              "kind": "positive",
+              "description": "Allow IPv6 sockets to handle IPv4 connections",
+              "confidence": 1.0,
+              "reason": "The option '--enable-v4-mapped' is a positive switch as it allows IPv6 sockets to handle IPv4 connections, which implies adding functionality."
+           },
+           {
+              "key": "--enable-bsd-makefiles",
+              "values": [],
+              "kind": "positive",
+              "description": "use BSD Makefile syntax",
+              "confidence": 1.0,
+              "reason": "The option '--enable-bsd-makefiles' is a positive switch as it enables the use of BSD Makefile syntax, which likely adds or modifies functionalities related to Makefile generation or usage."
+           },
+           {
+              "key": "--with-included-apr",
+              "values": [],
+              "kind": "positive",
+              "description": "Use bundled copies of APR/APR-Util",
+              "confidence": 1.0,
+              "reason": "The option '--with-included-apr' enables the use of bundled copies of APR/APR-Util, which is a positive action that adds functionality by including third-party libraries."
+           },
+           {
+              "key": "--with-apr",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "options",
+              "description": "prefix for installed APR or the full path to apr-config",
+              "confidence": 1.0,
+              "reason": "The option '--with-apr' requires a value (PATH) which can be either a prefix for installed APR or the full path to apr-config, indicating it is an options type."
+           },
+           {
+              "key": "--with-apr-util",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "options",
+              "description": "prefix for installed APU or the full path to apu-config",
+              "confidence": 1.0,
+              "reason": "The option '--with-apr-util' requires a value (PATH) which can be either a prefix for installed APU or the full path to apu-config, indicating it is an options type."
+           },
+           {
+              "key": "--with-pcre",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "options",
+              "description": "Use external PCRE library",
+              "confidence": 1.0,
+              "reason": "The option '--with-pcre=PATH' is classified as 'options' because it requires a specific value (PATH) to specify the location of the external PCRE library. This type of option is typically used to configure the path or source for a third-party library, which affects file compilation and linking."
+           },
+           {
+              "key": "--with-port",
+              "values": [
+                 "PORT"
+              ],
+              "kind": "options",
+              "description": "Port on which to listen (default is 80)",
+              "confidence": 1.0,
+              "reason": "The option '--with-port' specifies a port number, which is an option type that supports multiple possible values. It does not enable or disable functionalities, nor is it irrelevant to file compilation."
+           },
+           {
+              "key": "--with-sslport",
+              "values": [
+                 "SSLPORT"
+              ],
+              "kind": "options",
+              "description": "Port on which to securelisten (default is 443)",
+              "confidence": 1.0,
+              "reason": "The option '--with-sslport' requires a value (SSLPORT) and is classified as 'options' because it supports multiple possible values."
+           },
+           {
+              "key": "--with-valgrind",
+              "values": [
+                 "DIR"
+              ],
+              "kind": "positive",
+              "description": "Enable code to reduce valgrind false positives (optionally: set path to valgrind headers)",
+              "confidence": 1.0,
+              "reason": "The option '--with-valgrind' enables functionality to reduce valgrind false positives, which is a positive addition to the project. It optionally allows specifying a path to valgrind headers, indicating it can accept a value."
+           },
+           {
+              "key": "--with-distcache",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "ignore",
+              "description": "Distcache installation directory",
+              "confidence": 1.0,
+              "reason": "The option is used to specify the installation directory of Distcache, which is not directly related to file compilation or enabling/disabling functionalities."
+           },
+           {
+              "key": "--with-z",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "options",
+              "description": "use a specific zlib library",
+              "confidence": 1.0,
+              "reason": "The option '--with-z=PATH' is classified as 'options' because it requires a specific value (PATH) to specify the location of the zlib library. This type of option typically affects file compilation by altering third-party library dependencies."
+           },
+           {
+              "key": "--with-libxml2",
+              "values": [
+                 "PATH"
+              ],
+              "kind": "ignore",
+              "description": "location for libxml2",
+              "confidence": 1.0,
+              "reason": "The option specifies a location for libxml2, which is related to linking libraries or specifying directories rather than enabling or disabling functionalities or affecting file compilation directly."
+           }
         ]
     }
 ]
