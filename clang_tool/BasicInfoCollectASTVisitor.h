@@ -19,36 +19,18 @@
 #include <llvm/Support/Error.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/raw_ostream.h>
-#include <unordered_set>
 #include <vector>
 
-#include "clang/AST/ParentMapContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Analysis/AnalysisDeclContext.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Index/USRGeneration.h"
 
 #include "DiffLineManager.h"
+#include "Utils.h"
 
 using namespace clang;
 using SetOfConstDecls = llvm::DenseSet<const Decl *>;
-
-class IncOptions {
-public:
-  bool PrintLoc = false;
-  bool ClassLevelTypeChange = true;
-  bool FieldLevelTypeChange = false;
-
-  bool DumpCG = false;
-  bool DumpToFile = true;
-  bool DumpUSR = false;
-  bool DumpANR = false;
-  bool CTU = false;
-
-  std::string RFPath;
-  std::string CppcheckRFPath;
-  std::string FilePath;
-};
 
 int CountCanonicalDeclInSet(llvm::DenseSet<const Decl *> &set, const Decl *D);
 

@@ -506,23 +506,26 @@ class Project:
         with open(os.path.join(config2.cache_path, 'new_reports.json'), 'w') as f:
             json.dump(all_diff, f, indent=4, sort_keys=True)
 
+    def prepare_compilation_database(self, config):
+        self.execute_prerequisites(config)
+        if self.project_info.must_make:
+            self.build_clean(config)
+        process_status = self.configure(config)
+        if not process_status:
+            logger.error(f"[Configure {config.tag}] Configure failed! Stop subsequent jobs.")
+            return False
+        if self.project_info.must_make:
+            self.build(config)
+        else:
+            process_status = self.parse_makefile(config)
+            if not process_status:
+                logger.error(f"[Parse Makefile {config.tag}] Parse makefile failed! Stop subsequent jobs.")
+                return False
+        return True
+
     def process_every_configuraion(self):
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
-            self.execute_prerequisites(config)
-            if self.project_info.must_make:
-                self.build_clean(config)
-            process_status = self.configure(config)
-            if not process_status:
-                logger.error(f"[Configure {config.tag}] Configure failed! Stop subsequent jobs.")
-                break
-            if self.project_info.must_make:
-                self.build(config)
-            else:
-                process_status = self.parse_makefile(config)
-                if not process_status:
-                    logger.error(f"[Parse Makefile {config.tag}] Parse makefile failed! Stop subsequent jobs.")
-                    continue
+            process_status = self.prepare_compilation_database(config)
             self.icebear(config)
             self.reports_analysis(self.baseline, config)
-        pass

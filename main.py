@@ -37,9 +37,6 @@ def checkout_target_commit(repo_dir: str, commit: str) -> bool:
         logger.error(f"error while checking out commit.\n{e}")
         return False
 
-def get_if_exists(dict, key, default=None):
-    return dict[key] if key in dict else default
-
 def handle_project(projects, opts):
     pwd = os.path.abspath(".")
     projects_root_dir = os.path.join(pwd, "expriments")

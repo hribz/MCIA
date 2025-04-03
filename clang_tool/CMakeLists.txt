@@ -18,7 +18,7 @@ add_definitions(${LLVM_DEFINITIONS})
 # LLVM default option disable RTTI, IncInfoCollector should alse disable RTTI.
 add_compile_options(-fno-rtti)
 
-add_executable(collectStatistics CollectStatistics.cpp DiffLineManager.cpp BasicInfoCollectASTVisitor.cpp)
+add_executable(collectStatistics CollectStatistics.cpp DiffLineManager.cpp BasicInfoCollectASTVisitor.cpp PreprocessCoverageAnalyzer.cpp)
 
 # Ensure the LLVM and Clang include directories are added
 target_include_directories(collectStatistics PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})

@@ -8,6 +8,7 @@
 #include <clang/AST/ExprCXX.h>
 #include <clang/AST/Stmt.h>
 #include <clang/Basic/LLVM.h>
+#include <clang/Basic/SourceLocation.h>
 #include <fstream>
 #include <iostream>
 #include <llvm/ADT/DenseSet.h>
@@ -17,9 +18,6 @@
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
-#include <memory>
-#include <ostream>
-#include <string>
 
 #include "llvm/Support/CommandLine.h"
 #include <clang/Analysis/AnalysisDeclContext.h>
@@ -32,6 +30,7 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include "BasicInfoCollectASTVisitor.h"
+#include "PreprocessCoverageAnalyzer.h"
 
 using namespace clang;
 using namespace clang::tooling;
@@ -143,7 +142,7 @@ public:
     llvm::errs() << "Analysis CF ";
     DisplayTime(toolEnd);
 
-    DumpIncSummary();
+    DumpInfoSummary();
   }
 
   static void getUSRName(const Decl *D, std::string &Str) {
@@ -230,14 +229,14 @@ public:
       outFile->close();
   }
 
-  void DumpIncSummary() {
+  void DumpInfoSummary() {
     std::ostream *OS = &std::cout;
     std::shared_ptr<std::ofstream> outFile;
     if (IncOpt.DumpToFile) {
-      std::string IncSummaryFile = MainFilePath.str() + ".ics";
-      outFile = std::make_shared<std::ofstream>(IncSummaryFile);
+      std::string InfoSummaryFile = MainFilePath.str() + ".info";
+      outFile = std::make_shared<std::ofstream>(InfoSummaryFile);
       if (!outFile->is_open()) {
-        llvm::errs() << "Error: Could not open file " << IncSummaryFile
+        llvm::errs() << "Error: Could not open file " << InfoSummaryFile
                      << " for writing.\n";
         return;
       }
@@ -249,9 +248,9 @@ public:
     *OS << "cg nodes (total)" << ":" << CG.size() - 1 << "\n";
     *OS << "cg nodes (system)" << ":" << FunctionsInSystemHeader.size() << "\n";
     *OS << "cg nodes (user)" << ":" << FunctionsInUserHeader.size() << "\n";
-    *OS << "cg nodes (main)" << ":" << FunctionsInMainFile.size() << "\n";
-    *OS << "virtual functions" << ":"
-        << BasicVisitor.VirtualFunctions.size() << "\n";
+    *OS << "cg nodes (file)" << ":" << FunctionsInMainFile.size() << "\n";
+    *OS << "virtual functions" << ":" << BasicVisitor.VirtualFunctions.size()
+        << "\n";
     *OS << "total vf indirect calls" << ":"
         << BasicVisitor.TotalIndirectCallByVF << "\n";
     *OS << "function pointer types" << ":"
@@ -275,7 +274,7 @@ private:
   BasicInfoCollectASTVisitor BasicVisitor;
   std::deque<Decl *> LocalTUDecls;
   Preprocessor &PP;
-  const clang::SourceManager &SM;
+  clang::SourceManager &SM;
 };
 
 class IncInfoCollectAction : public clang::ASTFrontendAction {
@@ -287,13 +286,46 @@ public:
   std::unique_ptr<clang::ASTConsumer>
   CreateASTConsumer(clang::CompilerInstance &CI,
                     llvm::StringRef file) override {
+    CI.getPreprocessor().addPPCallbacks(
+        std::make_unique<PreprocessCoverageAnalyzer>(CI.getSourceManager(),
+                                                     CoveredLines, FileSummaries, IncOpt));
     return std::make_unique<IncInfoCollectConsumer>(CI, DiffPath, IncOpt);
   }
+
+  // 在所有预处理完成后输出结果
+  void EndSourceFileAction() override {
+    SourceManager &SM = getCompilerInstance().getSourceManager();
+    FileID mainFileID = SM.getMainFileID();
+    unsigned totalLines =
+        SM.getSpellingLineNumber(SM.getLocForEndOfFile(mainFileID));
+    unsigned skippedLines = 0;
+
+    unsigned UserTotalLines = FileSummaries[FileKind::USER].TotalLines;
+    unsigned UserSkippedLines = FileSummaries[FileKind::USER].SkippedLines;
+    unsigned MainTotalLines = FileSummaries[FileKind::MAIN].TotalLines;
+    unsigned MainSkippedLines = FileSummaries[FileKind::MAIN].SkippedLines;
+
+    llvm::errs() << "--------------------------\n"
+               << "User Files Summary\n"
+               << "Total Lines: " << UserTotalLines << "\n"
+               << "Skipped Lines: " << UserSkippedLines << "\n"
+               << "Coverage: " 
+               << llvm::format("%1f%%\n", 100.0*(UserTotalLines - UserSkippedLines) / UserTotalLines)
+               << "--------------------------\n"
+               << "Main Files Summary\n"
+               << "Total Lines: " << MainTotalLines << "\n"
+               << "Skipped Lines: " << MainSkippedLines << "\n"
+               << "Coverage: " 
+               << llvm::format("%1f%%\n", 100.0*(MainTotalLines - MainSkippedLines) / MainTotalLines)
+               << "--------------------------\n";
+}
 
 private:
   std::string &DiffPath;
   std::string &FSPath;
   const IncOptions &IncOpt;
+  std::set<unsigned> CoveredLines;
+  std::map<FileKind, FileSummary> FileSummaries;
 };
 
 class IncInfoCollectActionFactory : public FrontendActionFactory {
@@ -357,6 +389,9 @@ static llvm::cl::opt<std::string> CppcheckRFPath(
 static llvm::cl::opt<std::string>
     FilePath("file-path", llvm::cl::desc("File path before preprocess"),
              llvm::cl::value_desc("origin file"), llvm::cl::init(""));
+static llvm::cl::opt<bool>
+    DebugPP("debug-pp", llvm::cl::desc("Enable preprocessing debug output"),
+            llvm::cl::init(false));
 
 int main(int argc, const char **argv) {
   std::unique_ptr<llvm::Timer> toolTimer =
@@ -374,7 +409,8 @@ int main(int argc, const char **argv) {
 
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
-  IncOptions IncOpt{.PrintLoc = PrintLoc,
+
+  const IncOptions IncOpt{.PrintLoc = PrintLoc,
                     .ClassLevelTypeChange = ClassLevel,
                     .FieldLevelTypeChange = FieldLevel,
                     .DumpCG = DumpCG,
@@ -382,6 +418,7 @@ int main(int argc, const char **argv) {
                     .DumpUSR = DumpUSR,
                     .DumpANR = DumpANR,
                     .CTU = CTU,
+                    .DebugPP = DebugPP,
                     .RFPath = RFPath,
                     .CppcheckRFPath = CppcheckRFPath,
                     .FilePath = FilePath};

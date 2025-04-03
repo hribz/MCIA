@@ -176,3 +176,8 @@ expriments/*
 !expriments/benchmark.json
 !expriments/config_options.json
 !expriments/script/
+
+*.pp
+*.ics
+*.ii
+*.info
