@@ -181,3 +181,6 @@ expriments/*
 *.ics
 *.ii
 *.info
+*.cg
+clang_tool/test/*.json
+build*/

@@ -8,3 +8,7 @@ int b = 10;
 void foo();
 #endif
 
+class A {
+    
+    virtual void foo() {}
+};

@@ -1,10 +1,11 @@
 #include "cov.h"
 
 int main() {
+  auto ptr = foo;
 #ifndef A
-foo();
+  foo();
 #else
-a = 12;
+  a = 12;
 #endif
   return 0;
 }

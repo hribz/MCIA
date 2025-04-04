@@ -1,8 +1,10 @@
-#include "PreprocessCoverageAnalyzer.h"
 #include <clang/Basic/SourceLocation.h>
 #include <clang/Basic/SourceManager.h>
 #include <clang/Lex/PPCallbacks.h>
 #include <map>
+
+#include "FileSummary.h"
+#include "PreprocessCoverageAnalyzer.h"
 
 FileKind getFileKind(SourceManager &SM, SourceLocation Loc) {
   auto FID = SM.getFileID(Loc);
@@ -25,6 +27,10 @@ FileKind getFileKind(SourceManager &SM, SourceLocation Loc) {
 
 FileKind getFileKind(SourceManager &SM, SourceRange Range) {
   return getFileKind(SM, Range.getBegin());
+}
+
+FileKind getFileKind(SourceManager &SM, FileID FID) {
+  return getFileKind(SM, SM.getLocForStartOfFile(FID));
 }
 
 std::string getFileKindString(FileKind kind) {
@@ -57,19 +63,34 @@ void PreprocessCoverageAnalyzer::FileChanged(
   }
 }
 
+void AddNewItemInFCSs(
+    std::map<FileID, FileCoverageSummary> &FileCoverageSummaries,
+    SourceManager &SM, FileID FID) {
+  if (!FileCoverageSummaries.count(FID)) {
+    auto CurrentFilename = SM.getNonBuiltinFilenameForID(FID);
+    FileCoverageSummaries.insert(
+        {FID,
+         {.FileName = (CurrentFilename ? CurrentFilename->str() : "built-in"),
+          .SkippedRanges = {},
+          .TotalLines = 0,
+          .kind = getFileKind(SM, FID)}});
+  }
+}
+
 void PreprocessCoverageAnalyzer::SourceRangeSkipped(SourceRange Range,
                                                     SourceLocation EndifLoc) {
-  printDebugInfo("#skip", Range);
+  printDebugInfo("#range", Range);
   unsigned StartLine = SM.getSpellingLineNumber(Range.getBegin());
   unsigned EndLine = SM.getSpellingLineNumber(Range.getEnd());
-  auto filekind = getFileKind(SM, Range);
-  FileSummaries[filekind].SkippedLines += (EndLine - StartLine);
+  auto FID = SM.getFileID(Range.getBegin());
+  AddNewItemInFCSs(FileCoverageSummaries, SM, FID);
+  FileCoverageSummaries[FID].SkippedRanges.push_back({StartLine, EndLine});
 }
 
 void PreprocessCoverageAnalyzer::EndOfMainFile() {
   for (auto FID : Files) {
     auto Loc = SM.getLocForEndOfFile(FID);
-    auto kind = getFileKind(SM, Loc);
-    FileSummaries[kind].TotalLines += SM.getSpellingLineNumber(Loc);
+    AddNewItemInFCSs(FileCoverageSummaries, SM, FID);
+    FileCoverageSummaries[FID].TotalLines += SM.getSpellingLineNumber(Loc);
   }
 }

@@ -15,7 +15,7 @@ message(STATUS "Found Clang: ${CLANG_INCLUDE_DIRS}")
 include_directories(SYSTEM "${LLVM_INCLUDE_DIRS};${CLANG_INCLUDE_DIRS}")
 
 add_definitions(${LLVM_DEFINITIONS})
-# LLVM default option disable RTTI, IncInfoCollector should alse disable RTTI.
+# LLVM default option disable RTTI, BasicInfoCollector should alse disable RTTI.
 add_compile_options(-fno-rtti)
 
 add_executable(collectStatistics CollectStatistics.cpp DiffLineManager.cpp BasicInfoCollectASTVisitor.cpp PreprocessCoverageAnalyzer.cpp)

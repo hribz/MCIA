@@ -30,6 +30,7 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include "BasicInfoCollectASTVisitor.h"
+#include "FileSummary.h"
 #include "PreprocessCoverageAnalyzer.h"
 
 using namespace clang;
@@ -40,13 +41,15 @@ void DisplayTime(llvm::TimeRecord &Time) {
                << " ms\n";
 }
 
-class IncInfoCollectConsumer : public clang::ASTConsumer {
+class BasicInfoCollectConsumer : public clang::ASTConsumer {
 public:
-  explicit IncInfoCollectConsumer(CompilerInstance &CI, std::string &diffPath,
+  explicit BasicInfoCollectConsumer(CompilerInstance &CI, std::string &diffPath,
+                                  FileSummary &FileSum_,
                                   const IncOptions &incOpt)
       : CG(), IncOpt(incOpt), DLM(CI.getASTContext().getSourceManager()),
         PP(CI.getPreprocessor()), SM(CI.getASTContext().getSourceManager()),
-        BasicVisitor(&CI.getASTContext(), DLM, CG, IncOpt) {
+        FileSum(FileSum_),
+        BasicVisitor(&CI.getASTContext(), DLM, CG, IncOpt, FileSum_) {
     std::unique_ptr<llvm::Timer> consumerTimer = std::make_unique<llvm::Timer>(
         "Consumer Timer", "Consumer Constructor Time");
     consumerTimer->startTimer();
@@ -100,6 +103,7 @@ public:
       auto D = LocalTUDecls[i];
       CG.addToCallGraph(D);
     }
+    FileSum.TotalCGNodes = CG.size() - 1;
     DumpCallGraph();
 
     toolTimer->stopTimer();
@@ -125,11 +129,11 @@ public:
       if (Loc.isInvalid())
         continue;
       if (SM.isInSystemHeader(Loc)) {
-        InsertCanonicalDeclToSet(FunctionsInSystemHeader, D);
+        InsertCanonicalDeclToSet(FileSum.FunctionsInSystemHeader, D);
       } else if (SM.isInMainFile(Loc)) {
-        InsertCanonicalDeclToSet(FunctionsInMainFile, D);
+        InsertCanonicalDeclToSet(FileSum.FunctionsInMainFile, D);
       } else {
-        InsertCanonicalDeclToSet(FunctionsInUserHeader, D);
+        InsertCanonicalDeclToSet(FileSum.FunctionsInUserHeader, D);
       }
     }
 
@@ -245,18 +249,21 @@ public:
       *OS << "--- Inc Summary ---\n";
     }
 
-    *OS << "cg nodes (total)" << ":" << CG.size() - 1 << "\n";
-    *OS << "cg nodes (system)" << ":" << FunctionsInSystemHeader.size() << "\n";
-    *OS << "cg nodes (user)" << ":" << FunctionsInUserHeader.size() << "\n";
-    *OS << "cg nodes (file)" << ":" << FunctionsInMainFile.size() << "\n";
-    *OS << "virtual functions" << ":" << BasicVisitor.VirtualFunctions.size()
+    *OS << "cg nodes (total)" << ":" << FileSum.TotalCGNodes << "\n";
+    *OS << "cg nodes (system)" << ":" << FileSum.FunctionsInSystemHeader.size()
         << "\n";
-    *OS << "total vf indirect calls" << ":"
-        << BasicVisitor.TotalIndirectCallByVF << "\n";
-    *OS << "function pointer types" << ":"
-        << BasicVisitor.TypesMayUsedByFP.size() << "\n";
-    *OS << "total fp indirect calls" << ":"
-        << BasicVisitor.TotalIndirectCallByFP << "\n";
+    *OS << "cg nodes (user)" << ":" << FileSum.FunctionsInUserHeader.size()
+        << "\n";
+    *OS << "cg nodes (file)" << ":" << FileSum.FunctionsInMainFile.size()
+        << "\n";
+    *OS << "virtual functions" << ":" << FileSum.VirtualFunctions.size()
+        << "\n";
+    *OS << "total vf indirect calls" << ":" << FileSum.TotalIndirectCallByVF
+        << "\n";
+    *OS << "function pointer types" << ":" << FileSum.TypesMayUsedByFP.size()
+        << "\n";
+    *OS << "total fp indirect calls" << ":" << FileSum.TotalIndirectCallByFP
+        << "\n";
 
     (*OS).flush();
     if (IncOpt.DumpToFile)
@@ -268,18 +275,16 @@ private:
   llvm::StringRef MainFilePath;
   DiffLineManager DLM;
   CallGraph CG;
-  llvm::DenseSet<const Decl *> FunctionsInSystemHeader;
-  llvm::DenseSet<const Decl *> FunctionsInUserHeader;
-  llvm::DenseSet<const Decl *> FunctionsInMainFile;
+  FileSummary &FileSum;
   BasicInfoCollectASTVisitor BasicVisitor;
   std::deque<Decl *> LocalTUDecls;
   Preprocessor &PP;
   clang::SourceManager &SM;
 };
 
-class IncInfoCollectAction : public clang::ASTFrontendAction {
+class BasicInfoCollectAction : public clang::ASTFrontendAction {
 public:
-  IncInfoCollectAction(std::string &diffPath, std::string &fsPath,
+  BasicInfoCollectAction(std::string &diffPath, std::string &fsPath,
                        const IncOptions &incOpt)
       : DiffPath(diffPath), FSPath(fsPath), IncOpt(incOpt) {}
 
@@ -287,55 +292,90 @@ public:
   CreateASTConsumer(clang::CompilerInstance &CI,
                     llvm::StringRef file) override {
     CI.getPreprocessor().addPPCallbacks(
-        std::make_unique<PreprocessCoverageAnalyzer>(CI.getSourceManager(),
-                                                     CoveredLines, FileSummaries, IncOpt));
-    return std::make_unique<IncInfoCollectConsumer>(CI, DiffPath, IncOpt);
+        std::make_unique<PreprocessCoverageAnalyzer>(
+            CI.getSourceManager(), CoveredLines, FileSum.FileCoverageSummaries,
+            IncOpt));
+    return std::make_unique<BasicInfoCollectConsumer>(CI, DiffPath, FileSum,
+                                                    IncOpt);
   }
 
-  // 在所有预处理完成后输出结果
   void EndSourceFileAction() override {
+    llvm::errs() << "debug\n";
     SourceManager &SM = getCompilerInstance().getSourceManager();
     FileID mainFileID = SM.getMainFileID();
     unsigned totalLines =
         SM.getSpellingLineNumber(SM.getLocForEndOfFile(mainFileID));
-    unsigned skippedLines = 0;
 
-    unsigned UserTotalLines = FileSummaries[FileKind::USER].TotalLines;
-    unsigned UserSkippedLines = FileSummaries[FileKind::USER].SkippedLines;
-    unsigned MainTotalLines = FileSummaries[FileKind::MAIN].TotalLines;
-    unsigned MainSkippedLines = FileSummaries[FileKind::MAIN].SkippedLines;
+    auto TotalSkippedLines =
+        [](std::vector<std::pair<unsigned, unsigned>> ranges) -> unsigned {
+      unsigned skipped = 0;
+      for (auto range : ranges) {
+        skipped += (range.second - range.first);
+      }
+      return skipped;
+    };
+
+    for (auto item : FileSum.FileCoverageSummaries) {
+      auto FID = item.first;
+      auto FCS = item.second;
+      auto skipped = TotalSkippedLines(FCS.SkippedRanges);
+      auto total = FCS.TotalLines;
+
+      auto kind = getFileKind(SM, FID);
+      if (kind == USER) {
+        FileSum.UserTotalLines += total;
+        FileSum.UserSkippedLines += skipped;
+      } else if (kind == MAIN) {
+        FileSum.MainTotalLines += total;
+        FileSum.MainSkippedLines += skipped;
+      }
+    }
 
     llvm::errs() << "--------------------------\n"
-               << "User Files Summary\n"
-               << "Total Lines: " << UserTotalLines << "\n"
-               << "Skipped Lines: " << UserSkippedLines << "\n"
-               << "Coverage: " 
-               << llvm::format("%1f%%\n", 100.0*(UserTotalLines - UserSkippedLines) / UserTotalLines)
-               << "--------------------------\n"
-               << "Main Files Summary\n"
-               << "Total Lines: " << MainTotalLines << "\n"
-               << "Skipped Lines: " << MainSkippedLines << "\n"
-               << "Coverage: " 
-               << llvm::format("%1f%%\n", 100.0*(MainTotalLines - MainSkippedLines) / MainTotalLines)
-               << "--------------------------\n";
-}
+                 << "User Files Coverage Summary\n"
+                 << "Total Lines: " << FileSum.UserTotalLines << "\n"
+                 << "Skipped Lines: " << FileSum.UserSkippedLines << "\n"
+                 << "Coverage: "
+                 << llvm::format("%1f%%\n", FileSum.UserTotalLines == 0
+                                                ? 100.0
+                                                : (100.0 *
+                                                   (FileSum.UserTotalLines -
+                                                    FileSum.UserSkippedLines) /
+                                                   FileSum.UserTotalLines))
+                 << "--------------------------\n"
+                 << "Main Files Coverage Summary\n"
+                 << "Total Lines: " << FileSum.MainTotalLines << "\n"
+                 << "Skipped Lines: " << FileSum.MainSkippedLines << "\n"
+                 << "Coverage: "
+                 << llvm::format("%1f%%\n", FileSum.MainTotalLines == 0
+                                                ? 100.0
+                                                : (100.0 *
+                                                   (FileSum.MainTotalLines -
+                                                    FileSum.MainSkippedLines) /
+                                                   FileSum.MainTotalLines))
+                 << "--------------------------\n";
+
+    std::string InfoSummaryFile =
+        SM.getFileEntryForID(mainFileID)->tryGetRealPathName().str() + ".json";
+    FileSum.exportToJSON(InfoSummaryFile);
+  }
 
 private:
   std::string &DiffPath;
   std::string &FSPath;
   const IncOptions &IncOpt;
   std::set<unsigned> CoveredLines;
-  std::map<FileKind, FileSummary> FileSummaries;
+  FileSummary FileSum;
 };
 
-class IncInfoCollectActionFactory : public FrontendActionFactory {
+class BasicInfoCollectActionFactory : public FrontendActionFactory {
 public:
-  IncInfoCollectActionFactory(std::string &diffPath, std::string &fsPath,
+  BasicInfoCollectActionFactory(std::string &diffPath, std::string &fsPath,
                               const IncOptions &incOpt)
       : DiffPath(diffPath), FSPath(fsPath), IncOpt(incOpt) {}
 
   std::unique_ptr<FrontendAction> create() override {
-    return std::make_unique<IncInfoCollectAction>(DiffPath, FSPath, IncOpt);
+    return std::make_unique<BasicInfoCollectAction>(DiffPath, FSPath, IncOpt);
   }
 
 private:
@@ -386,9 +426,6 @@ static llvm::cl::opt<std::string>
 static llvm::cl::opt<std::string> CppcheckRFPath(
     "cppcheck-rf-file", llvm::cl::desc("Output Cppcheck RF to the path"),
     llvm::cl::value_desc("dump cppcheck rf file"), llvm::cl::init(""));
-static llvm::cl::opt<std::string>
-    FilePath("file-path", llvm::cl::desc("File path before preprocess"),
-             llvm::cl::value_desc("origin file"), llvm::cl::init(""));
 static llvm::cl::opt<bool>
     DebugPP("debug-pp", llvm::cl::desc("Enable preprocessing debug output"),
             llvm::cl::init(false));
@@ -411,18 +448,18 @@ int main(int argc, const char **argv) {
                  OptionsParser.getSourcePathList());
 
   const IncOptions IncOpt{.PrintLoc = PrintLoc,
-                    .ClassLevelTypeChange = ClassLevel,
-                    .FieldLevelTypeChange = FieldLevel,
-                    .DumpCG = DumpCG,
-                    .DumpToFile = DumpToFile,
-                    .DumpUSR = DumpUSR,
-                    .DumpANR = DumpANR,
-                    .CTU = CTU,
-                    .DebugPP = DebugPP,
-                    .RFPath = RFPath,
-                    .CppcheckRFPath = CppcheckRFPath,
-                    .FilePath = FilePath};
-  IncInfoCollectActionFactory Factory(DiffPath, FSPath, IncOpt);
+                          .ClassLevelTypeChange = ClassLevel,
+                          .FieldLevelTypeChange = FieldLevel,
+                          .DumpCG = DumpCG,
+                          .DumpToFile = DumpToFile,
+                          .DumpUSR = DumpUSR,
+                          .DumpANR = DumpANR,
+                          .CTU = CTU,
+                          .DebugPP = DebugPP,
+                          .RFPath = RFPath,
+                          .CppcheckRFPath = CppcheckRFPath,
+                          };
+  BasicInfoCollectActionFactory Factory(DiffPath, FSPath, IncOpt);
 
   toolTimer->stopTimer();
   llvm::TimeRecord toolPrepare = toolTimer->getTotalTime();

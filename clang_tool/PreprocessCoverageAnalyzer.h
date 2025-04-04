@@ -1,4 +1,6 @@
-#include <clang/Basic/SourceLocation.h>
+#ifndef PREPROCESS_COVERAGE_ANALYZER_H
+#define PREPROCESS_COVERAGE_ANALYZER_H
+
 #include <clang/Lex/PPCallbacks.h>
 #include <clang/Lex/Preprocessor.h>
 #include <fstream>
@@ -9,26 +11,22 @@
 #include <string>
 
 #include "Utils.h"
+#include "FileSummary.h"
 
 using namespace clang;
-
-enum FileKind { SYSTEM, USER, MAIN, UNKNOWN };
-
-struct FileSummary {
-  unsigned SkippedLines = 0;
-  unsigned TotalLines = 0;
-};
 
 FileKind getFileKind(SourceManager &SM, SourceLocation Loc);
 
 FileKind getFileKind(SourceManager &SM, SourceRange Range);
+
+FileKind getFileKind(SourceManager &SM, FileID FID);
 
 std::string getFileKindString(FileKind kind);
 
 class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
   clang::SourceManager &SM;
   std::set<unsigned> &CoveredLines;
-  std::map<FileKind, FileSummary> &FileSummaries;
+  std::map<FileID, FileCoverageSummary> &FileCoverageSummaries;
   std::stack<bool> ConditionStack;
   std::stack<FileID> FileStack;
   std::set<FileID> Files;
@@ -55,11 +53,11 @@ class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
     auto CurrentFID = SM.getFileID(Loc);
     auto CurrentFilename = SM.getNonBuiltinFilenameForID(CurrentFID);
 
-    outFile << "[PP DEBUG] " << Directive << " @ line " << (CurrentFilename ? CurrentFilename->str(): "built-in")
-            << ":" << Line << " | State: "
+    outFile << "[PP DEBUG] " << Directive << " @ line "
+            << (CurrentFilename ? CurrentFilename->str() : "built-in") << ":"
+            << Line << " | State: "
             << (CurrentConditionActive() ? "Active" : "Inactive")
-            << " | Filekind: "
-            << getFileKindString(getFileKind(SM, Loc)) << " " 
+            << " | Filekind: " << getFileKindString(getFileKind(SM, Loc)) << " "
             << Extra << "\n";
     outFile.flush();
   }
@@ -74,21 +72,21 @@ class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
     auto CurrentFID = SM.getFileID(Range.getBegin());
     auto CurrentFilename = SM.getNonBuiltinFilenameForID(CurrentFID);
 
-    outFile << "[PP DEBUG] " << Directive << " @ line " << (CurrentFilename ? CurrentFilename->str(): "built-in")
-            << ":" << StartLine << "," << EndLine << " | State: "
-            << (CurrentConditionActive() ? "Active" : "Inactive") 
-            << " | Filekind: "
-            << getFileKindString(getFileKind(SM, Range)) << " " 
-            << Extra << "\n";
+    outFile << "[PP DEBUG] " << Directive << " @ line "
+            << (CurrentFilename ? CurrentFilename->str() : "built-in") << ":"
+            << StartLine << "," << EndLine << " | State: "
+            << (CurrentConditionActive() ? "Active" : "Inactive")
+            << " | Filekind: " << getFileKindString(getFileKind(SM, Range))
+            << " " << Extra << "\n";
     outFile.flush();
   }
 
 public:
   PreprocessCoverageAnalyzer(clang::SourceManager &SM,
                              std::set<unsigned> &Lines,
-                             std::map<FileKind, FileSummary> &FS,
+                             std::map<FileID, FileCoverageSummary> &FCSs,
                              const IncOptions &IncOpt)
-      : SM(SM), CoveredLines(Lines), FileSummaries(FS), IncOpt(IncOpt) {
+      : SM(SM), CoveredLines(Lines), FileCoverageSummaries(FCSs), IncOpt(IncOpt) {
     FileID MainFileID = SM.getMainFileID();
     const FileEntry *FE = SM.getFileEntryForID(MainFileID);
     MainFilePath = FE->tryGetRealPathName();
@@ -147,3 +145,5 @@ private:
     }
   }
 };
+
+#endif // PREPROCESS_COVERAGE_ANALYZER_H

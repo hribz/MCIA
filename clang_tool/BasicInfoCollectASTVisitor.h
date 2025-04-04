@@ -27,6 +27,7 @@
 #include "clang/Index/USRGeneration.h"
 
 #include "DiffLineManager.h"
+#include "FileSummary.h"
 #include "Utils.h"
 
 using namespace clang;
@@ -59,8 +60,8 @@ class BasicInfoCollectASTVisitor
     : public RecursiveASTVisitor<BasicInfoCollectASTVisitor> {
 public:
   explicit BasicInfoCollectASTVisitor(ASTContext *Context, DiffLineManager &dlm,
-                                      CallGraph &CG, const IncOptions &incOpt)
-      : Context(Context), DLM(dlm), CG(CG), IncOpt(incOpt) {}
+                                      CallGraph &CG, const IncOptions &incOpt, FileSummary &FileSum_)
+      : Context(Context), DLM(dlm), CG(CG), IncOpt(incOpt), FileSum(FileSum_) {}
 
   // Def
   bool VisitFunctionDecl(FunctionDecl *FD);
@@ -73,15 +74,11 @@ public:
   bool VisitCallExpr(CallExpr *CE);
 
   ASTContext *Context;
-  llvm::DenseSet<const FunctionDecl *> VirtualFunctions;
-  llvm::DenseSet<QualType> TypesMayUsedByFP; // Function types maybe
-                                             // used by function pointer call.
-  unsigned int TotalIndirectCallByVF = 0;
-  unsigned int TotalIndirectCallByFP = 0;
   DiffLineManager &DLM;
   CallGraph &CG;
   std::vector<const Decl *> inFunctionOrMethodStack;
   const IncOptions &IncOpt;
+  FileSummary &FileSum;
 };
 
 #endif // INC_INFO_COLLECT_AST_VISITOR_H

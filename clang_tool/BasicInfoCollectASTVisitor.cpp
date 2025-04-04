@@ -46,7 +46,7 @@ bool BasicInfoCollectASTVisitor::TraverseDecl(Decl *D) {
 bool BasicInfoCollectASTVisitor::VisitFunctionDecl(FunctionDecl *FD) {
   if (auto MD = llvm::dyn_cast<CXXMethodDecl>(FD)) {
     if (MD->isVirtual()) {
-      VirtualFunctions.insert(MD);
+      FileSum.VirtualFunctions.insert(MD);
     }
   }
   return true;
@@ -88,7 +88,7 @@ bool BasicInfoCollectASTVisitor::VisitDeclRefExpr(DeclRefExpr *DR) {
     // If this dereference is not a direct function call.
     if (maybeIndirectCall(Context, DR)) {
       auto FD = dyn_cast<FunctionDecl>(ND);
-      TypesMayUsedByFP.insert(FD->getType().getCanonicalType());
+      FileSum.TypesMayUsedByFP.insert(FD->getType().getCanonicalType());
     }
   }
 
@@ -99,7 +99,7 @@ bool BasicInfoCollectASTVisitor::VisitCallExpr(CallExpr *CE) {
   Expr *callee = CE->getCallee()->IgnoreImpCasts();
   // Identify indirect call: function pointer.
   if (callee->getType()->isFunctionPointerType()) {
-    TotalIndirectCallByFP++;
+    FileSum.TotalIndirectCallByFP++;
   } 
   // Identify indirect call: virtual function.
   else if (clang::MemberExpr *memberExpr =
@@ -108,7 +108,7 @@ bool BasicInfoCollectASTVisitor::VisitCallExpr(CallExpr *CE) {
     if (clang::CXXMethodDecl *methodDecl =
             llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
       if (methodDecl->isVirtual()) {
-        TotalIndirectCallByVF++;
+        FileSum.TotalIndirectCallByVF++;
       }
     }
   }
