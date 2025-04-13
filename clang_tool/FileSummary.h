@@ -1,10 +1,15 @@
 #ifndef FILE_SUMMARY_H
 #define FILE_SUMMARY_H
 
+#include <clang/AST/ASTContext.h>
 #include <clang/AST/Decl.h>
+#include <clang/AST/Stmt.h>
+#include <clang/AST/TypeOrdering.h>
 #include <clang/Basic/SourceLocation.h>
+#include <clang/Basic/SourceManager.h>
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/Support/JSON.h>
+
 #include <map>
 #include <vector>
 
@@ -12,21 +17,55 @@ using namespace clang;
 
 enum FileKind { SYSTEM, USER, MAIN, UNKNOWN };
 
+inline const std::string getFileKindString(FileKind kind) {
+  switch (kind) {
+  case SYSTEM:
+    return "SYSTEM";
+  case USER:
+    return "USER";
+  case MAIN:
+    return "MAIN";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+template <typename T>
+inline void addItemToMap(llvm::DenseMap<FileID, llvm::DenseSet<T>> &Map,
+                         const FileID &FileID, const T &Item) {
+  if (Map.find(FileID) == Map.end()) {
+    Map[FileID] = llvm::DenseSet<T>();
+    Map[FileID].insert(Item);
+  } else {
+    Map[FileID].insert(Item);
+  }
+}
+
+inline SourceLocation getDeclBodyLocation(SourceManager &SM, const Decl *D) {
+  const Stmt *Body = D->getBody();
+  SourceLocation SL = Body ? Body->getBeginLoc() : D->getLocation();
+  return SM.getExpansionLoc(SL);
+}
+
 struct FileCoverageSummary {
-  std::string FileName;
   std::vector<std::pair<unsigned, unsigned>> SkippedRanges;
   unsigned TotalLines = 0;
   FileKind kind;
 
   llvm::json::Object exportToJSON() {
     llvm::json::Object FileCoverageJSON;
-    FileCoverageJSON.try_emplace("file", FileName);
     FileCoverageJSON.try_emplace("total", TotalLines);
-    llvm::json::Array skipped = llvm::json::Array();
+    llvm::json::Array skipped_ranges = llvm::json::Array();
+    unsigned int skipped_lines = 0;
     for (auto &range : SkippedRanges) {
-      skipped.push_back({range.first, range.second});
+      skipped_ranges.push_back({range.first, range.second});
+      skipped_lines += range.second - range.first;
     }
-    FileCoverageJSON.try_emplace("skipped", std::move(skipped));
+    FileCoverageJSON.try_emplace("skipped", std::move(skipped_ranges));
+    auto coverage = TotalLines == 0
+                        ? 100.0
+                        : (100.0 * (TotalLines - skipped_lines) / TotalLines);
+    FileCoverageJSON.try_emplace("coverage", coverage);
     return FileCoverageJSON;
   }
 };
@@ -34,20 +73,22 @@ struct FileCoverageSummary {
 class FileSummary {
 public:
   unsigned TotalCGNodes = 0;
-  llvm::DenseSet<const Decl *> FunctionsInSystemHeader;
-  llvm::DenseSet<const Decl *> FunctionsInUserHeader;
-  llvm::DenseSet<const Decl *> FunctionsInMainFile;
-  llvm::DenseSet<const FunctionDecl *> VirtualFunctions;
-  llvm::DenseSet<QualType> TypesMayUsedByFP; // Function types maybe
+  llvm::DenseMap<FileID, llvm::DenseSet<const Decl *>> FunctionsMap;
+  llvm::DenseMap<FileID, llvm::DenseSet<const Decl *>> VirtualFunctions;
+  llvm::DenseMap<FileID, llvm::DenseSet<QualType>>
+      TypesMayUsedByFP; // Function types maybe
+  llvm::DenseMap<FileID, unsigned int> TotalCallCount;
   // used by function pointer call.
-  unsigned int TotalIndirectCallByVF = 0;
-  unsigned int TotalIndirectCallByFP = 0;
+  llvm::DenseMap<FileID, unsigned int> TotalIndirectCallByVF;
+  llvm::DenseMap<FileID, unsigned int> TotalIndirectCallByFP;
 
   std::map<FileID, FileCoverageSummary> FileCoverageSummaries;
   unsigned UserTotalLines = 0;
   unsigned UserSkippedLines = 0;
   unsigned MainTotalLines = 0;
   unsigned MainSkippedLines = 0;
+
+  const SourceManager *SM;
 
   void exportToJSON(const std::string &OutputPath) {
     std::error_code EC;
@@ -58,47 +99,30 @@ public:
     }
 
     llvm::json::Object FileSummaryJSON;
-    FileSummaryJSON.try_emplace(
-        "Call Graph",
-        llvm::json::Object({{"total", TotalCGNodes},
-                            {"system", FunctionsInSystemHeader.size()},
-                            {"user", FunctionsInUserHeader.size()},
-                            {"main", FunctionsInMainFile.size()}}));
-    FileSummaryJSON.try_emplace(
-        "Indirect Call", llvm::json::Object({{"VF", VirtualFunctions.size()},
-                                             {"VFIC", TotalIndirectCallByVF},
-                                             {"FPTY", TypesMayUsedByFP.size()},
-                                             {"FPIC", TotalIndirectCallByFP}}));
 
-    llvm::errs() << "export coverage\n";
-    auto UserCoverage =
-        UserTotalLines == 0
-            ? 100.0
-            : (100.0 * (UserTotalLines - UserSkippedLines) / UserTotalLines);
-
-    auto MainCoverage =
-        MainTotalLines == 0
-            ? 100.0
-            : (100.0 * (MainTotalLines - MainSkippedLines) / MainTotalLines);
-
-    llvm::json::Array Files;
     for (auto item : FileCoverageSummaries) {
-      // skip system and unknown files.
-      if (item.second.kind == SYSTEM || item.second.kind == UNKNOWN) {
-        continue;
+      // // skip system and unknown files.
+      // if (item.second.kind == SYSTEM || item.second.kind == UNKNOWN) {
+      //   continue;
+      // }
+      auto FE = SM->getFileEntryForID(item.first);
+      std::string FileName;
+      if (FE) {
+        FileName = FE->tryGetRealPathName().str();
+      } else {
+        FileName = "built-in";
       }
-      Files.push_back(std::move(item.second.exportToJSON()));
+      llvm::json::Object FileObject = llvm::json::Object(
+          {{"CG Nodes", FunctionsMap[item.first].size()},
+           {"Call Exprs", TotalCallCount[item.first]},
+           {"VF", VirtualFunctions[item.first].size()},
+           {"VFIC", TotalIndirectCallByVF[item.first]},
+           {"FPTY", TypesMayUsedByFP[item.first].size()},
+           {"FPIC", TotalIndirectCallByFP[item.first]},
+           {"kind", getFileKindString(item.second.kind)},
+           {"Coverage", std::move(item.second.exportToJSON())}});
+      FileSummaryJSON.try_emplace(FileName, std::move(FileObject));
     }
-    auto CoverageObject = llvm::json::Object({
-        {"user", llvm::json::Object({{"total", UserTotalLines},
-                                     {"skipped", UserSkippedLines},
-                                     {"coverage", UserCoverage}})},
-        {"main", llvm::json::Object({{"total", MainTotalLines},
-                                     {"skipped", MainSkippedLines},
-                                     {"coverage", MainCoverage}})},
-    });
-    CoverageObject.try_emplace("files", std::move(Files));
-    FileSummaryJSON.try_emplace("Coverage", std::move(CoverageObject));
 
     // Output to string.
     llvm::json::Value FileSummaryValue(std::move(FileSummaryJSON));

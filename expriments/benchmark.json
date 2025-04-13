@@ -3239,7 +3239,7 @@
             {
                 "key": "--disable-amalgamation",
                 "values": [],
-                "kind": "positive",
+                "kind": "negative",
                 "description": "Disable the amalgamation and instead build all files separately",
                 "confidence": 1.0,
                 "reason": "The option '--disable-amalgamation' is a negative switch that disables the amalgamation process, which is a functionality that combines files. Therefore, it fits the 'negative' classification."
@@ -3440,7 +3440,7 @@
         "prerequisites": [
             ["rm", "src/auto/config.cache"]
         ],
-        "dry_run": true,
+        "make": true,
         "switch_values": {
             "positive": {"on": "yes", "off": "no"},
             "negative": {"on": ""}
@@ -8206,7 +8206,9 @@
             "--with-setup",
             "--with-setjmp-type",
             "--with-modular-gc",
-            "--with-soname"
+            "--with-soname",
+            "--with-coroutine",
+            "--with-rubylibprefix"
         ],
         "config_options": [
             {
@@ -12589,7 +12591,8 @@
             "negative": {"on": "ON", "off": "OFF"}
         },
         "ignore_options": [
-            "ABSL_BUILD_MONOLITHIC_SHARED_LIBS"
+            "ABSL_BUILD_MONOLITHIC_SHARED_LIBS",
+            "utf8_range_ENABLE_TESTS"
         ],
         "constant_options": [
             "-Dprotobuf_FORCE_FETCH_DEPENDENCIES=ON",
@@ -12714,6 +12717,9 @@
                 "kind": "positive",
                 "description": "Build and run container tests (implies CARES_BUILD_TESTS, Linux only)",
                 "confidence": 1.0,
+                "conflict": [
+                    "protobuf_BUILD_TESTS"
+                ],
                 "reason": "The option enables the building and running of container tests, which is a positive functionality. It also implies the need to enable CARES_BUILD_TESTS, indicating a combination relationship."
             },
             {
@@ -12722,9 +12728,12 @@
                     "ON",
                     "OFF"
                 ],
-                "kind": "negative",
+                "kind": "positive",
                 "description": "Build and run tests",
                 "confidence": 1.0,
+                "conflict": [
+                    "protobuf_BUILD_TESTS"
+                ],
                 "reason": "The option disables the build and run of tests, which is a negative functionality."
             },
             {
@@ -13025,7 +13034,7 @@
                     "ON",
                     "OFF"
                 ],
-                "kind": "negative",
+                "kind": "positive",
                 "description": "Build tests",
                 "confidence": 1.0,
                 "reason": "The option disables the build of tests, which is a negative functionality switch."
@@ -13195,7 +13204,7 @@
                     "ON",
                     "OFF"
                 ],
-                "kind": "negative",
+                "kind": "positive",
                 "description": "Build conformance tests",
                 "confidence": 1.0,
                 "reason": "The option disables the build of conformance tests, which is a negative functionality."
@@ -13206,7 +13215,7 @@
                     "ON",
                     "OFF"
                 ],
-                "kind": "negative",
+                "kind": "positive",
                 "description": "Build examples",
                 "confidence": 1.0,
                 "reason": "The option disables the building of examples, which is a negative functionality."
@@ -13276,7 +13285,8 @@
                 "description": "Build tests",
                 "confidence": 1.0,
                 "conflict": [
-                    "utf8_range_ENABLE_TESTS"
+                    "utf8_range_ENABLE_TESTS",
+                    "CARES_BUILD_TESTS"
                 ],
                 "reason": "The option disables the building of tests, which is a negative functionality."
             },

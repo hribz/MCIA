@@ -44,8 +44,8 @@ void DisplayTime(llvm::TimeRecord &Time) {
 class BasicInfoCollectConsumer : public clang::ASTConsumer {
 public:
   explicit BasicInfoCollectConsumer(CompilerInstance &CI, std::string &diffPath,
-                                  FileSummary &FileSum_,
-                                  const IncOptions &incOpt)
+                                    FileSummary &FileSum_,
+                                    const IncOptions &incOpt)
       : CG(), IncOpt(incOpt), DLM(CI.getASTContext().getSourceManager()),
         PP(CI.getPreprocessor()), SM(CI.getASTContext().getSourceManager()),
         FileSum(FileSum_),
@@ -118,9 +118,9 @@ public:
     for (CallGraphNode *N : RPOT) {
       if (N == CG.getRoot())
         continue;
-      Decl *D = N->getDecl();
+      const Decl *D = N->getDecl();
 
-      const SourceLocation Loc = [&SM](Decl *D) -> SourceLocation {
+      const SourceLocation Loc = [&SM](const Decl *D) -> SourceLocation {
         const Stmt *Body = D->getBody();
         SourceLocation SL = Body ? Body->getBeginLoc() : D->getLocation();
         return SM.getExpansionLoc(SL);
@@ -128,13 +128,8 @@ public:
 
       if (Loc.isInvalid())
         continue;
-      if (SM.isInSystemHeader(Loc)) {
-        InsertCanonicalDeclToSet(FileSum.FunctionsInSystemHeader, D);
-      } else if (SM.isInMainFile(Loc)) {
-        InsertCanonicalDeclToSet(FileSum.FunctionsInMainFile, D);
-      } else {
-        InsertCanonicalDeclToSet(FileSum.FunctionsInUserHeader, D);
-      }
+      FileID FID = SM.getFileID(Loc);
+      addItemToMap(FileSum.FunctionsMap, FID, D);
     }
 
     // Consider other factors on AST which make functions need to reanalyze.
@@ -145,8 +140,6 @@ public:
     toolEnd -= toolPrepare;
     llvm::errs() << "Analysis CF ";
     DisplayTime(toolEnd);
-
-    DumpInfoSummary();
   }
 
   static void getUSRName(const Decl *D, std::string &Str) {
@@ -233,43 +226,6 @@ public:
       outFile->close();
   }
 
-  void DumpInfoSummary() {
-    std::ostream *OS = &std::cout;
-    std::shared_ptr<std::ofstream> outFile;
-    if (IncOpt.DumpToFile) {
-      std::string InfoSummaryFile = MainFilePath.str() + ".info";
-      outFile = std::make_shared<std::ofstream>(InfoSummaryFile);
-      if (!outFile->is_open()) {
-        llvm::errs() << "Error: Could not open file " << InfoSummaryFile
-                     << " for writing.\n";
-        return;
-      }
-      OS = outFile.get();
-    } else {
-      *OS << "--- Inc Summary ---\n";
-    }
-
-    *OS << "cg nodes (total)" << ":" << FileSum.TotalCGNodes << "\n";
-    *OS << "cg nodes (system)" << ":" << FileSum.FunctionsInSystemHeader.size()
-        << "\n";
-    *OS << "cg nodes (user)" << ":" << FileSum.FunctionsInUserHeader.size()
-        << "\n";
-    *OS << "cg nodes (file)" << ":" << FileSum.FunctionsInMainFile.size()
-        << "\n";
-    *OS << "virtual functions" << ":" << FileSum.VirtualFunctions.size()
-        << "\n";
-    *OS << "total vf indirect calls" << ":" << FileSum.TotalIndirectCallByVF
-        << "\n";
-    *OS << "function pointer types" << ":" << FileSum.TypesMayUsedByFP.size()
-        << "\n";
-    *OS << "total fp indirect calls" << ":" << FileSum.TotalIndirectCallByFP
-        << "\n";
-
-    (*OS).flush();
-    if (IncOpt.DumpToFile)
-      outFile->close();
-  }
-
 private:
   const IncOptions &IncOpt;
   llvm::StringRef MainFilePath;
@@ -285,29 +241,33 @@ private:
 class BasicInfoCollectAction : public clang::ASTFrontendAction {
 public:
   BasicInfoCollectAction(std::string &diffPath, std::string &fsPath,
-                       const IncOptions &incOpt)
+                         const IncOptions &incOpt)
       : DiffPath(diffPath), FSPath(fsPath), IncOpt(incOpt) {}
 
   std::unique_ptr<clang::ASTConsumer>
   CreateASTConsumer(clang::CompilerInstance &CI,
                     llvm::StringRef file) override {
-    CI.getPreprocessor().addPPCallbacks(
-        std::make_unique<PreprocessCoverageAnalyzer>(
-            CI.getSourceManager(), CoveredLines, FileSum.FileCoverageSummaries,
-            IncOpt));
+    DiagnosticsEngine &Diags = CI.getPreprocessor().getDiagnostics();
+    FileSum.SM = &CI.getSourceManager();
+    if (!Diags.hasErrorOccurred() && !Diags.hasFatalErrorOccurred()) {
+      CI.getPreprocessor().addPPCallbacks(
+          std::make_unique<PreprocessCoverageAnalyzer>(
+              CI.getSourceManager(), CoveredLines,
+              FileSum.FileCoverageSummaries, IncOpt));
+    }
     return std::make_unique<BasicInfoCollectConsumer>(CI, DiffPath, FileSum,
-                                                    IncOpt);
+                                                      IncOpt);
   }
 
   void EndSourceFileAction() override {
-    llvm::errs() << "debug\n";
     SourceManager &SM = getCompilerInstance().getSourceManager();
     FileID mainFileID = SM.getMainFileID();
     unsigned totalLines =
         SM.getSpellingLineNumber(SM.getLocForEndOfFile(mainFileID));
 
     auto TotalSkippedLines =
-        [](std::vector<std::pair<unsigned, unsigned>> ranges) -> unsigned {
+        [](const std::vector<std::pair<unsigned, unsigned>> &ranges)
+        -> unsigned {
       unsigned skipped = 0;
       for (auto range : ranges) {
         skipped += (range.second - range.first);
@@ -357,6 +317,9 @@ public:
 
     std::string InfoSummaryFile =
         SM.getFileEntryForID(mainFileID)->tryGetRealPathName().str() + ".json";
+    if (!IncOpt.Output.empty()) {
+      InfoSummaryFile = IncOpt.Output;
+    }
     FileSum.exportToJSON(InfoSummaryFile);
   }
 
@@ -371,7 +334,7 @@ private:
 class BasicInfoCollectActionFactory : public FrontendActionFactory {
 public:
   BasicInfoCollectActionFactory(std::string &diffPath, std::string &fsPath,
-                              const IncOptions &incOpt)
+                                const IncOptions &incOpt)
       : DiffPath(diffPath), FSPath(fsPath), IncOpt(incOpt) {}
 
   std::unique_ptr<FrontendAction> create() override {
@@ -410,25 +373,13 @@ static llvm::cl::opt<bool>
     DumpToFile("dump-file", llvm::cl::desc("Dump CG and CF to file"),
                llvm::cl::value_desc("dump to file or stream"),
                llvm::cl::init(true));
-static llvm::cl::opt<bool> DumpUSR("dump-usr",
-                                   llvm::cl::desc("Dump USR function name"),
-                                   llvm::cl::value_desc("dump usr fname"),
-                                   llvm::cl::init(false));
-static llvm::cl::opt<bool>
-    DumpANR("dump-anr", llvm::cl::desc("Dump affected nodes line ranges"),
-            llvm::cl::value_desc("dump ANR"), llvm::cl::init(false));
-static llvm::cl::opt<bool> CTU("ctu", llvm::cl::desc("Consider CTU analysis"),
-                               llvm::cl::value_desc("consider CTU analysis"),
-                               llvm::cl::init(false));
-static llvm::cl::opt<std::string>
-    RFPath("rf-file", llvm::cl::desc("Output RF to the path"),
-           llvm::cl::value_desc("dump rf file"), llvm::cl::init(""));
-static llvm::cl::opt<std::string> CppcheckRFPath(
-    "cppcheck-rf-file", llvm::cl::desc("Output Cppcheck RF to the path"),
-    llvm::cl::value_desc("dump cppcheck rf file"), llvm::cl::init(""));
 static llvm::cl::opt<bool>
     DebugPP("debug-pp", llvm::cl::desc("Enable preprocessing debug output"),
             llvm::cl::init(false));
+static llvm::cl::opt<std::string> Output("o",
+                                         llvm::cl::desc("Specify output file"),
+                                         llvm::cl::value_desc("output file"),
+                                         llvm::cl::init(""));
 
 int main(int argc, const char **argv) {
   std::unique_ptr<llvm::Timer> toolTimer =
@@ -447,18 +398,15 @@ int main(int argc, const char **argv) {
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  const IncOptions IncOpt{.PrintLoc = PrintLoc,
-                          .ClassLevelTypeChange = ClassLevel,
-                          .FieldLevelTypeChange = FieldLevel,
-                          .DumpCG = DumpCG,
-                          .DumpToFile = DumpToFile,
-                          .DumpUSR = DumpUSR,
-                          .DumpANR = DumpANR,
-                          .CTU = CTU,
-                          .DebugPP = DebugPP,
-                          .RFPath = RFPath,
-                          .CppcheckRFPath = CppcheckRFPath,
-                          };
+  const IncOptions IncOpt{
+      .PrintLoc = PrintLoc,
+      .ClassLevelTypeChange = ClassLevel,
+      .FieldLevelTypeChange = FieldLevel,
+      .DumpCG = DumpCG,
+      .DumpToFile = DumpToFile,
+      .DebugPP = DebugPP,
+      .Output = Output,
+  };
   BasicInfoCollectActionFactory Factory(DiffPath, FSPath, IncOpt);
 
   toolTimer->stopTimer();

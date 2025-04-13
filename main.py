@@ -44,6 +44,8 @@ def handle_project(projects, opts):
     for project in projects:
         if opts.repo and opts.repo != project['project'] and opts.repo != os.path.basename(project['project']):
             continue
+        if 'config_options' not in project:
+            continue
         project_info = ProjectInfo(projects_root_dir, project)
 
         if not clone_project(project_info.repo_name, project_info.src_dir):
@@ -72,6 +74,7 @@ class MCArgumentParser():
         self.parser.add_argument('--tag', type=str, dest='tag', help='Tag of this analysis.')
         self.parser.add_argument('--file-identifier', type=str, dest='file_identifier', choices=['file', 'target'], default='file name', 
                                  help='Identify analysis unit by file or target.')
+        self.parser.add_argument('--clean-cache', action='store_true', dest='clean_cache', help='Clean the cache before analysis.')
     
     def parse_args(self, args):
         return self.parser.parse_args(args)

@@ -31,6 +31,8 @@ class GlobalConfig:
             except (subprocess.CalledProcessError, OSError):
                 return 2
         self.bear_version = get_bear_version(GlobalConfig.bear)
+        pwd = os.path.dirname(os.path.abspath(__file__))
+        self.basic_info_extractor = os.path.join(pwd, 'build/collectStatistics')
 
 global_config = GlobalConfig()
 
@@ -42,6 +44,7 @@ class Configuration:
         self.opts = opts
         self.config_options = config_options
         self.cache_path = os.path.join(self.workspace, self.tag)
+        self.prep_path = os.path.join(self.cache_path, 'preprocess/version')
         self.cache_file = os.path.join(self.workspace, 'cache.txt')
         makedir(self.cache_path)
         self.compile_database = os.path.join(self.cache_path, "compile_commands.json")
@@ -100,6 +103,7 @@ class Configuration:
         cmd.extend(['--cc', self.opts.cc])
         cmd.extend(['--cxx', self.opts.cxx])
         cmd.append(f'--file-identifier={self.opts.file_identifier}')
+        cmd.append(f'--basic-info={global_config.basic_info_extractor}')
         if self.opts.verbose:
             cmd.extend(['--verbose'])
         if self.opts.prep_only:
@@ -114,6 +118,7 @@ class Project:
         self.project_name = os.path.basename(self.src_dir)
         logger.TAG = self.project_name
         self.workspace = workspace # The directory to store cache and analysis results.
+        self.basic_statistics_csv = os.path.join(self.workspace, 'basic_statistics.csv')
         self.config_list: List[Configuration] = []
         self.opts = opts
         self.project_info = project_info
@@ -193,10 +198,15 @@ class Project:
         self.baseline = default_configuration
         all_config = [default_configuration, all_positive_configuration, all_negative_configuration]
         self.config_list = [self.baseline] + [config for config in all_config if config != self.baseline]
+        # self.config_list = [all_negative_configuration]
 
-    def execute_prerequisites(self, config: Configuration) -> bool:
+    def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:
-            return run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
+            run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
+        if self.opts.clean_cache and config == self.baseline:
+            run(['rm', config.cache_file], config.workspace, tag="RM Cache", env=self.env)
+        if self.project_info.build_type == BuildType.CMake:
+            run(['rm', os.path.join(config.project_info.build_dir, 'CMakeCache.txt')], config.project_info.build_dir, tag="RM CMakeCache", env=self.env)
 
     def configure(self, config: Configuration) -> bool:
         configure_script = commands_to_shell_script(config.config_cmd())
@@ -234,16 +244,18 @@ class Project:
             capture_output=True,
             text=True
         )
-        logger.info(f"[Build Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
         if process.returncode != 0:
             logger.info(f"[Build Failed] {commands_to_shell_script(cmd)}")
+            logger.info(f"[Build Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
+        else:
+            logger.info(f"[Build Success] {commands_to_shell_script(cmd)}")
         return process.returncode == 0
 
     def build_clean(self, config: Configuration):
         run_without_check(["make", "clean"], config.project_info.build_dir, "Make Clean")
 
     def parse_makefile(self, config: Configuration):
-        if self.build_type == BuildType.CMake:
+        if self.project_info.build_type == BuildType.CMake:
             # The compile_commands.json of opencv contain compile argument like -DXXX="long long",
             # compiledb doesn't perserve the "", so we use CMake's compile_commands.json.
             # TODO: compiledb support -DXXX="long long"?
@@ -418,7 +430,7 @@ class Project:
         else:
             # Only record one config as baseline cache.
             icebear_cmd = config.icebear_cmd(update_cache=False)
-        run(icebear_cmd, config.cache_path, "IceBear Preprocess")
+        run(icebear_cmd, self.src_dir, "IceBear Preprocess")
 
     def reports_analysis(self, config1: Configuration, config2: Configuration):
         if config1 == config2:
@@ -527,5 +539,7 @@ class Project:
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             process_status = self.prepare_compilation_database(config)
+            if not process_status:
+                break
             self.icebear(config)
             self.reports_analysis(self.baseline, config)

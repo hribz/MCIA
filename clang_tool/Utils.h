@@ -19,6 +19,7 @@ public:
   std::string RFPath;
   std::string CppcheckRFPath;
   std::string FilePath;
+  std::string Output;
 };
 
 #endif // UTILS_H

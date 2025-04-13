@@ -2,20 +2,21 @@
 #include <clang/AST/Decl.h>
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/Expr.h>
+#include <clang/AST/ParentMapContext.h>
 #include <clang/AST/Type.h>
+#include <clang/Basic/SourceLocation.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
-#include <clang/AST/ParentMapContext.h>
 
 #include "BasicInfoCollectASTVisitor.h"
+#include "FileSummary.h"
 
-int CountCanonicalDeclInSet(llvm::DenseSet<const Decl *> &set,
-  const Decl *D) {
+int CountCanonicalDeclInSet(llvm::DenseSet<const Decl *> &set, const Decl *D) {
   return set.count(D->getCanonicalDecl());
 }
 
 void InsertCanonicalDeclToSet(llvm::DenseSet<const Decl *> &set,
-  const Decl *D) {
+                              const Decl *D) {
   set.insert(D->getCanonicalDecl());
 }
 
@@ -46,7 +47,9 @@ bool BasicInfoCollectASTVisitor::TraverseDecl(Decl *D) {
 bool BasicInfoCollectASTVisitor::VisitFunctionDecl(FunctionDecl *FD) {
   if (auto MD = llvm::dyn_cast<CXXMethodDecl>(FD)) {
     if (MD->isVirtual()) {
-      FileSum.VirtualFunctions.insert(MD);
+      auto Loc = getDeclBodyLocation(SM, FD);
+      addItemToMap<const clang::Decl *>(
+          FileSum.VirtualFunctions, SM.getFileID(Loc), FD->getCanonicalDecl());
     }
   }
   return true;
@@ -83,12 +86,15 @@ QualType getCanonicalFunctionType(clang::QualType type) {
 bool BasicInfoCollectASTVisitor::VisitDeclRefExpr(DeclRefExpr *DR) {
   auto ND = DR->getFoundDecl();
 
-  // TODO: May need a pre-pass to collect MayUsedAsFP before BasicInfoCollectASTVisitor.
+  // TODO: May need a pre-pass to collect MayUsedAsFP before
+  // BasicInfoCollectASTVisitor.
   if (isa<FunctionDecl>(ND)) {
     // If this dereference is not a direct function call.
     if (maybeIndirectCall(Context, DR)) {
       auto FD = dyn_cast<FunctionDecl>(ND);
-      FileSum.TypesMayUsedByFP.insert(FD->getType().getCanonicalType());
+      auto Loc = getDeclBodyLocation(SM, FD);
+      addItemToMap(FileSum.TypesMayUsedByFP, SM.getFileID(Loc),
+                   FD->getType().getCanonicalType());
     }
   }
 
@@ -97,18 +103,30 @@ bool BasicInfoCollectASTVisitor::VisitDeclRefExpr(DeclRefExpr *DR) {
 
 bool BasicInfoCollectASTVisitor::VisitCallExpr(CallExpr *CE) {
   Expr *callee = CE->getCallee()->IgnoreImpCasts();
+  auto FID = SM.getFileID(CE->getBeginLoc());
+  // Count call exprs.
+  if (!FileSum.TotalCallCount.count(FID)) {
+    FileSum.TotalCallCount[FID] = 0;
+  }
+  FileSum.TotalCallCount[FID]++;
   // Identify indirect call: function pointer.
   if (callee->getType()->isFunctionPointerType()) {
-    FileSum.TotalIndirectCallByFP++;
-  } 
+    if (!FileSum.TotalIndirectCallByFP.count(FID)) {
+      FileSum.TotalIndirectCallByFP[FID] = 0;
+    }
+    FileSum.TotalIndirectCallByFP[FID]++;
+  }
   // Identify indirect call: virtual function.
   else if (clang::MemberExpr *memberExpr =
-                 llvm::dyn_cast<clang::MemberExpr>(callee)) {
+               llvm::dyn_cast<clang::MemberExpr>(callee)) {
     clang::ValueDecl *decl = memberExpr->getMemberDecl();
     if (clang::CXXMethodDecl *methodDecl =
             llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
       if (methodDecl->isVirtual()) {
-        FileSum.TotalIndirectCallByVF++;
+        if (!FileSum.TotalIndirectCallByVF.count(FID)) {
+          FileSum.TotalIndirectCallByVF[FID] = 0;
+        }
+        FileSum.TotalIndirectCallByVF[FID]++;
       }
     }
   }

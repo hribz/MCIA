@@ -1,6 +1,6 @@
 #include <clang/Basic/SourceLocation.h>
-#include <clang/Basic/SourceManager.h>
 #include <clang/Lex/PPCallbacks.h>
+#include <llvm/Support/raw_ostream.h>
 #include <map>
 
 #include "FileSummary.h"
@@ -33,47 +33,25 @@ FileKind getFileKind(SourceManager &SM, FileID FID) {
   return getFileKind(SM, SM.getLocForStartOfFile(FID));
 }
 
-std::string getFileKindString(FileKind kind) {
-  switch (kind) {
-  case SYSTEM:
-    return "SYSTEM";
-  case USER:
-    return "USER";
-  case MAIN:
-    return "MAIN";
-  default:
-    return "UNKNOWN";
-  }
-}
-
 void PreprocessCoverageAnalyzer::FileChanged(
     SourceLocation Loc, FileChangeReason Reason,
     SrcMgr::CharacteristicKind FileType, FileID PrevFID) {
   auto CurrentFilename = SM.getFilename(Loc).str();
   printDebugInfo(reason[Reason], Loc, CurrentFilename.c_str());
   auto FID = SM.getFileID(Loc);
-  if (SM.isInSystemHeader(Loc)) {
-    return;
-  }
-  if (Reason == PPCallbacks::FileChangeReason::EnterFile) {
-    FileStack.push(FID);
-    Files.insert(FID);
-  } else if (Reason == PPCallbacks::FileChangeReason::ExitFile) {
-    FileStack.pop();
-  }
+  // if (SM.isInSystemHeader(Loc)) {
+  //   return;
+  // }
+  Files.insert(FID);
 }
 
 void AddNewItemInFCSs(
     std::map<FileID, FileCoverageSummary> &FileCoverageSummaries,
     SourceManager &SM, FileID FID) {
   if (!FileCoverageSummaries.count(FID)) {
-    auto CurrentFilename = SM.getNonBuiltinFilenameForID(FID);
     FileCoverageSummaries.insert(
         {FID,
-         {.FileName = (CurrentFilename ? CurrentFilename->str() : "built-in"),
-          .SkippedRanges = {},
-          .TotalLines = 0,
-          .kind = getFileKind(SM, FID)}});
+         {.SkippedRanges = {}, .TotalLines = 0, .kind = getFileKind(SM, FID)}});
   }
 }
 

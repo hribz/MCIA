@@ -21,8 +21,6 @@ FileKind getFileKind(SourceManager &SM, SourceRange Range);
 
 FileKind getFileKind(SourceManager &SM, FileID FID);
 
-std::string getFileKindString(FileKind kind);
-
 class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
   clang::SourceManager &SM;
   std::set<unsigned> &CoveredLines;
@@ -53,7 +51,7 @@ class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
     auto CurrentFID = SM.getFileID(Loc);
     auto CurrentFilename = SM.getNonBuiltinFilenameForID(CurrentFID);
 
-    outFile << "[PP DEBUG] " << Directive << " @ line "
+    outFile << "[PP DEBUG] " << Directive << " "
             << (CurrentFilename ? CurrentFilename->str() : "built-in") << ":"
             << Line << " | State: "
             << (CurrentConditionActive() ? "Active" : "Inactive")
@@ -72,7 +70,7 @@ class PreprocessCoverageAnalyzer : public clang::PPCallbacks {
     auto CurrentFID = SM.getFileID(Range.getBegin());
     auto CurrentFilename = SM.getNonBuiltinFilenameForID(CurrentFID);
 
-    outFile << "[PP DEBUG] " << Directive << " @ line "
+    outFile << "[PP DEBUG] " << Directive << " "
             << (CurrentFilename ? CurrentFilename->str() : "built-in") << ":"
             << StartLine << "," << EndLine << " | State: "
             << (CurrentConditionActive() ? "Active" : "Inactive")
@@ -93,6 +91,9 @@ public:
 
     if (IncOpt.DebugPP) {
       std::string PPDebugFile = MainFilePath.str() + ".pp";
+      if (!IncOpt.Output.empty()) {
+        PPDebugFile = IncOpt.Output + ".pp";
+      }
 
       // Clean the file.
       std::ofstream clear_file(PPDebugFile, std::ios::trunc);

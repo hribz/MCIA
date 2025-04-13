@@ -9,10 +9,10 @@
 #include <clang/AST/DeclTemplate.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/ExprCXX.h>
-#include <clang/AST/Stmt.h>
 #include <clang/AST/Type.h>
 #include <clang/Analysis/CallGraph.h>
 #include <clang/Basic/LLVM.h>
+#include <clang/Basic/SourceManager.h>
 #include <llvm/ADT/DenseMapInfo.h>
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/ADT/StringRef.h>
@@ -37,31 +37,12 @@ int CountCanonicalDeclInSet(llvm::DenseSet<const Decl *> &set, const Decl *D);
 
 void InsertCanonicalDeclToSet(llvm::DenseSet<const Decl *> &set, const Decl *D);
 
-namespace llvm {
-  template <> struct DenseMapInfo<clang::QualType> {
-    static inline clang::QualType getEmptyKey() {
-      return clang::QualType::getFromOpaquePtr(
-          reinterpret_cast<void *>(~static_cast<uintptr_t>(0)));
-    }
-    static inline clang::QualType getTombstoneKey() {
-      return clang::QualType::getFromOpaquePtr(
-          reinterpret_cast<void *>(~static_cast<uintptr_t>(1)));
-    }
-    static unsigned getHashValue(clang::QualType Val) {
-      return DenseMapInfo<void *>::getHashValue(Val.getAsOpaquePtr());
-    }
-    static bool isEqual(clang::QualType LHS, clang::QualType RHS) {
-      return LHS == RHS; // 直接使用 QualType 的判等操作符
-    }
-  };
-} // namespace llvm
-
 class BasicInfoCollectASTVisitor
     : public RecursiveASTVisitor<BasicInfoCollectASTVisitor> {
 public:
   explicit BasicInfoCollectASTVisitor(ASTContext *Context, DiffLineManager &dlm,
                                       CallGraph &CG, const IncOptions &incOpt, FileSummary &FileSum_)
-      : Context(Context), DLM(dlm), CG(CG), IncOpt(incOpt), FileSum(FileSum_) {}
+      : Context(Context), DLM(dlm), CG(CG), IncOpt(incOpt), FileSum(FileSum_), SM(Context->getSourceManager()) {}
 
   // Def
   bool VisitFunctionDecl(FunctionDecl *FD);
@@ -79,6 +60,7 @@ public:
   std::vector<const Decl *> inFunctionOrMethodStack;
   const IncOptions &IncOpt;
   FileSummary &FileSum;
+  SourceManager &SM;
 };
 
 #endif // INC_INFO_COLLECT_AST_VISITOR_H
