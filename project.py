@@ -19,6 +19,7 @@ class GlobalConfig:
     bear = 'bear'
     icebear = 'icebear'
     build_jobs = '16'
+    inc_gcc = '/home/xiaoyu/package/src/gcc/install/bin/gcc-14'
 
     def __init__(self):
         def get_bear_version(bear):
@@ -43,19 +44,16 @@ class Configuration:
         self.tag = tag
         self.opts = opts
         self.config_options = config_options
-        self.cache_path = os.path.join(self.workspace, self.tag)
-        self.prep_path = os.path.join(self.cache_path, 'preprocess/version')
+        self.prep_path = os.path.join(self.workspace, f'preprocess/{tag}')
         self.cache_file = os.path.join(self.workspace, 'cache.txt')
-        makedir(self.cache_path)
-        self.compile_database = os.path.join(self.cache_path, "compile_commands.json")
+        makedir(self.prep_path)
+        self.compile_database = os.path.join(self.prep_path, "compile_commands.json")
 
     def option_cmd(self):
         cmd = self.project_info.constant_options.copy()
         if self.project_info.build_type == BuildType.CMake:
             cmd.extend([
-                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-                "-DCMAKE_C_COMPILER=clang-18",
-                "-DCMAKE_CXX_COMPILER=clang++-18"
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
             ])
         for option in self.config_options:
             if self.project_info.build_type == BuildType.CMake:
@@ -77,7 +75,7 @@ class Configuration:
         option_cmd = self.option_cmd()
         cmd.extend(option_cmd)
         # record options
-        json.dump(option_cmd, open(os.path.join(self.cache_path, 'options.json'), 'w'), indent=4)
+        json.dump(option_cmd, open(os.path.join(self.prep_path, 'options.json'), 'w'), indent=4)
         return cmd
     
     def build_cmd(self):
@@ -95,21 +93,28 @@ class Configuration:
     def icebear_cmd(self, update_cache):
         cmd = [GlobalConfig.icebear]
         cmd.extend(['-f', self.compile_database])
-        cmd.extend(['-o', self.cache_path])
+        cmd.extend(['-o', self.workspace])
         cmd.extend(['-j', GlobalConfig.build_jobs])
         cmd.extend(['--inc', self.opts.inc])
-        cmd.extend(['--analyzers', 'clangsa'])
-        cmd.extend(['-c', self.cache_file])
+        cmd.extend(['--analyzers', 'clangsa', 'gsa', 'clang-tidy', 'cppcheck'])
+        cmd.extend(['--cache', self.cache_file])
         cmd.extend(['--cc', self.opts.cc])
         cmd.extend(['--cxx', self.opts.cxx])
+        cmd.extend(['--gcc', GlobalConfig.inc_gcc])
         cmd.append(f'--file-identifier={self.opts.file_identifier}')
-        cmd.append(f'--basic-info={global_config.basic_info_extractor}')
+        cmd.append(f'--tag={self.tag}')
+        cmd.extend(['--report-hash', 'context'])
+        cmd.extend(['--clean-inc=False'])
+        if self.opts.basic_info:
+            cmd.append(f'--basic-info={global_config.basic_info_extractor}')
         if self.opts.verbose:
             cmd.extend(['--verbose'])
         if self.opts.prep_only:
             cmd.append('--preprocess-only')
         if not update_cache:
             cmd.append('--not-update-cache')
+        if self.opts.only_process_reports:
+            cmd.append("--only-process-reports")
         return cmd
 
 class Project:
@@ -118,11 +123,12 @@ class Project:
         self.project_name = os.path.basename(self.src_dir)
         logger.TAG = self.project_name
         self.workspace = workspace # The directory to store cache and analysis results.
-        self.basic_statistics_csv = os.path.join(self.workspace, 'basic_statistics.csv')
         self.config_list: List[Configuration] = []
         self.opts = opts
         self.project_info = project_info
         self.env = dict(os.environ)
+        self.sampling_config = SamplingConfig(self.project_info.options, 15)
+        self.config_sampler = ConfigSampling(self.project_info.options, self.sampling_config)
         if not project_info.must_gcc:
             self.env['CC'] = 'clang-18'
             self.env['CXX'] = 'clang++-18'
@@ -138,67 +144,59 @@ class Project:
     def create_configuration(self, options, workspace, tag):
         return Configuration(workspace, tag, self.opts, options, self.project_info)
     
-    def get_different_kind_configuration(self, kind: OptionType, tag):
-        options = []
-        option_to_idx = dict()
-        conflict_options = set()
-
-        def add_to_options(op, overwrite):
-            if op is not None:
-                ops = op.split("=")
-                if ops[0] in option_to_idx:
-                    if overwrite:
-                        options[ops[0]] = op
-                else:
-                    option_to_idx[ops[0]] = len(options)
-                    options.append(op)
-        
-        for option in self.project_info.options:
-            if kind == OptionType.positive:
-                op, state = option.positive()
-                if state and option.option == '--enable-all':
-                    logger.info(f"[Enable All] --enable-all is turn on, don't need to consider other options.")
-                    options = [op]
-                    break
-            elif kind == OptionType.negative:
-                op, state = option.negative()
-                if state and option.option == '--disable-all':
-                    logger.info(f"[Disable All] --disable-all is turn on, don't need to consider other options.")
-                    options = [op]
-                    break
-            else:
-                # TODO: select one value
-                op, state = None, False
-            if state == True:
-                # This option is turn on.
-                if option.option not in conflict_options:
-                    add_to_options(op, False)
-                    conflict_options = conflict_options.union(option.conflict)
-                    # Options in combination must be set to these value.
-                    for com_op in option.combination:
-                        add_to_options(com_op, True)
-                else:
-                    add_to_options(option.negative()[0], True)
-            else:
-                # This option is turn off.
-                add_to_options(op, False)
-        if len(conflict_options):
-            logger.debug(f"[Conflict Options] {conflict_options}")
-        
+    def get_different_kind_configuration(self, kind: ConfigType, tag):
+        options = self.config_sampler.get_different_kind_configuration(kind)
+        if options is None:
+            return None
         return self.create_configuration(options, self.workspace, tag)
 
     def configuation_sampling(self):
+        classified_options = {ty:[] for ty in OptionType}
+        for option in self.config_sampler.options:
+            classified_options[option.kind].append(f"{option.option} on:{option.on_value} off:{option.off_value}")
+        with open(os.path.join(self.workspace, 'configure.txt'), 'w') as f:
+            for ty in OptionType:
+                f.write(ty.getStr() + '\n')
+                f.writelines([(op_str + '\n') for op_str in classified_options[ty]])
         # Default configuration
-        default_configuration = self.create_configuration([], self.workspace, "0_default")
-        # All positive configuration
-        all_positive_configuration = self.get_different_kind_configuration(OptionType.positive, "1_all_positive")
-        # All no configuration
-        all_negative_configuration = self.get_different_kind_configuration(OptionType.negative, "2_all_negative")
+        default_configuration = self.get_different_kind_configuration(ConfigType.default, "0_default")
         # Default as baseline
         self.baseline = default_configuration
-        all_config = [default_configuration, all_positive_configuration, all_negative_configuration]
+        all_config = [default_configuration]
+
+        def get_equidistant_elements(lst, num):
+            if len(lst) <= num:
+                return lst.copy()
+            step = (len(lst) - 1) / (num - 1)
+            indices = [round(i * step) for i in range(num)]
+            return [lst[i] for i in indices]
+        
+        # One positive sampling.
+        all_positives = self.config_sampler.get_all_options(ConfigType.one_positive)
+        selected_positives = get_equidistant_elements(all_positives, self.sampling_config.num)
+        for options in selected_positives:
+            one_positive = self.create_configuration(options, self.workspace, f"{len(all_config)}_one_positive")
+            all_config.append(one_positive)
+        # One negative sampling.
+        all_negatives = self.config_sampler.get_all_options(ConfigType.one_negative)
+        selected_negatives = get_equidistant_elements(all_negatives, self.sampling_config.num)
+        for options in selected_negatives:
+            one_negative = self.create_configuration(options, self.workspace, f"{len(all_config)}_one_negative")
+            all_config.append(one_negative)
+        
+        # All negative configuration
+        all_config.append(self.get_different_kind_configuration(ConfigType.all_negative, f"{len(all_config)}_all_negative"))
+
+        # All positive configuration
+        all_config.append(self.get_different_kind_configuration(ConfigType.all_positive, f"{len(all_config)}_all_positive"))
+
         self.config_list = [self.baseline] + [config for config in all_config if config != self.baseline]
         # self.config_list = [all_negative_configuration]
+        with open(os.path.join(self.workspace, 'configure.txt'), 'a') as f:
+            for config in self.config_list:
+                configure_script = commands_to_shell_script(config.config_cmd())
+                f.write(config.tag + '\n')
+                f.write(configure_script + '\n')
 
     def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:
@@ -218,6 +216,7 @@ class Project:
             config.config_cmd(),
             cwd=config.project_info.build_dir,
             env=self.env,
+            capture_output=True,
             text=True
         )
         logger.info(f"[Configure Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
@@ -245,8 +244,8 @@ class Project:
             text=True
         )
         if process.returncode != 0:
-            logger.info(f"[Build Failed] {commands_to_shell_script(cmd)}")
-            logger.info(f"[Build Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
+            logger.error(f"[Build Failed] {commands_to_shell_script(cmd)}")
+            logger.error(f"[Build Output]\nstdout:\n{process.stdout}\nstderr:\n{process.stderr}")
         else:
             logger.info(f"[Build Success] {commands_to_shell_script(cmd)}")
         return process.returncode == 0
@@ -429,7 +428,7 @@ class Project:
             icebear_cmd = config.icebear_cmd(update_cache=True)
         else:
             # Only record one config as baseline cache.
-            icebear_cmd = config.icebear_cmd(update_cache=False)
+            icebear_cmd = config.icebear_cmd(update_cache=True)
         run(icebear_cmd, self.src_dir, "IceBear Preprocess")
 
     def reports_analysis(self, config1: Configuration, config2: Configuration):
@@ -448,7 +447,7 @@ class Project:
                 return hash((self.file, self.report))
 
         def get_reports(analyzer, config: Configuration):
-            reports_dir = os.path.join(config.cache_path, analyzer)
+            reports_dir = os.path.join(config.workspace, analyzer)
             if analyzer == 'csa':
                 reports_dir = os.path.join(reports_dir, 'csa-reports/version')
             if not os.path.exists(reports_dir):
@@ -515,10 +514,12 @@ class Project:
             }
             logger.info(f"[Reports Analysis] Find {diff_num} new reports in {config2.tag}")
 
-        with open(os.path.join(config2.cache_path, 'new_reports.json'), 'w') as f:
+        with open(os.path.join(config2.workspace, 'new_reports.json'), 'w') as f:
             json.dump(all_diff, f, indent=4, sort_keys=True)
 
     def prepare_compilation_database(self, config):
+        if self.opts.skip_prepare:
+            return True
         self.execute_prerequisites(config)
         if self.project_info.must_make:
             self.build_clean(config)
@@ -527,7 +528,7 @@ class Project:
             logger.error(f"[Configure {config.tag}] Configure failed! Stop subsequent jobs.")
             return False
         if self.project_info.must_make:
-            self.build(config)
+            return self.build(config)
         else:
             process_status = self.parse_makefile(config)
             if not process_status:
@@ -536,10 +537,13 @@ class Project:
         return True
 
     def process_every_configuraion(self):
+        if not self.opts.prep_only:
+            remove_file(os.path.join(self.workspace, 'all_reports.json'))
+            remove_file(os.path.join(self.workspace, 'new_reports.json'))
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             process_status = self.prepare_compilation_database(config)
             if not process_status:
-                break
+                continue
             self.icebear(config)
-            self.reports_analysis(self.baseline, config)
+            # self.reports_analysis(self.baseline, config)

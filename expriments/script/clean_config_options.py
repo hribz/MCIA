@@ -41,7 +41,7 @@ for project in origin_config:
             key = option['key']
             if option['kind'] != 'positive' and option['kind'] != 'negative':
                 for header in headers_list:
-                    if key.startswith(header) and len(option['values'])<2:
+                    if key.startswith(header) and len(option['values']) < 2:
                         option['kind'] = 'positive' if header in headers['positive'] else 'negative'
     
     special_turn_on = project.get('special_turn_on', [])

@@ -5,12 +5,13 @@
         "out_of_tree": true,
         "language": "C++",
         "shallow": "master",
+        "gcc": true,
         "config_options": [
             {
                 "key": "CHANGE_ALL",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "positive",
                 "description": "Change all",
@@ -44,8 +45,8 @@
             {
                 "key": "COMMON_CHANGE",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "positive",
                 "description": "Some common change",
@@ -55,8 +56,8 @@
             {
                 "key": "COMPLEX_FUNC",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "positive",
                 "description": "Complex function",
@@ -66,8 +67,8 @@
             {
                 "key": "FEATURE_UPGRADE",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "positive",
                 "description": "Change feature upgrade",
@@ -77,8 +78,8 @@
             {
                 "key": "GLOBAL_CONSTANT",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "options",
                 "description": "Change global constants",
@@ -88,8 +89,8 @@
             {
                 "key": "RECORD_FIELD",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "positive",
                 "description": "Change class/struct fields",
@@ -99,8 +100,8 @@
             {
                 "key": "VIRTUAL_FUNCTION",
                 "values": [
-                    "1",
-                    "0"
+                    "ON",
+                    "OFF"
                 ],
                 "kind": "options",
                 "description": "Change virtual functions",
@@ -748,7 +749,8 @@
                 ],
                 "kind": "positive",
                 "combination": [
-                    "--enable-version3"
+                    "--enable-version3",
+                    "--enable-gpl"
                 ],
                 "description": "enable ARIB text and caption decoding via libaribb24",
                 "confidence": 1.0,
@@ -1212,6 +1214,9 @@
                     "no"
                 ],
                 "kind": "positive",
+                "combination": [
+                    "--enable-gpl"
+                ],
                 "description": "enable rubberband needed for rubberband filter",
                 "confidence": 1.0,
                 "reason": "The option enables a feature (librubberband) when turned on, which matches the definition of a positive option."
@@ -1394,6 +1399,9 @@
                     "no"
                 ],
                 "kind": "positive",
+                "combination": [
+                    "--enable-gpl"
+                ],
                 "description": "enable video stabilization using vid.stab",
                 "confidence": 1.0,
                 "reason": "The option --enable-libvidstab is used to enable a feature (video stabilization using vid.stab), which aligns with the definition of a positive option."
@@ -1507,6 +1515,9 @@
                     "no"
                 ],
                 "kind": "positive",
+                "combination": [
+                    "--enable-gpl"
+                ],
                 "description": "enable AVS2 encoding via xavs2",
                 "confidence": 1.0,
                 "reason": "The option enables a feature (AVS2 encoding via xavs2) when turned on, which aligns with the definition of a positive option."

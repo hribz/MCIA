@@ -52,6 +52,8 @@ class Logger(object):
         for level in logLevels:
             logger = logging.getLogger(str(level))
             logger.setLevel(level)
+
+            logger.handlers.clear()
             
             log_path = os.path.abspath(handler[level])
             fh = logging.FileHandler(log_path)

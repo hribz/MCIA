@@ -23,7 +23,7 @@ def reports_statistics_analysis(project: Project):
     return datas
 
 def merge_skipped_ranges(skipped1, skipped2):
-    new_range = []
+    new_range = []  
     idx1 = idx2 = 0
 
     while idx1 < len(skipped1) and idx2 < len(skipped2):
@@ -118,11 +118,28 @@ def projects_statistics_analysis(project: Project):
 
     return datas
 
+def analyzer_statistics_analysis(project: Project):
+    datas = []
+    for config in project.config_list:
+        log_path = os.path.join(config.workspace, 'logs')
+        log_prefix = f'{project.project_name}_{project.opts.inc}_{config.tag}'
+        # log_file = os.path.join(log_path, log_prefix+'.csv')
+        log_file = os.path.join(log_path, log_prefix+'_specific.csv')
+        if os.path.exists(log_file):
+            with open(log_file, 'r', encoding='utf-8') as file:
+                csv_reader = csv.DictReader(file)
+                for row in csv_reader:
+                    datas.append(row)
+        else:
+            print(f"{log_file} doesn't exists.")
+    return datas
+
 def handle_project(projects, opts):
     pwd = os.path.abspath(".")
     projects_root_dir = os.path.join(pwd, "expriments")
     reports_statistics_csv = projects_root_dir + "/reports_statistics.csv"
     projects_statistics_csv = projects_root_dir + '/projects_statistics.csv'
+    analyzers_statistics_csv = projects_root_dir + '/analyzers_statistics.csv'
     first_in = True
 
     for project in projects:
@@ -140,11 +157,26 @@ def handle_project(projects, opts):
                     opts=opts,
                     project_info=project_info)
         
-        datas = reports_statistics_analysis(p)
-        add_to_csv(datas, reports_statistics_csv, first_in)
+        # datas = reports_statistics_analysis(p)
+        # # Single reports statistics.
+        # add_to_csv(datas, os.path.join(workspace, 'reports_statistics.csv'))
+        # # Overall reports statistics.
+        # if not opts.repo:
+        #     add_to_csv(datas, reports_statistics_csv, first_in)
 
         datas = projects_statistics_analysis(p)
-        add_to_csv(datas, projects_statistics_csv, first_in)
+        if datas:
+            # Single project statistics.
+            add_to_csv(datas, os.path.join(workspace, 'projects_statistics.csv'))
+            # Overall statistics.
+            if not opts.repo:
+                add_to_csv(datas, projects_statistics_csv, first_in)
+
+        datas = analyzer_statistics_analysis(p)
+        if datas:
+            add_to_csv(datas, os.path.join(workspace, 'analyzers_statistics.csv'), first_in)
+            if not opts.repo:
+                add_to_csv(datas, analyzers_statistics_csv, first_in)
 
         first_in = False
 

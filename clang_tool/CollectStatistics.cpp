@@ -6,6 +6,7 @@
 #include <clang/AST/DeclTemplate.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/ExprCXX.h>
+#include <clang/AST/PrettyPrinter.h>
 #include <clang/AST/Stmt.h>
 #include <clang/Basic/LLVM.h>
 #include <clang/Basic/SourceLocation.h>
@@ -46,10 +47,11 @@ public:
   explicit BasicInfoCollectConsumer(CompilerInstance &CI, std::string &diffPath,
                                     FileSummary &FileSum_,
                                     const IncOptions &incOpt)
-      : CG(), IncOpt(incOpt), DLM(CI.getASTContext().getSourceManager()),
+      : Context(CI.getASTContext()), CG(), IncOpt(incOpt), DLM(CI.getASTContext().getSourceManager()),
         PP(CI.getPreprocessor()), SM(CI.getASTContext().getSourceManager()),
         FileSum(FileSum_),
-        BasicVisitor(&CI.getASTContext(), DLM, CG, IncOpt, FileSum_) {
+        BasicVisitor(&CI.getASTContext(), DLM, CG, IncOpt, FileSum_),
+        PrintPolicy(CI.getASTContext().getPrintingPolicy()) {
     std::unique_ptr<llvm::Timer> consumerTimer = std::make_unique<llvm::Timer>(
         "Consumer Timer", "Consumer Constructor Time");
     consumerTimer->startTimer();
@@ -59,6 +61,16 @@ public:
     const FileEntry *FE = SM.getFileEntryForID(MainFileID);
     MainFilePath = FE->tryGetRealPathName();
     DLM.Initialize(diffPath, MainFilePath.str());
+
+    PrintPolicy.TerseOutput = false;
+    PrintPolicy.SuppressInlineNamespace = false;
+    // PrintPolicy.SuppressTagKeyword = true;
+    // PrintPolicy.SuppressStrongLifetime = true;
+    // PrintPolicy.SuppressLifetimeQualifiers = true;
+    // PrintPolicy.PrintInjectedClassNameWithArguments = true;
+    // PrintPolicy.FullyQualifiedName = false;
+    // PrintPolicy.UseVoidForZeroParams = false;
+    Context.setPrintingPolicy(PrintPolicy);
 
     consumerTimer->stopTimer();
     llvm::TimeRecord consumerStop = consumerTimer->getTotalTime();
@@ -184,7 +196,26 @@ public:
         getUSRName(D, ret);
         *OS << ret;
       } else {
-        *OS << AnalysisDeclContext::getFunctionName(D->getCanonicalDecl());
+        // *OS << AnalysisDeclContext::getFunctionName(D->getCanonicalDecl());
+        std::string Str;
+        llvm::raw_string_ostream SOS(Str);
+        if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+          auto PrintPolicy = Context.getPrintingPolicy();
+          FD->printQualifiedName(SOS, PrintPolicy);
+      
+          // In C++, there are overloads.
+          if (Context.getLangOpts().CPlusPlus) {
+            SOS << '(';
+            for (const auto &P : FD->parameters()) {
+              if (P != *FD->param_begin())
+                SOS << ", ";
+              SOS << P->getType().getAsString(PrintPolicy);
+            }
+            SOS << ')';
+          }
+        }
+        if (!Str.empty())
+          *OS << Str;
       }
       if (IncOpt.PrintLoc) {
         auto loc = DLM.StartAndEndLineOfDecl(D);
@@ -227,6 +258,7 @@ public:
   }
 
 private:
+  ASTContext &Context;
   const IncOptions &IncOpt;
   llvm::StringRef MainFilePath;
   DiffLineManager DLM;
@@ -236,6 +268,7 @@ private:
   std::deque<Decl *> LocalTUDecls;
   Preprocessor &PP;
   clang::SourceManager &SM;
+  PrintingPolicy PrintPolicy;
 };
 
 class BasicInfoCollectAction : public clang::ASTFrontendAction {

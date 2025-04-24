@@ -75,6 +75,11 @@ class MCArgumentParser():
         self.parser.add_argument('--file-identifier', type=str, dest='file_identifier', choices=['file', 'target'], default='file name', 
                                  help='Identify analysis unit by file or target.')
         self.parser.add_argument('--clean-cache', action='store_true', dest='clean_cache', help='Clean the cache before analysis.')
+        self.parser.add_argument('--basic-info', action='store_true', dest='basic_info', help='Extract the basic project info.')
+        self.parser.add_argument('--only-process-reports', dest='only_process_reports', action='store_true',
+                                 help='Only postprocess reports')
+        self.parser.add_argument('--skip_prepare', dest='skip_prepare', action='store_true',
+                                 help='Skip prepare compilation database')
     
     def parse_args(self, args):
         return self.parser.parse_args(args)

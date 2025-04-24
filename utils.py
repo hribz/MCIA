@@ -24,6 +24,10 @@ def remake_dir(path: Path, debug_TAG=None):
         shutil.rmtree(path)
     os.makedirs(path)
 
+def remove_file(file: str):
+    if os.path.exists(file):
+        os.remove(file)
+
 def run(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
     if not os.path.exists(cwd):
