@@ -3,7 +3,7 @@ import json
 origin_json = '../benchmark.json'
 output_json = '../cleaned_options.json'
 
-origin_config = json.load(open(origin_json, 'r'))
+origin_config: list = json.load(open(origin_json, 'r'))
 
 # If option startswith these headers, changing its type to switch.
 switcher_headers = {
@@ -12,6 +12,9 @@ switcher_headers = {
         'negative': ['--without', '--disable']
     }
 }
+
+skip_projects = {'sqlite'}
+origin_config = [project for project in origin_config if project['project'].split('/')[-1] not in skip_projects]
 
 for project in origin_config:
     print(project['project'])

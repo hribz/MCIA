@@ -96,7 +96,7 @@ class Configuration:
         cmd.extend(['-o', self.workspace])
         cmd.extend(['-j', GlobalConfig.build_jobs])
         cmd.extend(['--inc', self.opts.inc])
-        cmd.extend(['--analyzers', 'clangsa', 'gsa', 'clang-tidy', 'cppcheck'])
+        cmd.extend(['--analyzers', 'clangsa', 'gsa', 'cppcheck'])
         cmd.extend(['--cache', self.cache_file])
         cmd.extend(['--cc', self.opts.cc])
         cmd.extend(['--cxx', self.opts.cxx])
@@ -104,7 +104,7 @@ class Configuration:
         cmd.append(f'--file-identifier={self.opts.file_identifier}')
         cmd.append(f'--tag={self.tag}')
         cmd.extend(['--report-hash', 'context'])
-        cmd.extend(['--clean-inc=False'])
+        cmd.extend(['--no-clean-inc'])
         if self.opts.basic_info:
             cmd.append(f'--basic-info={global_config.basic_info_extractor}')
         if self.opts.verbose:
@@ -538,12 +538,18 @@ class Project:
 
     def process_every_configuraion(self):
         if not self.opts.prep_only:
-            remove_file(os.path.join(self.workspace, 'all_reports.json'))
-            remove_file(os.path.join(self.workspace, 'new_reports.json'))
+            inc_levels = [self.opts.inc]
+            if self.opts.inc == 'all':
+                inc_levels = ['noinc', 'file', 'func']
+            for inc_level in inc_levels:
+                remove_file(os.path.join(self.workspace, f'reports_summary_{inc_level}.json'))
+                remove_file(os.path.join(self.workspace, f'unique_reports_{inc_level}.json'))
         for config in self.config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             process_status = self.prepare_compilation_database(config)
             if not process_status:
                 continue
+            if os.path.exists(config.cache_file):
+                shutil.copyfile(config.cache_file, os.path.join(config.prep_path, 'cache.txt'))
             self.icebear(config)
             # self.reports_analysis(self.baseline, config)

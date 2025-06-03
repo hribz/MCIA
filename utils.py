@@ -33,35 +33,62 @@ def run(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     if not os.path.exists(cwd):
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
-    process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
-    return_code = process.wait()
-    if return_code == 0:
+    process = subprocess.Popen(cmd, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+
+    if process.returncode == 0:
         return True
     else:
         # Do something
-        logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nstdout: {process.stdout}\nstderr: {process.stderr}")
+        stderr = process.stderr.read()
+        if stderr:
+            logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nError: {stderr.strip()}")
         return False
-    
+
 def run_without_check(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     makedir(cwd)
     logger.info(f"[{tag}] {commands_to_shell_script(cmd)}")
     if not os.path.exists(cwd):
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
-    process = subprocess.Popen(cmd, cwd=cwd, stdout=None, stderr=None, env=env)
-    return_code = process.wait()
-    if return_code != 0:
-        logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nstdout: {process.stdout}\nstderr: {process.stderr}")
-    return return_code == 0
+    process = subprocess.Popen(cmd, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+
+    if process.returncode != 0:
+        stderr = process.stderr.read()
+        if stderr:
+            logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!\nError: {stderr.strip()}")
+    return process.returncode == 0
 
 def add_to_csv(datas, csv_file, write_headers: bool = True):
     makedir(os.path.dirname(csv_file))
+    if len(datas) == 0:
+        return
     fieldnames = datas[0].keys()
+    if not write_headers and os.path.exists(csv_file):
+        with open(csv_file, 'r') as f:
+            origin_headers = f.readlines()[0].strip().split(',')
+            if len(origin_headers) > len(fieldnames):
+                fieldnames = origin_headers
     with open(csv_file, 'w' if write_headers else 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_headers:
             writer.writeheader()
-        writer.writerows(datas)
+        for data in datas:
+            data = {h: data.get(h, 'Skipped') for h in fieldnames}
+            writer.writerow(data)
 
 def combine_csv(from_csv, to_csv, first_in):
     assert os.path.exists(from_csv), f"{from_csv} does not exist!"

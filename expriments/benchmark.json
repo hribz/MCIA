@@ -4423,6 +4423,7 @@
         "out_of_tree": false,
         "language": "C",
         "shallow": "f75dd82866382bf5511193a77d8391639652607f",
+        "make": true,
         "switch_values": {
             "positive": {"on": "yes", "off": "no"},
             "negative": {"on": ""}
@@ -6149,7 +6150,8 @@
             "--with-ca-embed",
             "--with-nghttp3",
             "--without-ssl",
-            "--enable-unity"
+            "--enable-unity",
+            "--disable-rt"
         ],
         "constant_options": [
             "--with-openssl"
@@ -8204,10 +8206,14 @@
         "language": "C",
         "shallow": "de48e47ddf78aba02fd9623bc7ce685540a10743",
         "make": true,
-        "gcc": true,
         "switch_values": {
             "positive": {"on": "yes", "off": "no"},
             "negative": {"on": ""}
+        },
+        "env": {
+            "AR": "llvm-ar-18",
+            "CC": "clang-19",
+            "CXX": "clang++-19"
         },
         "ignore_options": [
             "--with-baseruby",
@@ -8219,7 +8225,8 @@
             "--with-modular-gc",
             "--with-soname",
             "--with-coroutine",
-            "--with-rubylibprefix"
+            "--with-rubylibprefix",
+            "--with-ruby-pc"
         ],
         "config_options": [
             {
@@ -13455,6 +13462,7 @@
         "project": "bitcoin/bitcoin",
         "build_type": "cmake",
         "out_of_tree": true,
+        "make": true,
         "language": "C++",
         "shallow": "a60d5702fd5c81718d2add42e0d50ef5a32e6378",
         "switch_values": {

@@ -66,11 +66,11 @@ class MCArgumentParser():
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument('--repo', type=str, dest='repo', help='Only analyse specific repos.')
         self.parser.add_argument('--verbose', action='store_true', dest='verbose', help='Record debug information.')
-        self.parser.add_argument('--cc', type=str, dest='cc', default='clang-18', help='Customize the C compiler for configure & build.')
-        self.parser.add_argument('--cxx', type=str, dest='cxx', default='clang++-18', help='Customize the C++ compiler for configure & build.')
+        self.parser.add_argument('--cc', type=str, dest='cc', default='clang-19', help='Customize the C compiler for configure & build.')
+        self.parser.add_argument('--cxx', type=str, dest='cxx', default='clang++-19', help='Customize the C++ compiler for configure & build.')
         self.parser.add_argument('--preprocess-only', dest='prep_only', action='store_true', help='Only preprocess and diff')
-        self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func'], default='func',
-                                 help='Incremental analysis mode: noinc, file, func')
+        self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func', 'all'], default='func',
+                                 help='Incremental analysis mode: noinc, file, func, all')
         self.parser.add_argument('--tag', type=str, dest='tag', help='Tag of this analysis.')
         self.parser.add_argument('--file-identifier', type=str, dest='file_identifier', choices=['file', 'target'], default='file name', 
                                  help='Identify analysis unit by file or target.')

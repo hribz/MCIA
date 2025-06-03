@@ -2,23 +2,70 @@ import argparse
 import json
 import os
 import sys
+from typing import Dict, List
+
+from pydantic import BaseModel, Field
 
 from project import Project, Configuration
 from project_info import ProjectInfo
 from utils import *
 
+analyzers = ['CSA', 'GSA', 'CppCheck']
+inc_levels = []
+
+class AnalyzerStatistics(BaseModel):
+    total: int = 0
+    configs: Dict[str, int] = Field(default_factory=dict)
+
+class Summary(BaseModel):
+    total: int = 0
+    CSA: AnalyzerStatistics = Field(default_factory=AnalyzerStatistics)
+    GSA: AnalyzerStatistics = Field(default_factory=AnalyzerStatistics)
+    CppCheck: AnalyzerStatistics = Field(default_factory=AnalyzerStatistics)
+    ClangTidy: AnalyzerStatistics = Field(default_factory=AnalyzerStatistics)
+
+class Statistics(BaseModel):
+    summary: Summary = Field(default_factory=Summary)
+    diff: Summary = Field(default_factory=Summary)
+    ClangTidyDistribution: Dict[str, int] = Field(default_factory=dict)
+
+    def update_analyzer_statistics(self, analyzer_name: str, report_num: int, current_version: str):
+        getattr(self.summary, analyzer_name).total += report_num
+        getattr(self.summary, analyzer_name).configs[current_version] = report_num
+        self.summary.total += report_num
+
+    def update_diff_statistics(self, analyzer_name: str, new_reports_count: int, current_version: str):
+        getattr(self.diff, analyzer_name).total += new_reports_count
+        getattr(self.diff, analyzer_name).configs[current_version] = new_reports_count
+        self.diff.total += new_reports_count
+
+    def update_clang_tidy_distribution(self, distribution: Dict[str, int]):
+        self.ClangTidyDistribution = distribution
+
 def reports_statistics_analysis(project: Project):
     datas = []
+    all_reports: Dict[str, Statistics] = {}
+    for inc_level in inc_levels:
+        reports_summary_file = os.path.join(project.workspace, f'reports_summary_{inc_level}.json')
+        if not os.path.exists(reports_summary_file):
+            continue
+        all_reports[inc_level] = Statistics(**json.load(open(reports_summary_file, 'r')))
+    if len(all_reports) == 0:
+        return datas
+
     for config in project.config_list:
         data = {
-            "project": project.project_name,
-            "config": config.tag,
-            "reports number": 0,
+            'project': project.project_name, 'version': config.tag          
         }
-        new_reports_json = json.load(open(os.path.join(config.cache_path, 'new_reports.json'), 'r'))
-        for analyzer, reports in new_reports_json.items():
-            data['reports number'] = reports[f"{config.tag} number"]
-            data[f"new reports ({analyzer})"] = reports["diff number"]
+        for analyzer in ['CSA', 'GSA', 'CppCheck']:
+            for inc_level in inc_levels:
+                if inc_level in all_reports:
+                    summary = all_reports[inc_level].summary
+                    diff = all_reports[inc_level].diff
+                    inc_analyzer = f"{analyzer} ({inc_level})"
+                    data[inc_analyzer] = getattr(summary, analyzer).configs.get(config.tag, 0)
+                    analyzer_diff = f"{inc_analyzer} (diff)"
+                    data[analyzer_diff] = 0 if (config == project.baseline or diff is None) else getattr(diff, analyzer).configs.get(config.tag, 0)
         datas.append(data)
     return datas
 
@@ -50,9 +97,9 @@ def projects_statistics_analysis(project: Project):
     combine_statistics_across_configs = {}
 
     for config in project.config_list:
-        print(f"Processing {config.tag}...")
+        # print(f"Processing {config.tag}...")
         data = {
-            'project': project.project_name, 'config': config.tag,
+            'project': project.project_name, 'version': config.tag,
             'files (total)': 0, 'files (main)': 0, 'files (user)': 0, 
             'Lines (total)': 0, 'Lines (skip)': 0, 'Coverage': 100.0, 
             'CG (total)': 0, 'CG (main)': 0, 'CG (user)': 0, 
@@ -76,7 +123,7 @@ def projects_statistics_analysis(project: Project):
             data['files (main)'] += 1 if statistics['kind'] == 'MAIN' else 0
             data['files (user)'] += 1 if statistics['kind'] == 'USER' else 0
 
-            data['CG (total)'] +=  statistics['CG Nodes']
+            data['CG (total)'] += statistics['CG Nodes']
             data['CG (main)'] += statistics['CG Nodes'] if statistics['kind'] == 'MAIN' else 0
             data['CG (user)'] += statistics['CG Nodes'] if statistics['kind'] == 'USER' else 0
 
@@ -118,13 +165,15 @@ def projects_statistics_analysis(project: Project):
 
     return datas
 
-def analyzer_statistics_analysis(project: Project):
+def analyzer_statistics_analysis(project: Project, specific):
     datas = []
     for config in project.config_list:
         log_path = os.path.join(config.workspace, 'logs')
         log_prefix = f'{project.project_name}_{project.opts.inc}_{config.tag}'
-        # log_file = os.path.join(log_path, log_prefix+'.csv')
-        log_file = os.path.join(log_path, log_prefix+'_specific.csv')
+        if specific:
+            log_file = os.path.join(log_path, log_prefix+'_specific.csv')
+        else:
+            log_file = os.path.join(log_path, log_prefix+'.csv')
         if os.path.exists(log_file):
             with open(log_file, 'r', encoding='utf-8') as file:
                 csv_reader = csv.DictReader(file)
@@ -134,13 +183,64 @@ def analyzer_statistics_analysis(project: Project):
             print(f"{log_file} doesn't exists.")
     return datas
 
+def ave_for_datas(datas: List[Dict], key):
+    if len(datas) < 1:
+        return None
+    values = []
+    for item in datas:
+        value = item[key]
+        if str.isdecimal(value):
+            values.append(int(value))
+        else:
+            try:
+                float_value = float(value)
+                values.append(float_value)
+            except ValueError:
+                values.append(0)
+    ret = sum(values) / len(values) if len(values) > 0 else None
+    return ret
+
+def sum_for_datas(datas: List[Dict], key):
+    if len(datas) < 1:
+        return None
+    values = []
+    for item in datas:
+        value = item[key]
+        if isinstance(value, int | float):
+            values.append(value)
+        elif isinstance(value, str):
+            if str.isdecimal(value):
+                values.append(int(value))
+            else:
+                try:
+                    float_value = float(value)
+                    values.append(float_value)
+                except ValueError:
+                    values.append(0)
+        else:
+            values.append(0)
+    ret = sum(values)
+    return ret
+
+def calculate_overview_data(keys, overview_data, datas):
+    for key in keys:
+        sum_val = sum_for_datas(datas, key)
+        if sum_val:
+            overview_data[key] = sum_val
+
 def handle_project(projects, opts):
     pwd = os.path.abspath(".")
     projects_root_dir = os.path.join(pwd, "expriments")
     reports_statistics_csv = projects_root_dir + "/reports_statistics.csv"
     projects_statistics_csv = projects_root_dir + '/projects_statistics.csv'
     analyzers_statistics_csv = projects_root_dir + '/analyzers_statistics.csv'
+    analyzers_statistics_specific_csv = projects_root_dir + '/analyzers_statistics_specific.csv'
+    time_overview = projects_root_dir + '/time_overview.csv'
+    reports_overview = projects_root_dir + '/reports_overview.csv'
     first_in = True
+
+    time_overview_datas = []
+    reports_overview_datas = []
 
     for project in projects:
         if opts.repo and opts.repo != project['project'] and opts.repo != os.path.basename(project['project']):
@@ -157,12 +257,28 @@ def handle_project(projects, opts):
                     opts=opts,
                     project_info=project_info)
         
-        # datas = reports_statistics_analysis(p)
-        # # Single reports statistics.
-        # add_to_csv(datas, os.path.join(workspace, 'reports_statistics.csv'))
-        # # Overall reports statistics.
-        # if not opts.repo:
-        #     add_to_csv(datas, reports_statistics_csv, first_in)
+        time_overview_data = {
+            'project': p.project_name, 'version': 'total',
+            'files': 0, 'diff files': 0, 'prepare for inc': 0,
+            'changed function': 0, 'reanalyze function': 0
+        }
+        time_overview_data.update({key: 0 for key in analyzers})
+        
+        reports_overview_data = {
+            'project': p.project_name, 'version': 'total'
+        }
+        reports_overview_data.update({key: 0 for key in [i for analyzer in analyzers for i in (analyzer, analyzer + " (diff)")]})
+        
+        datas = reports_statistics_analysis(p)
+        if datas:
+            # Single reports statistics.
+            add_to_csv(datas, os.path.join(workspace, 'reports_statistics.csv'))
+            # Overall reports statistics.
+            if not opts.repo:
+                add_to_csv(datas, reports_statistics_csv, first_in)
+            
+            keys = [i for analyzer in analyzers for i in (analyzer, analyzer + " (diff)")]
+            calculate_overview_data(keys, reports_overview_data, datas)
 
         datas = projects_statistics_analysis(p)
         if datas:
@@ -172,14 +288,33 @@ def handle_project(projects, opts):
             if not opts.repo:
                 add_to_csv(datas, projects_statistics_csv, first_in)
 
-        datas = analyzer_statistics_analysis(p)
+        datas = analyzer_statistics_analysis(p, False)
         if datas:
-            add_to_csv(datas, os.path.join(workspace, 'analyzers_statistics.csv'), first_in)
+            add_to_csv(datas, os.path.join(workspace, 'analyzers_statistics.csv'))
             if not opts.repo:
                 add_to_csv(datas, analyzers_statistics_csv, first_in)
+            
+            keys = ['prepare for inc']
+            calculate_overview_data(keys, time_overview_data, datas)
 
+        datas = analyzer_statistics_analysis(p, True)
+        if datas:
+            add_to_csv(datas, os.path.join(workspace, 'analyzers_statistics_specific.csv'))
+            if not opts.repo:
+                add_to_csv(datas, analyzers_statistics_specific_csv, first_in)
+
+            keys = analyzers.copy()
+            keys.extend([f"analyze ({inc_level})" for inc_level in inc_levels])
+            keys.extend(['files', 'diff files', 'changed function', 'reanalyze function'])
+            calculate_overview_data(keys, time_overview_data, datas)
+
+        time_overview_datas.append(time_overview_data)
+        reports_overview_datas.append(reports_overview_data)
         first_in = False
 
+    if not opts.repo:
+        add_to_csv(time_overview_datas, time_overview, True)
+        add_to_csv(reports_overview_datas, reports_overview, True)
 
 class PSArgumentParser():
     def __init__(self):
@@ -189,8 +324,8 @@ class PSArgumentParser():
         self.parser.add_argument('--cc', type=str, dest='cc', default='clang-18', help='Customize the C compiler for configure & build.')
         self.parser.add_argument('--cxx', type=str, dest='cxx', default='clang++-18', help='Customize the C++ compiler for configure & build.')
         self.parser.add_argument('--preprocess-only', dest='prep_only', action='store_true', help='Only preprocess and diff')
-        self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func'], default='func',
-                                 help='Incremental analysis mode: noinc, file, func')
+        self.parser.add_argument('--inc', type=str, dest='inc', choices=['noinc', 'file', 'func', 'all'], default='all',
+                                 help='Incremental analysis mode: noinc, file, func, all')
         self.parser.add_argument('--tag', type=str, dest='tag', help='Tag of this analysis.')
         self.parser.add_argument('--file-identifier', type=str, dest='file_identifier', choices=['file', 'target'], default='file name', 
                                  help='Identify analysis unit by file or target.')
@@ -199,9 +334,14 @@ class PSArgumentParser():
         return self.parser.parse_args(args)
 
 def main(args):
+    global inc_levels, analyzers
     parser = PSArgumentParser()
     opts = parser.parse_args(args)
     projects = json.load(open('expriments/cleaned_options.json', 'r'))
+    inc_levels = [opts.inc]
+    if opts.inc == 'all':
+        inc_levels = ['noinc', 'file', 'func']
+    analyzers = [f"{i} ({inc_level})" for i in analyzers for inc_level in inc_levels]
     handle_project(projects, opts)
 
 if __name__ == '__main__':

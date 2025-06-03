@@ -53,7 +53,7 @@ class Logger(object):
             logger = logging.getLogger(str(level))
             logger.setLevel(level)
 
-            logger.handlers.clear()
+            logger.handlers.pop()
             
             log_path = os.path.abspath(handler[level])
             fh = logging.FileHandler(log_path)

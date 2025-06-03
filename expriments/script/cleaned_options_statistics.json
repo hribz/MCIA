@@ -15,11 +15,11 @@
         "ignore": 0,
         "options": 17,
         "conflict": 10,
-        "combine": 3
+        "combine": 6
     },
     "sqlite/sqlite": {
-        "all": 29,
-        "positive": 18,
+        "all": 28,
+        "positive": 17,
         "negative": 9,
         "ignore": 0,
         "options": 2,
@@ -36,8 +36,8 @@
         "combine": 0
     },
     "php/php-src": {
-        "all": 157,
-        "positive": 96,
+        "all": 156,
+        "positive": 95,
         "negative": 38,
         "ignore": 0,
         "options": 23,
@@ -54,8 +54,8 @@
         "combine": 0
     },
     "ruby/ruby": {
-        "all": 67,
-        "positive": 29,
+        "all": 65,
+        "positive": 27,
         "negative": 13,
         "ignore": 0,
         "options": 25,
@@ -63,30 +63,75 @@
         "combine": 0
     },
     "opencv/opencv": {
-        "all": 174,
-        "positive": 165,
-        "negative": 3,
+        "all": 171,
+        "positive": 142,
+        "negative": 10,
         "ignore": 0,
-        "options": 6,
-        "conflict": 0,
+        "options": 19,
+        "conflict": 2,
         "combine": 0
     },
     "protocolbuffers/protobuf": {
-        "all": 34,
-        "positive": 30,
-        "negative": 4,
+        "all": 30,
+        "positive": 23,
+        "negative": 3,
         "ignore": 0,
-        "options": 0,
-        "conflict": 0,
+        "options": 4,
+        "conflict": 2,
         "combine": 0
     },
     "tesseract-ocr/tesseract": {
-        "all": 15,
-        "positive": 9,
+        "all": 14,
+        "positive": 8,
         "negative": 5,
         "ignore": 0,
         "options": 1,
         "conflict": 0,
         "combine": 0
+    },
+    "tmux/tmux": {
+        "all": 11,
+        "positive": 7,
+        "negative": 3,
+        "ignore": 0,
+        "options": 1,
+        "conflict": 0,
+        "combine": 0
+    },
+    "grpc/grpc": {
+        "all": 55,
+        "positive": 39,
+        "negative": 1,
+        "ignore": 0,
+        "options": 15,
+        "conflict": 3,
+        "combine": 0
+    },
+    "bitcoin/bitcoin": {
+        "all": 44,
+        "positive": 37,
+        "negative": 3,
+        "ignore": 0,
+        "options": 4,
+        "conflict": 0,
+        "combine": 0
+    },
+    "GNOME/libxml2": {
+        "all": 40,
+        "positive": 32,
+        "negative": 5,
+        "ignore": 0,
+        "options": 3,
+        "conflict": 0,
+        "combine": 0
+    },
+    "apache/httpd": {
+        "all": 168,
+        "positive": 140,
+        "negative": 23,
+        "ignore": 0,
+        "options": 5,
+        "conflict": 0,
+        "combine": 2
     }
 }
