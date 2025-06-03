@@ -1,14 +1,15 @@
 import argparse
+import json
 import os
 import random
 import re
-import json
 import subprocess
 import sys
 import time
-from typing import List, Dict
-from openai import OpenAI, RateLimitError
+from typing import Dict, List
+
 from dotenv import load_dotenv
+from openai import OpenAI, RateLimitError
 
 from project import BuildType
 
@@ -205,7 +206,7 @@ class ResilientClassifier(EnhancedConfigClassifier):
                 self.min_delay = max(1.0, self.min_delay * 0.9)
                 return result
 
-            except RateLimitError as e:
+            except RateLimitError:
                 backoff = self._calculate_backoff(attempt)
                 self._print_debug(
                     f"Rate limit reached. Backing off for {backoff:.2f}s", "WARNING"
@@ -274,7 +275,7 @@ class ConfigExtractor:
         for line in result.stdout.split("\n"):
             if line.startswith("//"):
                 current_desc.append(line[3:].strip())
-            elif match := re.match(
+            elif re.match(
                 r"^([A-Za-z_0-9]+):([A-Za-z_0-9]+)=(.+)$", line.strip()
             ):
                 items.append(

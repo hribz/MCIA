@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from typing import List
+
 from logger import logger
 
 
@@ -184,7 +185,7 @@ class ConfigSampling:
 
         def handle_option(op, state, option: Option) -> bool:
             nonlocal conflict_options
-            if state == True:
+            if state:
                 # This option is turn on.
                 if option.option not in conflict_options:
                     # Update conflict options set.
@@ -249,7 +250,7 @@ class ConfigSampling:
                     op, state = option.positive()
                     if state and option.option == "--enable-all":
                         logger.info(
-                            f"[Enable All] --enable-all is turn on, don't need to consider other options."
+                            "[Enable All] --enable-all is turn on, don't need to consider other options."
                         )
                         options = [op]
                         break
@@ -257,7 +258,7 @@ class ConfigSampling:
                     op, state = option.negative()
                     if state and option.option == "--disable-all":
                         logger.info(
-                            f"[Disable All] --disable-all is turn on, don't need to consider other options."
+                            "[Disable All] --disable-all is turn on, don't need to consider other options."
                         )
                         options = [op]
                         break

@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from project import Project, Configuration
+from project import Project
 from project_info import ProjectInfo
 from utils import *
 
