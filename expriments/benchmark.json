@@ -16365,5 +16365,4275 @@
               "reason": "The option specifies a location for libxml2, which is related to linking libraries or specifying directories rather than enabling or disabling functionalities or affecting file compilation directly."
            }
         ]
+    },
+    {
+        "project": "mesa/mesa",
+        "build_type": "meson",
+        "out_of_tree": true,
+        "language": "C",
+        "shallow": "24.3",
+        "make": true,
+        "native_file": {
+            "binaries": {
+                "llvm-config": "/usr/bin/llvm-config-18",
+                "cmake": "/usr/bin/cmake",
+                "c": "/usr/bin/clang-18",
+                "cpp": "/usr/bin/clang++-18",
+                "ar": "/usr/bin/llvm-ar-18",
+                "strip": "/usr/bin/llvm-strip-18"
+            },
+            "properties": {
+                "cmake_prefix_path": ["/usr/lib/llvm-18", "/usr/local", "/opt/local"],
+                "pkg_config_path": "/usr/lib/llvm-18/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig",
+                "library_dirs": ["/usr/lib/llvm-18/lib", "/usr/lib/x86_64-linux-gnu"],
+                "include_dirs": ["/usr/lib/llvm-18/include", "/usr/include"]
+            }
+        },
+        "constant_options": [
+        ],
+        "ignore_options": [
+            "split-debug",
+            "android-libbacktrace",
+            "android-strict",
+            "android-stub",
+            "gallium-d3d10umd",
+            "html-docs",
+            "shared-llvm"
+        ],
+        "config_options": [
+            {
+                "key": "allow-kcmp",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Allow using KCMP_FILE to compare file descriptions. auto = allowed everywhere except on Android",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "amd-use-llvm",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Whether to use LLVM for the AMD drivers, if LLVM is included.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "android-libbacktrace",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Use Android's libbacktrace",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "android-strict",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable strict Android compliance. Disabling may cause CTS failures or other problems, but allows drivers to expose capabilities that are normally hidden. Default: true",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "android-stub",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build against android-stub",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "build-aco-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build ACO tests. These require RADV and glslang but not an AMD GPU.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "build-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build unit tests. Currently this will build *all* unit tests except the ACO tests, which may build more than expected.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "custom-shader-replacement",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Enable a custom shader replacement mechanism. Note that enabling this option requires adding/generating a shader_replacement.h file that can be included (see shaderapi.c).",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "d3d-drivers-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Location of D3D drivers. Default: $libdir/d3d",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "datasources",
+                "values": [
+                    "auto"
+                ],
+                "kind": "ignore",
+                "description": "List of Perfetto datasources to build. If this is set to `auto`, datasources that can not be build are skipped. Default: [`auto`]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "draw-use-llvm",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Whether to use LLVM for the Gallium draw module, if LLVM is included.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dri-drivers-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Location to install dri drivers. Default: $libdir/dri.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "egl",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build support for EGL platform",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "egl-lib-suffix",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Suffix to append to EGL library name.  Default: none.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "egl-native-platform",
+                "values": [
+                    "auto",
+                    "x11",
+                    "wayland",
+                    "haiku",
+                    "android",
+                    "windows",
+                    "surfaceless",
+                    "drm"
+                ],
+                "kind": "options",
+                "description": "the window system EGL assumes for EGL_DEFAULT_DISPLAY",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "enable-glcpp-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build glcpp unit tests. These are flaky on CI.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "execmem",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Does nothing, left here for a while to avoid build breakages.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "expat",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Controls the use of expat. Cannot be disabled if xmlconfig is enabled.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "freedreno-kmds",
+                "values": [
+                    "msm"
+                ],
+                "kind": "ignore",
+                "description": "List of kernel-mode drivers to enable for freedreno gallium and vulkan driver",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-d3d10-dll-name",
+                "values": [
+                    "libgallium_d3d10"
+                ],
+                "kind": "ignore",
+                "description": "name of gallium d3d10 target DLL built for Windows. defaults to libgallium_d3d10.dll to match DRI",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-d3d10umd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build gallium D3D10 WDDM UMD frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-d3d12-graphics",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build gallium d3d12 with graphics pipeline support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-d3d12-video",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build gallium d3d12 with video support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-drivers",
+                "values": [
+                    "auto"
+                ],
+                "kind": "ignore",
+                "description": "List of gallium drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-extra-hud",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable HUD block/NIC I/O HUD status support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-nine",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build gallium \"nine\" Direct3D 9.x frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-opencl",
+                "values": [
+                    "icd",
+                    "standalone",
+                    "disabled"
+                ],
+                "kind": "options",
+                "description": "build gallium \"clover\" OpenCL frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-rusticl",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build gallium \"rusticl\" OpenCL frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-rusticl-enable-drivers",
+                "values": [
+                    "auto",
+                    "asahi"
+                ],
+                "kind": "ignore",
+                "description": "List of gallium drivers for which rusticl will be enabled by default",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-va",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "enable gallium va frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-vdpau",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "enable gallium vdpau frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-wgl-dll-name",
+                "values": [
+                    "libgallium_wgl"
+                ],
+                "kind": "ignore",
+                "description": "name of gallium wgl target DLL built for Windows. defaults to libgallium_wgl.dll to match DRI",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gallium-xa",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "enable gallium xa frontend.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gbm",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build support for gbm platform",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gbm-backends-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Locations to search for gbm backends, passed as colon separated list. Default: $libdir/gbm.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gles-lib-suffix",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Suffix to append to GLES library names.  Default: none.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gles1",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build support for OpenGL ES 1.x",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gles2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build support for OpenGL ES 2.x and 3.x",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glvnd",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Enable GLVND support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glvnd-vendor-name",
+                "values": [
+                    "mesa"
+                ],
+                "kind": "ignore",
+                "description": "Vendor name string to use for glvnd libraries",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glx",
+                "values": [
+                    "auto",
+                    "disabled",
+                    "dri",
+                    "xlib"
+                ],
+                "kind": "options",
+                "description": "Build support for GLX platform",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glx-direct",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable direct rendering in GLX and EGL for DRI",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glx-read-only-text",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Disable writable .text section on x86 (decreases performance)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gpuvis",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable tracing markers for gpuvis. Default: false",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "html-docs",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build HTML documentation.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "html-docs-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Location to install HTML documentation. Default: $datadir/doc/mesa.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "imagination-srv",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable Services backend for Imagination Technologies vulkan driver",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "install-intel-clc",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Install the intel-clc compiler (if needed for cross builds).",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "install-intel-gpu-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "combination": ["build-tests=true"],
+                "kind": "positive",
+                "description": "Build and install Intel unit tests which require the GPU. This option is for developers and the Intel CI system only.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "intel-clc",
+                "values": [
+                    "enabled",
+                    "system",
+                    "auto"
+                ],
+                "kind": "options",
+                "description": "Build the intel-clc compiler or use a system version.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "intel-rt",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build Ray Tracing on supported hardware.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "legacy-x11",
+                "values": [
+                    "none"
+                ],
+                "kind": "ignore",
+                "description": "Build legacy X11 support features.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libunwind",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Use libunwind for stack-traces",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "llvm",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build with LLVM support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "llvm-orcjit",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build llvmpipe with LLVM ORCJIT support. Has no effect when building for architectures without LLVM MCJIT support -- ORCJIT is the only choice on such architectures and will always be enabled.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "lmsensors",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Enable HUD lmsensors support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "microsoft-clc",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build support for the Microsoft CLC to DXIL compiler",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "min-windows-version",
+                "values": [
+                    "8"
+                ],
+                "kind": "ignore",
+                "description": "Minimum Windows version to support. Defaults to Windows 8.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "moltenvk-dir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Location of the MoltenVk SDK. Default: ",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "opencl-spirv",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build gallium \"clover\" OpenCL frontend with SPIR-V binary support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "opengl",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build support for desktop OpenGL",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "osmesa",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build OSmesa.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "perfetto",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable performance analysis with Perfetto. Default: false",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "platform-sdk-version",
+                "values": [
+                    "25"
+                ],
+                "kind": "ignore",
+                "description": "Android Platform SDK version. Default: Nougat version.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "platforms",
+                "values": [
+                    "auto"
+                ],
+                "kind": "ignore",
+                "description": "window systems to support. If this is set to `auto`, all platforms applicable will be enabled.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "power8",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Enable power8 optimizations.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "radv-build-id",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Override build id for shader cache keys (hex string). Can be extracted with readelf -x .note.gnu.build-id",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "selinux",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Does nothing, left here for a while to avoid build breakages.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shader-cache",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build with on-disk shader cache support.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shader-cache-default",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "If set to false, the feature is only activated when environment variable MESA_SHADER_CACHE_DISABLE is set to false",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shader-cache-max-size",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Default value for MESA_SHADER_CACHE_MAX_SIZE enviroment variable. If set, determines the maximum size of the on-disk cache of compiled shader programs, can be overriden by enviroment variable if needed. Should be set to a number optionally followed by ``K``, ``M``, or ``G`` to specify a size in kilobytes, megabytes, or gigabytes. By default, gigabytes will be assumed. And if unset, a maximum size of 1GB will be used.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shared-glapi",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Whether to build a shared or static glapi. Defaults to disabled on Windows, enabled elsewhere",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shared-llvm",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Whether to link LLVM shared or statically.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "spirv-to-dxil",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build support for the SPIR-V to DXIL library",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "split-debug",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "split debug information (-gsplit-dwarf compile flag) and debug information in the gdb index format (--gdb-index)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sse2",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "use msse2 flag for x86. Uses sse/sse2 instead of x87. Default: true",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "static-libclc",
+                "values": [],
+                "kind": "ignore",
+                "description": "Link libclc SPIR-V statically.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "teflon",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Enable TensorFlow Lite delegate. Default: false",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tools",
+                "values": [],
+                "kind": "ignore",
+                "description": "List of tools to build. (Note: `intel-ui` selects `intel`)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "unversion-libgallium",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Do not include mesa version in libgallium DSO filename. Do not enable unless you know what you are doing. Default: false",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "va-libs-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to put va libraries. defaults to $libdir/dri.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "valgrind",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build with valgrind support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vdpau-libs-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to put vdpau libraries. defaults to $libdir/vdpau.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "video-codecs",
+                "values": [
+                    "all_free"
+                ],
+                "kind": "ignore",
+                "description": "List of codecs to build support for. Distros might want to consult their legal department before enabling these. This is used for all video APIs (vaapi, vdpau, vulkan). Non-patent encumbered codecs will be enabled by default with the all_free default value.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vmware-mks-stats",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build gallium VMware/svga driver with mksGuestStats instrumentation.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vulkan-beta",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "Build vulkan drivers with BETA extensions enabled.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vulkan-drivers",
+                "values": [
+                    "auto"
+                ],
+                "kind": "ignore",
+                "description": "List of vulkan drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vulkan-icd-dir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "Location relative to prefix to put vulkan icds on install. Default: $datadir/vulkan/icd.d",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vulkan-layers",
+                "values": [],
+                "kind": "ignore",
+                "description": "List of vulkan layers to build",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xlib-lease",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Enable VK_EXT_acquire_xlib_display.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xmlconfig",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Build custom xmlconfig (driconf) support. If disabled, the default driconf file is hardcoded into Mesa. Requires expat.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "zlib",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Use ZLIB to build driver. Default: enabled",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "zstd",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "Use ZSTD instead of ZLIB in some cases.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            }
+        ]
+    },
+    {
+        "project": "systemd/systemd",
+        "build_type": "meson",
+        "out_of_tree": true,
+        "language": "C",
+        "shallow": "main",
+        "make": true,
+        "ignore make error": true,
+        "native_file": {
+            "binaries": {
+                "llvm-config": "/usr/bin/llvm-config-18",
+                "cmake": "/usr/bin/cmake",
+                "c": "/usr/bin/clang-18",
+                "cpp": "/usr/bin/clang++-18",
+                "ar": "/usr/bin/llvm-ar-18",
+                "strip": "/usr/bin/llvm-strip-18"
+            },
+            "properties": {
+                "cmake_prefix_path": ["/usr/lib/llvm-18", "/usr/local", "/opt/local"],
+                "pkg_config_path": "/usr/lib/llvm-18/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig",
+                "library_dirs": ["/usr/lib/llvm-18/lib", "/usr/lib/x86_64-linux-gnu"],
+                "include_dirs": ["/usr/lib/llvm-18/include", "/usr/include"]
+            }
+        },
+        "ignore_options": [
+            "llvm-fuzz",
+            "oss-fuzz",
+            "localed"
+        ],
+        "config_options": [
+            {
+                "key": "acl",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libacl support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "adm-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"adm\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "adm-group",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "the ACL for adm group should be added",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "analyze",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install systemd-analyze",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "apparmor",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "AppArmor support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "audio-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"audio\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "audit",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libaudit support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "backlight",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for restoring backlight state",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bashcompletiondir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for bash completion scripts [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "binfmt",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for custom binary formats",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "blkid",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libblkid support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bootloader",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "sd-boot/stub and userspace tools",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bpf-compiler",
+                "values": [
+                    "clang",
+                    "gcc"
+                ],
+                "kind": "options",
+                "description": "compiler used to build BPF programs",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bpf-framework",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build BPF programs from source code in restricted C",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bump-proc-sys-fs-file-max",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "bump /proc/sys/fs/file-max to LONG_MAX",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bump-proc-sys-fs-nr-open",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "bump /proc/sys/fs/nr_open to INT_MAX",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "bzip2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "bzip2 compression support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "cdrom-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"cdrom\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "certificate-root",
+                "values": [
+                    "/etc/ssl"
+                ],
+                "kind": "ignore",
+                "description": "the prefix for TLS certificates",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "clock-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"clock\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "clock-valid-range-usec-max",
+                "values": [
+                    "473364000000000"
+                ],
+                "kind": "ignore",
+                "description": "maximum value in microseconds for the difference between RTC and epoch, exceeding which is considered an RTC error [\"0\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "compat-mutable-uid-boundaries",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "look at uid boundaries in /etc/login.defs for compatibility",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "configfiledir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for configuration files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "container-uid-base-max",
+                "values": [
+                    "1878982656"
+                ],
+                "kind": "ignore",
+                "description": "maximum container UID base",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "container-uid-base-min",
+                "values": [
+                    "524288"
+                ],
+                "kind": "ignore",
+                "description": "minimum container UID base",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "coredump",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the coredump handler",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "create-log-dirs",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "create /var/log/journal{,/remote}",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "cryptolib",
+                "values": [
+                    "auto",
+                    "openssl",
+                    "gcrypt"
+                ],
+                "kind": "options",
+                "description": "cryptolib",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dbus",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libdbus support (for tests only)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dbus-interfaces-dir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "export D-Bus introspection XML as standalone files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dbuspolicydir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "D-Bus policy directory",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dbussessionservicedir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "D-Bus session service directory",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dbussystemservicedir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "D-Bus system service directory",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "debug-extra",
+                "values": [],
+                "kind": "ignore",
+                "description": "enable extra debugging",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "debug-shell",
+                "values": [
+                    "/bin/sh"
+                ],
+                "kind": "ignore",
+                "description": "path to debug shell binary",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "debug-tty",
+                "values": [
+                    "/dev/tty9"
+                ],
+                "kind": "ignore",
+                "description": "specify the tty device for debug shell",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-compression",
+                "values": [
+                    "auto",
+                    "zstd",
+                    "lz4",
+                    "xz"
+                ],
+                "kind": "options",
+                "description": "default compression algorithm",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-dns-over-tls",
+                "values": [
+                    "yes",
+                    "opportunistic",
+                    "no"
+                ],
+                "kind": "options",
+                "description": "default DNS-over-TLS mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-dnssec",
+                "values": [
+                    "yes",
+                    "allow-downgrade",
+                    "no"
+                ],
+                "kind": "options",
+                "description": "default DNSSEC mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-keymap",
+                "values": [
+                    "us"
+                ],
+                "kind": "ignore",
+                "description": "default keymap used when populating /etc/vconsole.conf",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-kill-user-processes",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "the default value for KillUserProcesses= setting",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-llmnr",
+                "values": [
+                    "yes",
+                    "resolve",
+                    "no"
+                ],
+                "kind": "options",
+                "description": "default LLMNR mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-locale",
+                "values": [
+                    "C.UTF-8"
+                ],
+                "kind": "ignore",
+                "description": "default locale used when /etc/locale.conf does not exist",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-mdns",
+                "values": [
+                    "yes",
+                    "resolve",
+                    "no"
+                ],
+                "kind": "options",
+                "description": "default MulticastDNS mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-mountfsd-trusted-directories",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "controls whether mountfsd should apply a relaxed policy on DDIs in system DDI directories",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-net-naming-scheme",
+                "values": [
+                    "latest"
+                ],
+                "kind": "ignore",
+                "description": "default net.naming_scheme= value",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-network",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install default .network files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-timeout-sec",
+                "values": [
+                    "90"
+                ],
+                "kind": "ignore",
+                "description": "default timeout for system unit start/stop",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-user-shell",
+                "values": [
+                    "/bin/bash"
+                ],
+                "kind": "ignore",
+                "description": "default interactive shell",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "default-user-timeout-sec",
+                "values": [
+                    "90"
+                ],
+                "kind": "ignore",
+                "description": "default timeout for user unit start/stop",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dev-kvm-mode",
+                "values": [
+                    "0666"
+                ],
+                "kind": "ignore",
+                "description": "/dev/kvm access mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dialout-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"dialout\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "disk-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"disk\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dns-over-tls",
+                "values": [
+                    "auto",
+                    "gnutls",
+                    "openssl",
+                    "true",
+                    "false"
+                ],
+                "kind": "options",
+                "description": "DNS-over-TLS support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dns-servers",
+                "values": [
+                    "1.1.1.1#cloudflare-dns.com 8.8.8.8#dns.google 9.9.9.9#dns.quad9.net 193.110.81.0#dns0.eu 1.0.0.1#cloudflare-dns.com 8.8.4.4#dns.google 149.112.112.112#dns.quad9.net 185.253.5.0#dns0.eu 2606:4700:4700::1111#cloudflare-dns.com 2001:4860:4860::8888#dns.google 2620:fe::fe#dns.quad9.net 2a0f:fc80::#dns0.eu 2606:4700:4700::1001#cloudflare-dns.com 2001:4860:4860::8844#dns.google 2620:fe::9#dns.quad9.net 2a0f:fc81::#dns0.eu"
+                ],
+                "kind": "ignore",
+                "description": "space-separated list of default DNS servers",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "docdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "documentation directory",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dynamic-uid-max",
+                "values": [
+                    "65519"
+                ],
+                "kind": "ignore",
+                "description": "maximum dynamic UID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "dynamic-uid-min",
+                "values": [
+                    "61184"
+                ],
+                "kind": "ignore",
+                "description": "minimum dynamic UID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "enable EFI support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-addon-extra-sections",
+                "values": [
+                    "15"
+                ],
+                "kind": "ignore",
+                "description": "minimum number of sections to keep free in addon PE header",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-color-edit",
+                "values": [
+                    "black,lightgray"
+                ],
+                "kind": "ignore",
+                "description": "boot loader color for option line edit",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-color-entry",
+                "values": [
+                    "lightgray,black"
+                ],
+                "kind": "ignore",
+                "description": "boot loader color for entries",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-color-highlight",
+                "values": [
+                    "black,lightgray"
+                ],
+                "kind": "ignore",
+                "description": "boot loader color for selected entries",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-color-normal",
+                "values": [
+                    "lightgray,black"
+                ],
+                "kind": "ignore",
+                "description": "general boot loader color in \"foreground,background\" form, see constants from eficon.h",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "efi-stub-extra-sections",
+                "values": [
+                    "120"
+                ],
+                "kind": "ignore",
+                "description": "minimum number of sections to keep free in stub PE header",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "elfutils",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "elfutils support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "environment-d",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for environment.d",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "extra-net-naming-schemes",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "comma-separated list of extra net.naming_scheme= definitions",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "fallback-hostname",
+                "values": [
+                    "localhost"
+                ],
+                "kind": "ignore",
+                "description": "the hostname used if none configured",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "fdisk",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libfdisk support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "fexecve",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "use fexecve() to spawn children",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "first-boot-full-preset",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "during first boot, do full preset-all (default will be changed to true later)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "firstboot",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for firstboot mechanism",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "foreign-uid-base",
+                "values": [
+                    "2147352576"
+                ],
+                "kind": "ignore",
+                "description": "foreign OS image UID base",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "fuzz-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "run the fuzzer regression tests",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gcrypt",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "gcrypt support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "glib",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libglib support (for tests only)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gnutls",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "gnutls support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "greeter-uid-max",
+                "values": [
+                    "60705"
+                ],
+                "kind": "ignore",
+                "description": "maximum greeter UID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "greeter-uid-min",
+                "values": [
+                    "60578"
+                ],
+                "kind": "ignore",
+                "description": "minimum greeter UID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "group-render-mode",
+                "values": [
+                    "0666"
+                ],
+                "kind": "ignore",
+                "description": "Access mode for devices owned by render group (e.g. /dev/dri/renderD*, /dev/kfd).",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "gshadow",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for shadow group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "hibernate",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for hibernation",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "homed",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-homed stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "hostnamed",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-hostnamed stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "html",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build and install html pages",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "hwdb",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for the hardware database",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "idn",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "use IDN when printing hostnames",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ima",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "IMA support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "importd",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-importd daemon",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "initrd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install services for use when running systemd in initrd",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "input-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"input\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "install-sysconfdir",
+                "values": [
+                    "true",
+                    "no-samples",
+                    "false"
+                ],
+                "kind": "options",
+                "description": "install configuration files and directories",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "install-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install test executables",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "integration-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "run the integration tests",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ipe",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "IPE support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kernel-install",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install kernel-install and associated files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kexec-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to kexec",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kmem-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"kmem\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kmod",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "support for loadable modules",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kmod-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to kmod",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "kvm-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"kvm\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ldconfig",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for dynamic linker cache creation",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libarchive",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libarchive support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libcryptsetup",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libcryptsetup support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libcryptsetup-plugins",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libcryptsetup LUKS2 external token handlers support (plugins)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libcryptsetup-plugins-dir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for libcryptsetup plugins",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libcurl",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libcurl support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libfido2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "FIDO2 support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libidn",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libidn support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libidn2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libidn2 support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "libiptc",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libiptc support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-boot-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link bootctl and systemd-bless-boot against libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-executor-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemd-executor to libsystemd-shared.so and libsystemd-core.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-journalctl-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link journalctl against libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-networkd-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemd-networkd and its helpers to libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-portabled-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemd-portabled and its helpers to libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-systemctl-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemctl against libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-timesyncd-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemd-timesyncd and its helpers to libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "link-udev-shared",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "link systemd-udevd and its helpers to libsystemd-shared.so",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "llvm-fuzz",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build against LLVM libFuzzer",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "loadkeys-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to loadkeys",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "localed",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-localed stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "localegen-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "absolute path to the locale-gen binary in case the system is using locale-gen",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "log-message-verification",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "do fake printf() calls to verify format strings",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "log-trace",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "enable low level debug logging",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "logind",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-logind stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "lp-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"lp\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "lz4",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "lz4 compression support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "machined",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-machined stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "man",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build and install man pages",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "memory-accounting-default",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "enable MemoryAccounting= by default",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "microhttpd",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "lib\u00b5httpd support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "mode",
+                "values": [
+                    "developer",
+                    "release"
+                ],
+                "kind": "options",
+                "description": "autoenable features suitable for systemd development/release builds",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "mount-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to mount",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "mountfsd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-mountfsd stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "networkd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-networkd stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nobody-group",
+                "values": [
+                    "nobody"
+                ],
+                "kind": "ignore",
+                "description": "The name of the nobody group (the one with GID 65534)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nobody-user",
+                "values": [
+                    "nobody"
+                ],
+                "kind": "ignore",
+                "description": "The name of the nobody user (the one with UID 65534)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nologin-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to nologin",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nspawn",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "build and install systemd-nspawn",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nspawn-locale",
+                "values": [
+                    "C.UTF-8"
+                ],
+                "kind": "ignore",
+                "description": "default locale used by systemd-nspawn when executing commands in a container",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nsresourced",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-nsresourced stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nss-myhostname",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install nss-myhostname module",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nss-mymachines",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install nss-mymachines module",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nss-resolve",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install nss-resolve module",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "nss-systemd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install nss-systemd module",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ntp-servers",
+                "values": [
+                    "time1.google.com time2.google.com time3.google.com time4.google.com"
+                ],
+                "kind": "ignore",
+                "description": "space-separated list of default NTP servers",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ok-color",
+                "values": [
+                    "black",
+                    "red",
+                    "green",
+                    "yellow",
+                    "blue",
+                    "magenta",
+                    "cyan",
+                    "white",
+                    "highlight-black",
+                    "highlight-red",
+                    "highlight-green",
+                    "highlight-yellow",
+                    "highlight-blue",
+                    "highlight-magenta",
+                    "highlight-cyan",
+                    "highlight-white"
+                ],
+                "kind": "options",
+                "description": "color of the \"OK\" status message",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "oomd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the userspace oom killer",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "openssl",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "openssl support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "oss-fuzz",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build against oss-fuzz",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "p11kit",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "p11kit support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pam",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "PAM support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pamconfdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for PAM configuration [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pamlibdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for PAM modules",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "passwdqc",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libpasswdqc support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pcre2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "regexp matching support using pcre2",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pkgconfigdatadir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for arch-independent pkg-config files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pkgconfiglibdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for standard pkg-config files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "polkit",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "polkit support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "portabled",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-portabled stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pstore",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the pstore archival tool",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "pwquality",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libpwquality support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "qrencode",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "libqrencode support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "quotacheck",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for the quotacheck tools",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "quotacheck-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to quotacheck",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "quotaon-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to quotaon",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "randomseed",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for restoring random seed",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "rc-local",
+                "values": [
+                    "/etc/rc.local"
+                ],
+                "kind": "ignore",
+                "description": "path to SysV rc.local script",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "remote",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "support for \"journal over the network\"",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "render-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"render\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "repart",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-repart tool",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "resolve",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "systemd-resolved stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "rfkill",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for the rfkill tools",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "rpmmacrosdir",
+                "values": [
+                    "lib/rpm/macros.d"
+                ],
+                "kind": "ignore",
+                "description": "directory for rpm macros [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro",
+                "values": [
+                    "auto"
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution ID, e.g. fedora, or auto for autodetection",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro-generation",
+                "values": [
+                    "1"
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution generation",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro-pkgname",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution package name, e.g. systemd",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro-summary",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution summary, e.g. Fedora",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro-url",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution URL, e.g. https://src.fedoraproject.org/rpms/systemd",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sbat-distro-version",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "SBAT distribution package version, e.g. 248-7.fc34",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "seccomp",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "SECCOMP support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "selinux",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "SELinux support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "service-watchdog",
+                "values": [
+                    "3min"
+                ],
+                "kind": "ignore",
+                "description": "default watchdog setting for systemd services",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "setfont-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to setfont",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sgx-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"sgx\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shared-lib-tag",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "override the private shared library version tag (defaults to project version)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "shellprofiledir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for Shell profile drop-ins [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "slow-tests",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "run the slow tests by default",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "smack",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "SMACK support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "smack-default-process-label",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "default SMACK label for executed processes",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "smack-run-label",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "run systemd --system itself with a specific SMACK label",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "split-bin",
+                "values": [
+                    "auto",
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "sbin is not a symlink to bin",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sshconfdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for SSH client configuration [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sshdconfdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for SSH server configuration [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sshdprivsepdir",
+                "values": [
+                    "/run/sshd"
+                ],
+                "kind": "ignore",
+                "description": "directory for SSH privilege separation [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "standalone-binaries",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "also build standalone versions of supported binaries",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "static-libsystemd",
+                "values": [
+                    "false",
+                    "true",
+                    "pic",
+                    "no-pic"
+                ],
+                "kind": "options",
+                "description": "install a static library for libsystemd",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "static-libudev",
+                "values": [
+                    "false",
+                    "true",
+                    "pic",
+                    "no-pic"
+                ],
+                "kind": "options",
+                "description": "install a static library for libudev",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "status-unit-format-default",
+                "values": [
+                    "auto",
+                    "description",
+                    "name",
+                    "combined"
+                ],
+                "kind": "options",
+                "description": "use unit name or description in messages by default",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "storagetm",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for Storage Target Mode",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sulogin-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to sulogin",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "support-url",
+                "values": [
+                    "https://lists.freedesktop.org/mailman/listinfo/systemd-devel"
+                ],
+                "kind": "ignore",
+                "description": "the support URL to show in catalog entries included in systemd",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysext",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-sysext stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "system-alloc-gid-min",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "minimum system GID used when allocating",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "system-alloc-uid-min",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "minimum system UID used when allocating",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "system-gid-max",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "maximum system GID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "system-uid-max",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "maximum system UID",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "systemd-journal-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the systemd-journal group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "systemd-network-uid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the systemd-network user",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "systemd-resolve-uid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the systemd-resolve user",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "systemd-timesync-uid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the systemd-timesync user",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysupdate",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-sysupdate tool",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysupdated",
+                "values": [
+                    "auto",
+                    "enabled",
+                    "disabled"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-sysupdated service",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysusers",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for the sysusers configuration",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysvinit-path",
+                "values": [
+                    "/etc/init.d"
+                ],
+                "kind": "ignore",
+                "description": "the directory where the SysV init scripts are located",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "sysvrcnd-path",
+                "values": [
+                    "/etc/rc.d"
+                ],
+                "kind": "ignore",
+                "description": "the base directory for SysV rcN.d directories",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tape-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"tape\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tests",
+                "values": [
+                    "true",
+                    "unsafe",
+                    "false"
+                ],
+                "kind": "options",
+                "description": "enable extra tests with =unsafe",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "time-epoch",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "time epoch for time clients",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "timedated",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-timedated daemon",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "timesyncd",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-timesyncd daemon",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tmpfiles",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for tmpfiles.d",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tpm",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "TPM should be used to log events and extend the registers",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tpm2",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "TPM2 support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "translations",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "build and install translations",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tty-gid",
+                "values": [
+                    "5"
+                ],
+                "kind": "ignore",
+                "description": "the numeric GID of the \"tty\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "tty-mode",
+                "values": [
+                    "0600"
+                ],
+                "kind": "ignore",
+                "description": "Access mode for tty/pts device nodes.",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "ukify",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install ukify",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "umount-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to umount",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "update-helper-user-timeout-sec",
+                "values": [
+                    "15"
+                ],
+                "kind": "ignore",
+                "description": "timeout for user manager package operations",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "urlify",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "enable pager Hyperlink ANSI sequence support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "user-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "$PATH to use for user sessions",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "userdb",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-userdbd stack",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "users-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"users\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "utmp",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for utmp/wtmp log handling",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "utmp-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"utmp\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vconsole",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "support for vconsole configuration",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vcs-tag",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "append current git commit to version output when git information is available",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "version-tag",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "set the extended version string (defaults to project version)",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "video-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"video\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vmlinux-h",
+                "values": [
+                    "auto",
+                    "provided",
+                    "generated",
+                    "disabled"
+                ],
+                "kind": "options",
+                "description": "which vmlinux.h to use",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vmlinux-h-path",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "path to vmlinux.h to use",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "vmspawn",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "install the systemd-vmspawn tool",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "wheel-gid",
+                "values": [
+                    "0"
+                ],
+                "kind": "ignore",
+                "description": "soft-static allocation for the \"wheel\" group",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "wheel-group",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "the ACL for wheel group should be added",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "www-target",
+                "values": [
+                    "www.freedesktop.org:/srv/www.freedesktop.org/www/software/systemd"
+                ],
+                "kind": "ignore",
+                "description": "the address and dir to upload docs too",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xdg-autostart",
+                "values": [
+                    "true",
+                    "false"
+                ],
+                "kind": "positive",
+                "description": "install the xdg-autostart-generator and unit",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xenctrl",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "support for Xen kexec",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xinitrcdir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for xinitrc files",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xkbcommon",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "xkbcommon keymap support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "xz",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "xz compression support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "zlib",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "zlib compression support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "zshcompletiondir",
+                "values": [
+                    ""
+                ],
+                "kind": "ignore",
+                "description": "directory for zsh completion scripts [\"no\" disables]",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            },
+            {
+                "key": "zstd",
+                "values": [
+                    "enabled",
+                    "disabled",
+                    "auto"
+                ],
+                "kind": "positive",
+                "description": "zstd compression support",
+                "confidence": 1.0,
+                "reason": "Direct extraction from Meson intro-buildoptions.json"
+            }
+        ]
+    },
+    {
+        "project": "allinurl/goaccess",
+        "build_type": "autoconf",
+        "out_of_tree": false,
+        "language": "C",
+        "shallow": "master",
+        "make": true,
+        "switch_values": {
+            "positive": {"on": ""},
+            "negative": {"on": ""}
+        },
+        "config_options": [
+            {
+                "key": "--bindir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "user executables [EPREFIX/bin]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for user executables, which is irrelevant to file compilation or third-party library inclusion."
+            },
+            {
+                "key": "--sbindir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "system admin executables [EPREFIX/sbin]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for system admin executables, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--libexecdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "program executables [EPREFIX/libexec]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for program executables, which is irrelevant to file compilation or third-party library inclusion."
+            },
+            {
+                "key": "--sysconfdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "read-only single-machine data [PREFIX/etc]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for read-only single-machine data, which is not directly related to file compilation or enabling/disabling functionalities."
+            },
+            {
+                "key": "--sharedstatedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "modifiable architecture-independent data [PREFIX/com]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for modifiable architecture-independent data, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--localstatedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "modifiable single-machine data [PREFIX/var]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for modifiable single-machine data, which is not directly related to file compilation or third-party library inclusion."
+            },
+            {
+                "key": "--runstatedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "modifiable per-process data [LOCALSTATEDIR/run]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for modifiable per-process data, which is not directly related to file compilation or third-party library inclusion."
+            },
+            {
+                "key": "--libdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "object code libraries [EPREFIX/lib]",
+                "confidence": 1.0,
+                "reason": "The option '--libdir' is used to specify the directory for object code libraries, which is irrelevant to file compilation or enabling/disabling functionalities."
+            },
+            {
+                "key": "--includedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "C header files [PREFIX/include]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for C header files, which is irrelevant to file compilation or third-party library inclusion."
+            },
+            {
+                "key": "--oldincludedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "C header files for non-gcc [/usr/include]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for C header files, which does not directly affect file compilation or enable/disable functionalities. It is more related to specifying a directory path, hence classified as 'ignore'."
+            },
+            {
+                "key": "--datarootdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "read-only arch.-independent data root [PREFIX/share]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for data root and does not affect file compilation or include/exclude functionalities."
+            },
+            {
+                "key": "--datadir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "read-only architecture-independent data [DATAROOTDIR]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for read-only data, which does not directly affect file compilation or include/exclude functionalities. It is classified as 'ignore' because it is related to directory specification rather than compilation or functionality control."
+            },
+            {
+                "key": "--infodir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "info documentation [DATAROOTDIR/info]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for info documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--localedir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "locale-dependent data [DATAROOTDIR/locale]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for locale-dependent data, which is not directly related to file compilation or enabling/disabling functionalities."
+            },
+            {
+                "key": "--mandir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "man documentation [DATAROOTDIR/man]",
+                "confidence": 1.0,
+                "reason": "The option specifies the directory for man documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--docdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "documentation root [DATAROOTDIR/doc/goaccess]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--htmldir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "html documentation [DOCDIR]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for HTML documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--dvidir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "dvi documentation [DOCDIR]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--pdfdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "pdf documentation [DOCDIR]",
+                "confidence": 1.0,
+                "reason": "The option specifies a directory for PDF documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--psdir",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "ps documentation [DOCDIR]",
+                "confidence": 1.0,
+                "reason": "The option '--psdir' is used to specify a directory for documentation, which is irrelevant to file compilation or linking libraries."
+            },
+            {
+                "key": "--program-prefix",
+                "values": [
+                    "PREFIX"
+                ],
+                "kind": "ignore",
+                "description": "prepend PREFIX to installed program names",
+                "confidence": 1.0,
+                "reason": "The option '--program-prefix' is used to modify the names of installed programs, which does not directly affect file compilation or third-party library dependencies, thus it is classified as 'ignore'."
+            },
+            {
+                "key": "--program-suffix",
+                "values": [
+                    "SUFFIX"
+                ],
+                "kind": "options",
+                "description": "append SUFFIX to installed program names",
+                "confidence": 1.0,
+                "reason": "The option '--program-suffix' requires a value (SUFFIX) and modifies the installed program names, which is typical for options that support multiple possible values."
+            },
+            {
+                "key": "--program-transform-name",
+                "values": [
+                    "PROGRAM"
+                ],
+                "kind": "options",
+                "description": "run sed PROGRAM on installed program names",
+                "confidence": 1.0,
+                "reason": "The option '--program-transform-name' requires a value (PROGRAM) and is used to modify installed program names, which is an options type."
+            },
+            {
+                "key": "--disable-silent-rules",
+                "values": [],
+                "kind": "negative",
+                "description": "verbose build output (undo: \"make V=0\")",
+                "confidence": 1.0,
+                "reason": "The option '--disable-silent-rules' is a negative switch that disables silent rules, resulting in verbose build output. It does not require a value and does not conflict with or require other options to be enabled together."
+            },
+            {
+                "key": "--enable-dependency-tracking",
+                "values": [],
+                "kind": "positive",
+                "description": "do not reject slow dependency extractors",
+                "confidence": 1.0,
+                "reason": "The option '--enable-dependency-tracking' is a positive switch as it enables dependency tracking, which is a functionality that can be added to the project. The comment suggests that it prevents rejecting slow dependency extractors, indicating an enhancement or inclusion of a feature."
+            },
+            {
+                "key": "--disable-dependency-tracking",
+                "values": [],
+                "kind": "negative",
+                "description": "speeds up one-time build",
+                "confidence": 1.0,
+                "reason": "The option '--disable-dependency-tracking' is a negative switch as it disables a feature (dependency tracking) to speed up the build process."
+            },
+            {
+                "key": "--disable-nls",
+                "values": [],
+                "kind": "negative",
+                "description": "do not use Native Language Support",
+                "confidence": 1.0,
+                "reason": "The option '--disable-nls' is a negative switch that disables the Native Language Support functionality, which aligns with the 'negative' classification."
+            },
+            {
+                "key": "--disable-rpath",
+                "values": [],
+                "kind": "negative",
+                "description": "do not hardcode runtime library paths",
+                "confidence": 1.0,
+                "reason": "The option '--disable-rpath' is a negative switch that disables the hardcoding of runtime library paths, which is a functionality typically enabled by default."
+            },
+            {
+                "key": "--enable-debug",
+                "values": [],
+                "kind": "positive",
+                "description": "Create a debug build. Default is disabled",
+                "confidence": 1.0,
+                "reason": "The option '--enable-debug' is a positive switch as it enables the creation of a debug build, which likely involves adding debug-related functionalities or including debug-specific code."
+            },
+            {
+                "key": "--enable-asan",
+                "values": [],
+                "kind": "positive",
+                "description": "Enable address sanitizer",
+                "confidence": 1.0,
+                "reason": "The option '--enable-asan' is a positive switch as it enables the address sanitizer, which likely adds functionality or includes a third-party library for debugging memory issues."
+            },
+            {
+                "key": "--enable-geoip",
+                "values": [
+                    "mmdb",
+                    "legacy"
+                ],
+                "kind": "options",
+                "description": "Enable GeoIP country lookup. Supported types: mmdb, legacy. Default is disabled",
+                "confidence": 1.0,
+                "reason": "The option '--enable-geoip' is a positive switch as it enables GeoIP functionality, which likely involves including third-party libraries or adding functionalities related to GeoIP country lookup."
+            },
+            {
+                "key": "--enable-utf8",
+                "values": [],
+                "kind": "positive",
+                "description": "Enable ncurses library that handles wide characters. Default is disabled",
+                "confidence": 1.0,
+                "reason": "The option '--enable-utf8' is a positive switch as it enables the use of the ncurses library with wide character handling, which adds functionality."
+            },
+            {
+                "key": "--with-gnu-ld",
+                "values": [],
+                "kind": "ignore",
+                "description": "assume the C compiler uses GNU ld [default=no]",
+                "confidence": 1.0,
+                "reason": "The option '--with-gnu-ld' is used to assume that the C compiler uses GNU ld, which is not directly related to file compilation or inclusion of functionalities. It is more about the linker assumption, hence it is classified as 'ignore'."
+            },
+            {
+                "key": "--with-libiconv-prefix",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "search for libiconv in DIR/include and DIR/lib",
+                "confidence": 1.0,
+                "reason": "The option is used to specify the directory for libiconv, which is related to linking libraries rather than enabling or disabling functionalities or affecting file compilation directly."
+            },
+            {
+                "key": "--without-libiconv-prefix",
+                "values": [],
+                "kind": "negative",
+                "description": "don't search for libiconv in includedir and libdir",
+                "confidence": 1.0,
+                "reason": "The option '--without-libiconv-prefix' is a negative switch that disables the search for libiconv in specific directories, which implies it removes or restricts functionality."
+            },
+            {
+                "key": "--with-libintl-prefix",
+                "values": [
+                    "DIR"
+                ],
+                "kind": "ignore",
+                "description": "search for libintl in DIR/include and DIR/lib",
+                "confidence": 1.0,
+                "reason": "The option is used to specify a directory for searching for a library, which does not directly affect file compilation or add/disable functionalities."
+            },
+            {
+                "key": "--without-libintl-prefix",
+                "values": [],
+                "kind": "negative",
+                "description": "don't search for libintl in includedir and libdir",
+                "confidence": 1.0,
+                "reason": "The option '--without-libintl-prefix' is a negative switch that disables the search for libintl in specific directories, which implies it removes or restricts functionality related to libintl."
+            },
+            {
+                "key": "--with-openssl",
+                "values": [],
+                "kind": "positive",
+                "description": "Build with OpenSSL support. Default is disabled",
+                "confidence": 1.0,
+                "reason": "The option '--with-openssl' is a positive switch as it enables OpenSSL support, which likely involves adding functionalities or including third-party libraries."
+            },
+            {
+                "key": "--with-getline",
+                "values": [],
+                "kind": "positive",
+                "description": "Build using dynamic line buffer. Default is disabled",
+                "confidence": 1.0,
+                "reason": "The option '--with-getline' is a positive switch as it enables the use of a dynamic line buffer, which likely adds functionality to the build process."
+            }
+        ]
     }
 ]

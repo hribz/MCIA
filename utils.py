@@ -41,7 +41,12 @@ def run(cmd, cwd, tag, env=dict(os.environ)) -> bool:
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
     process = subprocess.Popen(
-        cmd, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd,
+        cwd=cwd,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     while True:
@@ -54,12 +59,7 @@ def run(cmd, cwd, tag, env=dict(os.environ)) -> bool:
     if process.returncode == 0:
         return True
     else:
-        # Do something
-        stderr = process.stderr.read()
-        if stderr:
-            logger.error(
-                f"[{tag}] {commands_to_shell_script(cmd)} failed!\nError: {stderr.strip()}"
-            )
+        logger.error(f"[{tag}] {commands_to_shell_script(cmd)} failed!")
         return False
 
 
@@ -70,7 +70,12 @@ def run_without_check(cmd, cwd, tag, env=dict(os.environ)) -> bool:
         logger.error(f"[{tag}] Please make sure {cwd} exists!")
         return False
     process = subprocess.Popen(
-        cmd, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd,
+        cwd=cwd,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     while True:
@@ -79,13 +84,6 @@ def run_without_check(cmd, cwd, tag, env=dict(os.environ)) -> bool:
             break
         if output:
             print(output.strip())
-
-    if process.returncode != 0:
-        stderr = process.stderr.read()
-        if stderr:
-            logger.error(
-                f"[{tag}] {commands_to_shell_script(cmd)} failed!\nError: {stderr.strip()}"
-            )
     return process.returncode == 0
 
 

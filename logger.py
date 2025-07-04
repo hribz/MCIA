@@ -22,7 +22,6 @@ class Logger(object):
         handler = {
             logging.DEBUG: sys.stderr,
             logging.INFO: sys.stdout,
-            logging.ERROR: sys.stderr,
         }
         self.__loggers = {}
         logLevels = handler.keys()
@@ -46,7 +45,6 @@ class Logger(object):
         handler = {
             logging.DEBUG: debug_file,
             logging.INFO: info_file,
-            logging.ERROR: debug_file,
         }
         self.__loggers = {}
         logLevels = handler.keys()
@@ -75,7 +73,7 @@ class Logger(object):
         self.__loggers[logging.DEBUG].debug(f"[{self.TAG}]" + message)
 
     def error(self, message):
-        self.__loggers[logging.ERROR].error(f"[{self.TAG}]" + message)
+        self.__loggers[logging.DEBUG].error(f"[{self.TAG}]" + message)
 
 
 logger = Logger("Prepare Env")

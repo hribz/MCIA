@@ -7,6 +7,7 @@ from option import *
 class BuildType(Enum):
     CMake = auto()
     AutoConf = auto()
+    Meson = auto()
     Unknown = auto()
 
     @staticmethod
@@ -15,8 +16,16 @@ class BuildType(Enum):
             return BuildType.CMake
         elif build_type == "autoconf":
             return BuildType.AutoConf
+        elif build_type == "meson":
+            return BuildType.Meson
         else:
             return BuildType.Unknown
+
+    def notNeedBear(self):
+        return self == BuildType.Meson or self == BuildType.CMake
+
+    def useMake(self):
+        return self == BuildType.AutoConf or self == BuildType.CMake
 
 
 def get_if_exists(dict, key, default=None):
@@ -38,6 +47,8 @@ def parse_options(options, switch_values, build_type):
             )
         ]
     for option in options:
+        if option["kind"] == "ignore":
+            continue
         switch_values_of_this_option = (
             switch_values.get(option["kind"], None) if switch_values else None
         )
@@ -70,6 +81,7 @@ class ProjectInfo:
         self.commit = project["shallow"]
 
         self.switch_values = get_if_exists(project, "switch_values")
+        self.meson_native = get_if_exists(project, "native_file", None)
         self.options: List[Option] = parse_options(
             project["config_options"], self.switch_values, self.build_type
         )

@@ -88,14 +88,14 @@ class MCArgumentParser:
             "--cc",
             type=str,
             dest="cc",
-            default="clang-19",
+            default="clang",
             help="Customize the C compiler for configure & build.",
         )
         self.parser.add_argument(
             "--cxx",
             type=str,
             dest="cxx",
-            default="clang++-19",
+            default="clang++",
             help="Customize the C++ compiler for configure & build.",
         )
         self.parser.add_argument(

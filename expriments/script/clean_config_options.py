@@ -28,7 +28,7 @@ for project in origin_config:
         print("no config options")
         continue
     constants = project["constant_options"] if "constant_options" in project else []
-    if constants and build_type == "cmake":
+    if constants and (build_type == "cmake" or build_type == "meson"):
         # remove all begin "-D"
         constants = [
             constant[2:] if constant.startswith("-D") else constant
@@ -46,31 +46,34 @@ for project in origin_config:
         ]
     config = [option for option in config if option["kind"] != "ignore"]
 
-    # Reclassify some options.
-    headers = switcher_headers.get(build_type)
-    if headers is not None:
-        headers_list = headers["positive"].copy()
-        headers_list.extend(headers["negative"])
+    if build_type != "meson":
+        # Reclassify some options.
+        headers = switcher_headers.get(build_type)
+        if headers is not None:
+            headers_list = headers["positive"].copy()
+            headers_list.extend(headers["negative"])
+            for option in config:
+                key = option["key"]
+                if option["kind"] != "positive" and option["kind"] != "negative":
+                    for header in headers_list:
+                        if key.startswith(header) and len(option["values"]) < 2:
+                            option["kind"] = (
+                                "positive"
+                                if header in headers["positive"]
+                                else "negative"
+                            )
+
+        special_turn_on = project.get("special_turn_on", [])
+        turn_on_values = {}
+        for op in special_turn_on:
+            k_and_v = op.split("=")
+            key = k_and_v[0]
+            val = k_and_v[1] if len(k_and_v) == 2 else ""
+            turn_on_values[key] = val
+
         for option in config:
-            key = option["key"]
-            if option["kind"] != "positive" and option["kind"] != "negative":
-                for header in headers_list:
-                    if key.startswith(header) and len(option["values"]) < 2:
-                        option["kind"] = (
-                            "positive" if header in headers["positive"] else "negative"
-                        )
-
-    special_turn_on = project.get("special_turn_on", [])
-    turn_on_values = {}
-    for op in special_turn_on:
-        k_and_v = op.split("=")
-        key = k_and_v[0]
-        val = k_and_v[1] if len(k_and_v) == 2 else ""
-        turn_on_values[key] = val
-
-    for option in config:
-        if option["key"] in turn_on_values:
-            option["on_value"] = turn_on_values[option["key"]]
+            if option["key"] in turn_on_values:
+                option["on_value"] = turn_on_values[option["key"]]
 
     project["config_options"] = config
 

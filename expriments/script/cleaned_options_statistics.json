@@ -17,15 +17,6 @@
         "conflict": 10,
         "combine": 6
     },
-    "sqlite/sqlite": {
-        "all": 28,
-        "positive": 17,
-        "negative": 9,
-        "ignore": 0,
-        "options": 2,
-        "conflict": 0,
-        "combine": 0
-    },
     "vim/vim": {
         "all": 47,
         "positive": 12,
@@ -45,17 +36,17 @@
         "combine": 0
     },
     "curl/curl": {
-        "all": 213,
+        "all": 212,
         "positive": 104,
-        "negative": 94,
+        "negative": 93,
         "ignore": 0,
         "options": 15,
         "conflict": 0,
         "combine": 0
     },
     "ruby/ruby": {
-        "all": 65,
-        "positive": 27,
+        "all": 64,
+        "positive": 26,
         "negative": 13,
         "ignore": 0,
         "options": 25,
@@ -133,5 +124,32 @@
         "options": 5,
         "conflict": 0,
         "combine": 2
+    },
+    "mesa/mesa": {
+        "all": 57,
+        "positive": 53,
+        "negative": 0,
+        "ignore": 0,
+        "options": 4,
+        "conflict": 0,
+        "combine": 1
+    },
+    "systemd/systemd": {
+        "all": 146,
+        "positive": 130,
+        "negative": 0,
+        "ignore": 0,
+        "options": 16,
+        "conflict": 0,
+        "combine": 0
+    },
+    "allinurl/goaccess": {
+        "all": 15,
+        "positive": 6,
+        "negative": 6,
+        "ignore": 0,
+        "options": 3,
+        "conflict": 0,
+        "combine": 0
     }
 }

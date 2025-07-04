@@ -135,7 +135,7 @@ def projects_statistics_analysis(project: Project):
             "VF": 0,
             "VFIC": 0,
             "VFIC Rate": 0,
-            "file (sum)": 0,
+            "files (sum)": 0,
             "Lines (total sum)": 0,
             "Lines (skip sum)": 0,
             "Coverage (sum)": 100.0,
@@ -280,6 +280,8 @@ def ave_for_datas(datas: List[Dict], key):
 def sum_for_datas(datas: List[Dict], key):
     if len(datas) < 1:
         return None
+    if key not in datas[0]:
+        return None
     values = []
     for item in datas:
         value = item[key]
@@ -303,7 +305,7 @@ def sum_for_datas(datas: List[Dict], key):
 def calculate_overview_data(keys, overview_data, datas):
     for key in keys:
         sum_val = sum_for_datas(datas, key)
-        if sum_val:
+        if sum_val is not None:
             overview_data[key] = sum_val
 
 

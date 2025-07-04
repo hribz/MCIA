@@ -28,8 +28,8 @@ class OptionType(Enum):
 
 
 class Option:
-    on_value_set = {"yes", "1", "on"}
-    off_value_set = {"no", "0", "off"}
+    on_value_set = {"yes", "1", "on", "true", "enable", "enabled"}
+    off_value_set = {"no", "0", "off", "false", "disable", "disabled"}
 
     def __init__(
         self,

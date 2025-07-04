@@ -27,7 +27,7 @@ PKG_MAP = {
 }
 
 def parse_configure(file_path):
-    """解析FFmpeg的configure文件，提取启用的库及其依赖条件"""
+    """解析FFmpeg的configure文件, 提取启用的库及其依赖条件"""
     pattern = re.compile(
         r"^\s*(enabled|disabled)\s+(\w+)\s+&&"
     )

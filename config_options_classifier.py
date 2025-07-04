@@ -275,9 +275,7 @@ class ConfigExtractor:
         for line in result.stdout.split("\n"):
             if line.startswith("//"):
                 current_desc.append(line[3:].strip())
-            elif re.match(
-                r"^([A-Za-z_0-9]+):([A-Za-z_0-9]+)=(.+)$", line.strip()
-            ):
+            elif re.match(r"^([A-Za-z_0-9]+):([A-Za-z_0-9]+)=(.+)$", line.strip()):
                 items.append(
                     {"option": line.strip(), "description": " ".join(current_desc)}
                 )
@@ -324,6 +322,106 @@ class ConfigExtractor:
                     items[-1] += f" {strip_line}"
         return items
 
+    @staticmethod
+    def from_meson(build_dir) -> List[Dict]:
+        """从 Meson 项目的 intro-buildoptions.json 文件中直接提取并返回分类结果"""
+        intro_file = os.path.join(build_dir, "meson-info", "intro-buildoptions.json")
+
+        if not os.path.exists(intro_file):
+            print(f"Meson info file not found: {intro_file}")
+            return []
+
+        try:
+            with open(intro_file, "r") as f:
+                buildoptions = json.load(f)
+
+            results = []
+            for option in buildoptions:
+                # 只处理 section 为 "user" 的选项
+                if option.get("section") != "user":
+                    continue
+
+                name = option.get("name", "")
+                if ":" in name:
+                    continue  # 跳过包含冒号的选项名(子项目的配置项)
+                
+                description = option.get("description", "")
+                option_type = option.get("type", "")
+                value = option.get("value")
+
+                # 根据类型确定可能的值
+                values = []
+                if option_type == "boolean":
+                    values = ["true", "false"]
+                elif option_type == "combo":
+                    # 对于combo类型，尝试获取choices
+                    choices = option.get("choices", [])
+                    if choices:
+                        values = choices
+                    elif value is not None:
+                        values = [str(value)]
+                elif option_type in ["string", "integer"]:
+                    if value is not None:
+                        values = [str(value)]
+                elif option_type == "array":
+                    if value is not None:
+                        if isinstance(value, list):
+                            values = [str(v) for v in value]
+                        else:
+                            values = [str(value)]
+
+                # 分类选项类型
+                kind = "options"  # 默认为选项类型
+                if option_type in ["string", "integer", "array"]:
+                    # 字符串和整数类型通常是选项
+                    kind = "ignore"
+                elif option_type == "boolean":
+                    # 根据选项名称判断是正向还是负向开关
+                    if any(
+                        keyword in name.lower()
+                        for keyword in ["enable", "with", "use", "support"]
+                    ):
+                        kind = "positive"
+                    elif any(
+                        keyword in name.lower()
+                        for keyword in ["disable", "without", "no"]
+                    ):
+                        kind = "negative"
+                    else:
+                        kind = "positive"  # 默认布尔选项为正向
+                elif option_type == "combo":
+                    values_set = set([i.lower() for i in values])
+                    switcher_values = {
+                        "auto",
+                        "true",
+                        "false",
+                        "enabled",
+                        "disabled",
+                        "enable",
+                        "disable",
+                    }
+                    if values_set.issubset(switcher_values):
+                        kind = "positive"
+
+                # 创建结果
+                result = {
+                    "key": name,
+                    "values": values,
+                    "kind": kind,
+                    "description": (
+                        description if description else f"Meson option: {name}"
+                    ),
+                    "confidence": 1.0,  # 高置信度，因为是直接提取
+                    "reason": "Direct extraction from Meson intro-buildoptions.json",
+                }
+                results.append(result)
+
+            return results
+
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Error reading Meson info file {intro_file}: {e}")
+            return []
+
 
 def get_if_exists(dict, key, default=None):
     return dict[key] if key in dict else default
@@ -350,36 +448,46 @@ def handle_project(projects, opts, classifier: ResilientClassifier):
 
         build_dir = f"{repo_dir}_build" if out_of_tree else repo_dir
 
-        config_items = []
-        if build_type == BuildType.CMake:
-            config_items = ConfigExtractor.from_cmake(build_dir, repo_dir)
-        elif build_type == BuildType.AutoConf:
-            config_items = ConfigExtractor.from_autoconf(
-                os.path.join(repo_dir, "configure"), repo_dir
+        # 对于Meson项目，直接获取分类结果；对于其他项目，先获取配置项再分类
+        if build_type == BuildType.Meson:
+            # Meson项目直接返回分类结果，无需AI处理
+            results = ConfigExtractor.from_meson(build_dir)
+            classifier._print_debug(
+                f"Meson project: Processed {len(results)} options directly (no AI classification)"
             )
-
-        # classification.
-        results = []
-        for idx, item in enumerate(config_items):
-            classification = classifier.classify_item(
-                {"project": project_name, "option": item}
-            )
-            results.append(classification)
-
-            if idx % 3 == 0:
-                classifier._print_debug(
-                    f"Progress: {idx}/{len(config_items)} ({idx/len(config_items):.0%})"
+        else:
+            # CMake和AutoConf项目需要先提取配置项，然后进行AI分类
+            config_items = []
+            if build_type == BuildType.CMake:
+                config_items = ConfigExtractor.from_cmake(build_dir, repo_dir)
+            elif build_type == BuildType.AutoConf:
+                config_items = ConfigExtractor.from_autoconf(
+                    os.path.join(repo_dir, "configure"), repo_dir
                 )
-                project["config_options"] = results
-                # Store results.
-                json.dump(
-                    projects,
-                    open(f"expriments/config_options_{model_name}.json", "w"),
-                    indent=3,
+
+            # AI classification.
+            results = []
+            for idx, item in enumerate(config_items):
+                classification = classifier.classify_item(
+                    {"project": project_name, "option": item}
                 )
+                results.append(classification)
+
+                if idx % 3 == 0:
+                    classifier._print_debug(
+                        f"Progress: {idx}/{len(config_items)} ({idx/len(config_items):.0%})"
+                    )
+                    project["config_options"] = results
+                    # Store results.
+                    json.dump(
+                        projects,
+                        open(f"expriments/config_options_{model_name}.json", "w"),
+                        indent=3,
+                    )
+
+            classifier.print_summary(len(config_items))
 
         project["config_options"] = results
-        classifier.print_summary(len(config_items))
         classifier.counter = 0
 
     json.dump(

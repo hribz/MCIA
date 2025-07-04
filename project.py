@@ -53,8 +53,28 @@ class Configuration:
         cmd = self.project_info.constant_options.copy()
         if self.project_info.build_type == BuildType.CMake:
             cmd.extend(["-DCMAKE_EXPORT_COMPILE_COMMANDS=1"])
+            cmd.extend(
+                [
+                    "-DCMAKE_BUILD_TYPE=Debug",
+                    "-DCMAKE_C_FLAGS=-O0 -g0",
+                    "-DCMAKE_CXX_FLAGS=-O0 -g0",
+                ]
+            )
+        elif self.project_info.build_type == BuildType.Meson:
+            cmd.extend(
+                [
+                    "--reconfigure",
+                    "-Dc_args=-O0 -g0",
+                    "-Dcpp_args=-O0 -g0",
+                    "-Doptimization=0",
+                    "-Ddebug=false",
+                ]
+            )
         for option in self.config_options:
-            if self.project_info.build_type == BuildType.CMake:
+            if (
+                self.project_info.build_type == BuildType.CMake
+                or self.project_info.build_type == BuildType.Meson
+            ):
                 option = f"-D{option}"
             cmd.append(option)
         return cmd
@@ -70,6 +90,15 @@ class Configuration:
             # these parameters, so we specify them in config_options.json.
             cmd = [f"{self.project_info.src_dir}/configure"]
             # cmd.append(f"--prefix={self.project_info.build_dir}")
+        elif self.project_info.build_type == BuildType.Meson:
+            cmd = ["meson"]
+            cmd.extend(
+                ["setup", self.project_info.build_dir, self.project_info.src_dir]
+            )
+            if self.project_info.meson_native:
+                cmd.extend(
+                    ["--native", os.path.join(self.workspace, "native_file.ini")]
+                )
         option_cmd = self.option_cmd()
         cmd.extend(option_cmd)
         # record options
@@ -88,8 +117,13 @@ class Configuration:
             cmd.append(f"-j{GlobalConfig.build_jobs}")
         elif self.project_info.build_type == BuildType.AutoConf:
             cmd = ["make", f"-j{GlobalConfig.build_jobs}"]
+        elif self.project_info.build_type == BuildType.Meson:
+            cmd = ["ninja"]
+            cmd.extend(["-C", self.project_info.build_dir])
+            cmd.append(f"-j{GlobalConfig.build_jobs}")
         if self.project_info.ignore_make_error:
-            cmd.append("-i")
+            if self.project_info.build_type.useMake():
+                cmd.append("-i")
         return cmd
 
     def icebear_cmd(self, update_cache):
@@ -98,7 +132,7 @@ class Configuration:
         cmd.extend(["-o", self.workspace])
         cmd.extend(["-j", GlobalConfig.build_jobs])
         cmd.extend(["--inc", self.opts.inc])
-        cmd.extend(["--analyzers", "clangsa", "gsa", "cppcheck"])
+        cmd.extend(["--analyzers", "clangsa", "cppcheck"])
         cmd.extend(["--cache", self.cache_file])
         cmd.extend(["--cc", self.opts.cc])
         cmd.extend(["--cxx", self.opts.cxx])
@@ -129,7 +163,17 @@ class Project:
         self.config_list: List[Configuration] = []
         self.opts = opts
         self.project_info = project_info
+
         self.env = dict(os.environ)
+        # O0 optimization level and no debug information.
+        self.env.update(
+            {
+                "CFLAGS": f"{self.env.get('CFLAGS', '')} -O0 -g0".strip(),
+                "CXXFLAGS": f"{self.env.get('CXXFLAGS', '')} -O0 -g0".strip(),
+                "OPTFLAGS": "-O0 -g0",
+            }
+        )
+
         self.sampling_config = SamplingConfig(self.project_info.options, 15)
         self.config_sampler = ConfigSampling(
             self.project_info.options, self.sampling_config
@@ -145,6 +189,19 @@ class Project:
     def create_dir(self):
         makedir(self.project_info.build_dir)
         makedir(self.workspace)
+        if self.project_info.meson_native:
+            native_file = os.path.join(self.workspace, "native_file.ini")
+            native_config = ""
+            for key, value in self.project_info.meson_native.items():
+                native_config += f"[{key}]\n"
+                for k, v in value.items():
+                    if isinstance(v, str):
+                        native_config += f"{k} = '{v}'\n"
+                    else:
+                        native_config += f"{k} = {v}\n"
+
+            with open(native_file, "w") as f:
+                f.write(native_config)
 
     def create_configuration(self, options, workspace, tag):
         return Configuration(workspace, tag, self.opts, options, self.project_info)
@@ -172,6 +229,20 @@ class Project:
         # Default as baseline
         self.baseline = default_configuration
         all_config = [default_configuration]
+        
+        # All negative configuration
+        all_config.append(
+            self.get_different_kind_configuration(
+                ConfigType.all_negative, f"{len(all_config)}_all_negative"
+            )
+        )
+
+        # All positive configuration
+        all_config.append(
+            self.get_different_kind_configuration(
+                ConfigType.all_positive, f"{len(all_config)}_all_positive"
+            )
+        )
 
         def get_equidistant_elements(lst, num):
             if len(lst) <= num:
@@ -201,19 +272,6 @@ class Project:
             )
             all_config.append(one_negative)
 
-        # All negative configuration
-        all_config.append(
-            self.get_different_kind_configuration(
-                ConfigType.all_negative, f"{len(all_config)}_all_negative"
-            )
-        )
-
-        # All positive configuration
-        all_config.append(
-            self.get_different_kind_configuration(
-                ConfigType.all_positive, f"{len(all_config)}_all_positive"
-            )
-        )
 
         self.config_list = [self.baseline] + [
             config for config in all_config if config != self.baseline
@@ -228,6 +286,8 @@ class Project:
     def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:
             run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
+        if self.project_info.must_make:
+            self.build_clean(config)
         if self.opts.clean_cache and config == self.baseline:
             run(
                 ["rm", config.cache_file],
@@ -236,10 +296,25 @@ class Project:
                 env=self.env,
             )
         if self.project_info.build_type == BuildType.CMake:
-            run(
+            run_without_check(
                 ["rm", os.path.join(config.project_info.build_dir, "CMakeCache.txt")],
                 config.project_info.build_dir,
                 tag="RM CMakeCache",
+                env=self.env,
+            )
+        elif self.project_info.build_type == BuildType.Meson:
+            run_without_check(
+                [
+                    "rm",
+                    os.path.join(
+                        config.project_info.build_dir, "meson-private", "cmd_line.txt"
+                    ),
+                    os.path.join(
+                        config.project_info.build_dir, "meson-private", "coredata.dat"
+                    ),
+                ],
+                config.project_info.build_dir,
+                tag="RM Meson Build Cache",
                 env=self.env,
             )
 
@@ -263,12 +338,14 @@ class Project:
         )
         if process.returncode != 0:
             logger.info(f"[Configure Failed] {configure_script}")
-
-        if self.project_info.build_type == BuildType.CMake:
-            shutil.copy(
-                os.path.join(config.project_info.build_dir, "compile_commands.json"),
-                config.compile_database,
-            )
+        else:
+            if self.project_info.build_type.notNeedBear():
+                shutil.copy(
+                    os.path.join(
+                        config.project_info.build_dir, "compile_commands.json"
+                    ),
+                    config.compile_database,
+                )
 
         return process.returncode == 0
 
@@ -294,20 +371,27 @@ class Project:
             )
         else:
             logger.info(f"[Build Success] {commands_to_shell_script(cmd)}")
+        if self.project_info.ignore_make_error:
+            return True
         return process.returncode == 0
 
     def build_clean(self, config: Configuration):
-        run_without_check(
-            ["make", "clean"], config.project_info.build_dir, "Make Clean"
-        )
+        if config.project_info.build_type.useMake():
+            run(
+                ["make", "clean"], config.project_info.build_dir, "Make Clean"
+            )
+        else:
+            run(
+                ["ninja", "clean"], config.project_info.build_dir, "Ninja Clean"
+            )
 
     def parse_makefile(self, config: Configuration):
-        if self.project_info.build_type == BuildType.CMake:
+        if self.project_info.build_type.notNeedBear():
             # The compile_commands.json of opencv contain compile argument like -DXXX="long long",
             # compiledb doesn't perserve the "", so we use CMake's compile_commands.json.
             # TODO: compiledb support -DXXX="long long"?
             logger.info(
-                "[Parse Makefile] Use compile_commands.json generated by CMake"
+                "[Parse Makefile] Use compile_commands.json generated by CMake/Meson"
             )
             return True
 
@@ -496,7 +580,7 @@ class Project:
         else:
             # Only record one config as baseline cache.
             icebear_cmd = config.icebear_cmd(update_cache=True)
-        run(icebear_cmd, self.src_dir, "IceBear Preprocess")
+        run(icebear_cmd, self.src_dir, "IceBear Running")
 
     def reports_analysis(self, config1: Configuration, config2: Configuration):
         if config1 == config2:
@@ -592,8 +676,6 @@ class Project:
         if self.opts.skip_prepare:
             return True
         self.execute_prerequisites(config)
-        if self.project_info.must_make:
-            self.build_clean(config)
         process_status = self.configure(config)
         if not process_status:
             logger.error(
