@@ -318,7 +318,7 @@ def handle_project(projects, opts):
     analyzers_statistics_specific_csv = (
         projects_root_dir + "/analyzers_statistics_specific.csv"
     )
-    time_overview = projects_root_dir + "/time_overview.csv"
+    time_overview = projects_root_dir + f"/time_overview.csv"
     reports_overview = projects_root_dir + "/reports_overview.csv"
     first_in = True
 
@@ -432,26 +432,6 @@ class PSArgumentParser:
             help="Record debug information.",
         )
         self.parser.add_argument(
-            "--cc",
-            type=str,
-            dest="cc",
-            default="clang-18",
-            help="Customize the C compiler for configure & build.",
-        )
-        self.parser.add_argument(
-            "--cxx",
-            type=str,
-            dest="cxx",
-            default="clang++-18",
-            help="Customize the C++ compiler for configure & build.",
-        )
-        self.parser.add_argument(
-            "--preprocess-only",
-            dest="prep_only",
-            action="store_true",
-            help="Only preprocess and diff",
-        )
-        self.parser.add_argument(
             "--inc",
             type=str,
             dest="inc",
@@ -463,13 +443,9 @@ class PSArgumentParser:
             "--tag", type=str, dest="tag", help="Tag of this analysis."
         )
         self.parser.add_argument(
-            "--file-identifier",
-            type=str,
-            dest="file_identifier",
-            choices=["file", "target"],
-            default="file name",
-            help="Identify analysis unit by file or target.",
+            "--order", type=str, dest="order", help="Order of this analysis."
         )
+        
 
     def parse_args(self, args):
         return self.parser.parse_args(args)

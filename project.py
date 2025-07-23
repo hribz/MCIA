@@ -132,7 +132,7 @@ class Configuration:
         cmd.extend(["-o", self.workspace])
         cmd.extend(["-j", GlobalConfig.build_jobs])
         cmd.extend(["--inc", self.opts.inc])
-        cmd.extend(["--analyzers", "clangsa", "cppcheck"])
+        cmd.extend(["--analyzers", "clangsa"])
         cmd.extend(["--cache", self.cache_file])
         cmd.extend(["--cc", self.opts.cc])
         cmd.extend(["--cxx", self.opts.cxx])
@@ -282,6 +282,10 @@ class Project:
                 configure_script = commands_to_shell_script(config.config_cmd())
                 f.write(config.tag + "\n")
                 f.write(configure_script + "\n")
+        
+        if self.project_info.filter_configs:
+            old_list = self.config_list.copy()
+            self.config_list = [old_list[idx] for idx in self.project_info.filter_configs]
 
     def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:

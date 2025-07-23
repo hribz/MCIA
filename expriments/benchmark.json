@@ -3470,6 +3470,9 @@
             "--no-create",
             "--cache-file"
         ],
+        "filter": [
+            0, 17, 20, 19, 2, 1
+        ],
         "config_options": [
             {
                 "key": "--help",

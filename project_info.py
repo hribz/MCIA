@@ -97,6 +97,9 @@ class ProjectInfo:
         )  # This project must built through gcc.
         self.env = get_if_exists(project, "env", {})
         self.ignore_make_error = get_if_exists(project, "ignore make error", False)
+        self.filter_configs = get_if_exists(
+            project, "filter", None
+        )
 
         self.build_dir = (
             f"{self.src_dir}_build" if self.out_of_tree else self.src_dir
