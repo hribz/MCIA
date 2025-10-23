@@ -334,13 +334,28 @@ def handle_project(projects, opts):
             continue
         if "config_options" not in project:
             continue
-        print(f"Processing project: {project['project']}")
         project_info = ProjectInfo(projects_root_dir, project)
 
-        workspace_tag = opts.tag if opts.tag else opts.inc
+        workspace_tag = (opts.tag if opts.tag else opts.inc)
         workspace = f"{project_info.src_dir}_workspace/{workspace_tag}"
+        print(f"Processing project: {project_info.repo_name}, workspace: {workspace}")
 
         p = Project(workspace=workspace, opts=opts, project_info=project_info)
+
+        if os.path.exists(p.workspace + "/chosen_config.json"):
+            chosen_config_tags = json.load(open(p.workspace + "/chosen_config.json"))
+            chosen_configs = []
+            for config in p.config_list:
+                if config.tag not in chosen_config_tags:
+                    shutil.rmtree(config.prep_path, ignore_errors=True)
+            
+            for config in chosen_config_tags:
+                find_config = next((c for c in p.config_list if c.tag == config), None)
+                if find_config is None:
+                    logger.error(f"Cannot find chosen config {config} in {p.workspace}.")
+                else:
+                    chosen_configs.append(find_config)
+            p.config_list = chosen_configs
 
         time_overview_data = {
             "project": p.project_name,

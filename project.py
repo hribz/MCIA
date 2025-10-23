@@ -2,8 +2,11 @@ import json
 import os
 import re
 import subprocess
-from typing import List
+from typing import Dict, List, Set
 
+from git import Union
+
+from incremental_database import FileLevelCache
 from logger import logger
 from project_info import *
 from utils import *
@@ -45,7 +48,7 @@ class Configuration:
         self.opts = opts
         self.config_options = config_options
         self.prep_path = os.path.join(self.workspace, f"preprocess/{tag}")
-        self.cache_file = os.path.join(self.workspace, "cache.txt")
+        self.cache_file = os.path.join(self.prep_path, "file_level_cache.json")
         makedir(self.prep_path)
         self.compile_database = os.path.join(self.prep_path, "compile_commands.json")
 
@@ -126,14 +129,16 @@ class Configuration:
                 cmd.append("-i")
         return cmd
 
-    def icebear_cmd(self, update_cache):
+    def icebear_cmd(self, prep_only=False, update_cache=True, cache_file=None):
+        if not cache_file:
+            cache_file = self.cache_file
         cmd = [GlobalConfig.icebear]
         cmd.extend(["-f", self.compile_database])
         cmd.extend(["-o", self.workspace])
         cmd.extend(["-j", GlobalConfig.build_jobs])
         cmd.extend(["--inc", self.opts.inc])
         cmd.extend(["--analyzers", "clangsa"])
-        cmd.extend(["--cache", self.cache_file])
+        cmd.extend(["--cache", cache_file])
         cmd.extend(["--cc", self.opts.cc])
         cmd.extend(["--cxx", self.opts.cxx])
         cmd.extend(["--gcc", GlobalConfig.inc_gcc])
@@ -145,7 +150,7 @@ class Configuration:
             cmd.append(f"--basic-info={global_config.basic_info_extractor}")
         if self.opts.verbose:
             cmd.extend(["--verbose"])
-        if self.opts.prep_only:
+        if prep_only:
             cmd.append("--preprocess-only")
         if not update_cache:
             cmd.append("--not-update-cache")
@@ -154,15 +159,26 @@ class Configuration:
         return cmd
 
 
+def get_equidistant_elements(lst, num):
+    if len(lst) <= num:
+        return lst.copy()
+    step = (len(lst) - 1) / (num - 1)
+    indices = [round(i * step) for i in range(num)]
+    return [lst[i] for i in indices]
+
 class Project:
     def __init__(self, workspace, opts, project_info: ProjectInfo):
         self.src_dir = project_info.src_dir  # The directory to store source code.
         self.project_name = os.path.basename(self.src_dir)
         logger.TAG = self.project_name
-        self.workspace = workspace  # The directory to store cache and analysis results.
-        self.config_list: List[Configuration] = []
+        self.workspace = workspace # The directory to store cache and analysis results.
         self.opts = opts
         self.project_info = project_info
+
+        self.config_list: List[Configuration] = [] # All sampled configurations.
+        self.chosen_config_list: List[Configuration] = [] # Configurations to be analyzed.
+        self.zero_distance_configs: Set[Configuration] = set() # Configurations with zero distance.
+        self.overall_cache_file = os.path.join(self.workspace, "file_level_cache.json")
 
         self.env = dict(os.environ)
         # O0 optimization level and no debug information.
@@ -184,13 +200,15 @@ class Project:
         if project_info.env:
             self.env.update(project_info.env)
         self.create_dir()
-        self.configuation_sampling()
+        self.configuration_sampling()
 
     def create_dir(self):
         makedir(self.project_info.build_dir)
         makedir(self.workspace)
         if self.project_info.meson_native:
             native_file = os.path.join(self.workspace, "native_file.ini")
+            if os.path.exists(native_file):
+                return
             native_config = ""
             for key, value in self.project_info.meson_native.items():
                 native_config += f"[{key}]\n"
@@ -212,7 +230,7 @@ class Project:
             return None
         return self.create_configuration(options, self.workspace, tag)
 
-    def configuation_sampling(self):
+    def configuration_sampling(self):
         classified_options = {ty: [] for ty in OptionType}
         for option in self.config_sampler.options:
             classified_options[option.kind].append(
@@ -243,13 +261,6 @@ class Project:
                 ConfigType.all_positive, f"{len(all_config)}_all_positive"
             )
         )
-
-        def get_equidistant_elements(lst, num):
-            if len(lst) <= num:
-                return lst.copy()
-            step = (len(lst) - 1) / (num - 1)
-            indices = [round(i * step) for i in range(num)]
-            return [lst[i] for i in indices]
 
         # One positive sampling.
         all_positives = self.config_sampler.get_all_options(ConfigType.one_positive)
@@ -292,13 +303,6 @@ class Project:
             run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
         if self.project_info.must_make:
             self.build_clean(config)
-        if self.opts.clean_cache and config == self.baseline:
-            run(
-                ["rm", config.cache_file],
-                config.workspace,
-                tag="RM Cache",
-                env=self.env,
-            )
         if self.project_info.build_type == BuildType.CMake:
             run_without_check(
                 ["rm", os.path.join(config.project_info.build_dir, "CMakeCache.txt")],
@@ -578,103 +582,21 @@ class Project:
             return dry_run(make_n_commands)
         return True
 
-    def icebear(self, config: Configuration):
+    def icebear(self, config: Configuration, cache_file):
         if config == self.baseline:
             icebear_cmd = config.icebear_cmd(update_cache=True)
         else:
             # Only record one config as baseline cache.
-            icebear_cmd = config.icebear_cmd(update_cache=True)
+            icebear_cmd = config.icebear_cmd(update_cache=True, cache_file=cache_file)
         run(icebear_cmd, self.src_dir, "IceBear Running")
 
-    def reports_analysis(self, config1: Configuration, config2: Configuration):
-        if config1 == config2:
-            logger.debug(f"[Report Analysis] {config1.tag} is same as {config2.tag}")
-
-        class Report:
-            def __init__(self, file, report):
-                self.file = file
-                self.report = report
-
-            def __eq__(self, value):
-                return self.file == value.file and self.report == value.report
-
-            def __hash__(self):
-                return hash((self.file, self.report))
-
-        def get_reports(analyzer, config: Configuration):
-            reports_dir = os.path.join(config.workspace, analyzer)
-            if analyzer == "csa":
-                reports_dir = os.path.join(reports_dir, "csa-reports/version")
-            if not os.path.exists(reports_dir):
-                return {}
-
-            def get_file_list(dir, file_pattern="*"):
-                assert os.path.exists(dir)
-                path = Path(dir)
-                ret = []
-                for abs_report in path.rglob(file_pattern):
-                    # is_file(): the path of the report
-                    # is_dir() and ...: empty direcotry, means correspond file doesn't have report.
-                    if abs_report.is_file() or (
-                        abs_report.is_dir() and not os.listdir(abs_report)
-                    ):
-                        ret.append("/" + str(abs_report.relative_to(dir)))
-                return ret
-
-            file_list = get_file_list(reports_dir)
-            file_to_reports = {}
-            for file in file_list:
-                if os.path.isfile(os.path.join(reports_dir, file[1:])):
-                    # file with reports.
-                    origin_file, report = os.path.split(file)
-                    if origin_file not in file_to_reports:
-                        file_to_reports[origin_file] = set()
-                    file_to_reports[origin_file].add(Report(origin_file, report))
-                else:
-                    # file doesn't have reports.
-                    file_to_reports[file] = set()
-            return file_to_reports
-
-        def diff_reports(reports1, reports2):
-            file_to_diff = {}
-            diff_num = 0
-            for file, reports in reports2.items():
-                if file in reports1:
-                    diff = reports - reports1[file]
-                    if len(diff) > 0:
-                        file_to_diff[file] = {
-                            # This field exists meaning that this file also be analyzed in baseline.
-                            config1.tag: sorted([i.report for i in reports1[file]]),
-                            config2.tag: sorted([i.report for i in diff]),
-                        }
-                        diff_num += len(diff)
-                else:
-                    # If this file doesn't have reports, don't record it.
-                    if len(reports) > 0:
-                        file_to_diff[file] = {
-                            config2.tag: sorted([i.report for i in reports])
-                        }
-                        diff_num += len(reports)
-            return file_to_diff, diff_num
-
-        analyzers = ["csa"]
-        all_diff = {}
-        for analyzer in analyzers:
-            reports1 = get_reports(analyzer, config1)
-            reports2 = get_reports(analyzer, config2)
-            diff, diff_num = diff_reports(reports1, reports2)
-            all_diff[analyzer] = {
-                f"{config1.tag} number": sum([len(v) for k, v in reports1.items()]),
-                f"{config2.tag} number": sum([len(v) for k, v in reports2.items()]),
-                "diff number": diff_num,
-                "file to diff": diff,
-            }
-            logger.info(
-                f"[Reports Analysis] Find {diff_num} new reports in {config2.tag}"
-            )
-
-        with open(os.path.join(config2.workspace, "new_reports.json"), "w") as f:
-            json.dump(all_diff, f, indent=4, sort_keys=True)
+    def icebear_for_fdb(self, config: Configuration, cache_file):
+        if config == self.baseline:
+            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=True)
+        else:
+            # Don't update cache for non-baseline configurations.
+            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=False, cache_file=cache_file)
+        run(icebear_cmd, self.src_dir, "IceBear Pre-Analysis Running")
 
     def prepare_compilation_database(self, config):
         if self.opts.skip_prepare:
@@ -697,7 +619,93 @@ class Project:
                 return False
         return True
 
-    def process_every_configuraion(self):
+    def get_candidate_config_list(self) -> List[Configuration]:
+        configs_not_chosen = list(filter(
+            lambda c: c not in self.chosen_config_list, self.config_list
+        ))
+        # If configuration has not been chosen, but its distance to all chosen configurations is zero,
+        # then it won't be chosen anymore.
+        all_candidates = list(filter(
+            lambda c: c not in self.zero_distance_configs, configs_not_chosen
+        ))
+        return get_equidistant_elements(all_candidates, 5)
+
+    def determine_chosen_configurations(self, chosen_configs: Union[None, List[Configuration]]=None):
+        if chosen_configs is not None:
+            logger.info(f"[Use Given Configurations] {', '.join([config.tag for config in chosen_configs])}")
+            for config in chosen_configs:
+                self.chosen_config_list.append(self.create_configuration(config.config_options, self.workspace, config.tag))
+            return
+        
+        choose_process_record = os.path.join(self.workspace, "choose_process.txt")
+        choose_process = []
+
+        # Choose configurations through adaptive sampling.
+        choice_rounds = 5
+
+        # Start from baseline configuration.
+        curr_config = self.baseline
+        process_status = self.prepare_compilation_database(curr_config)
+        if not process_status:
+            logger.error(
+                f"[Prepare {curr_config.tag}] Prepare compilation database failed! Stop subsequent jobs."
+            )
+            return
+        self.icebear_for_fdb(curr_config, None)
+        file_level_cache = FileLevelCache.model_validate(json.load(open(curr_config.cache_file)))
+        with open(self.overall_cache_file, "w") as f:
+            f.write(file_level_cache.model_dump_json(indent=3))
+        self.chosen_config_list.append(curr_config)
+        choose_process.append(f"{curr_config.tag}")
+
+        while choice_rounds:
+            choice_rounds -= 1
+            candidate_config_list = self.get_candidate_config_list()
+            if not candidate_config_list:
+                break
+            chosen_config = None
+            max_dis = 0
+            choose_process.append("")
+            for config in candidate_config_list:
+                logger.TAG = f"{self.project_name}/{config.tag}"
+                # 1. Calculate incremental database by icebear.
+                process_status = self.prepare_compilation_database(config)
+                if not process_status:
+                    continue
+                self.icebear_for_fdb(config, self.overall_cache_file)
+                # 2. Calculate distance.
+                curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
+                curr_dis = file_level_cache.distance(curr_flc)
+                logger.info(f"[Distance] {config.tag}: {curr_dis}")
+                choose_process[-1] += f"{config.tag}:{curr_dis} "
+                # 3. Choose the configuration which introduce largest distance.
+                if curr_dis > max_dis:
+                    max_dis = file_level_cache.distance(curr_flc)
+                    chosen_config = config
+                else:
+                    logger.info(f"[Not Chosen] {config.tag}: {curr_dis} < {max_dis}")
+                    if curr_dis == 0:
+                        self.zero_distance_configs.add(config)
+                        print([config.tag for config in self.zero_distance_configs])
+            if chosen_config:
+                curr_config = chosen_config
+                self.chosen_config_list.append(chosen_config)
+                choose_process[-1] += f"=> {chosen_config.tag}"
+                chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
+                file_level_cache.root.update(chosen_flc.root)
+                with open(self.overall_cache_file, "w") as f:
+                    f.write(file_level_cache.model_dump_json(indent=3))
+        
+        with open(choose_process_record, "w") as f:
+            f.write("\n".join(choose_process))
+
+    def clean_workspace_preprocess(self):
+        chosen_tags = {config.tag for config in self.chosen_config_list}
+        for config in self.config_list:
+            if config.tag not in chosen_tags:
+                shutil.rmtree(config.prep_path, ignore_errors=True)
+
+    def process_every_configuration(self):
         if not self.opts.prep_only:
             inc_levels = [self.opts.inc]
             if self.opts.inc == "all":
@@ -709,14 +717,23 @@ class Project:
                 remove_file(
                     os.path.join(self.workspace, f"unique_reports_{inc_level}.json")
                 )
-        for config in self.config_list:
+
+        if self.opts.clean_cache:
+            run(
+                ["rm", self.overall_cache_file],
+                self.workspace,
+                tag="RM Cache",
+                env=self.env,
+            )
+            logger.info(f"[Clean Cache] {self.overall_cache_file}")
+
+        for config in self.chosen_config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             process_status = self.prepare_compilation_database(config)
             if not process_status:
                 continue
-            if os.path.exists(config.cache_file):
-                shutil.copyfile(
-                    config.cache_file, os.path.join(config.prep_path, "cache.txt")
-                )
-            self.icebear(config)
-            # self.reports_analysis(self.baseline, config)
+            # if os.path.exists(config.cache_file):
+            #     shutil.copyfile(
+            #         config.cache_file, os.path.join(config.prep_path, os.path.basename(config.cache_file))
+            #     )
+            self.icebear(config, self.overall_cache_file)

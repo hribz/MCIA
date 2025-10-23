@@ -64,12 +64,23 @@ def handle_project(projects, opts):
             continue
         if not checkout_target_commit(project_info.src_dir, project_info.commit):
             continue
-        workspace_tag = opts.tag if opts.tag else opts.inc
+        workspace_tag = (opts.tag if opts.tag else opts.inc)
         workspace = f"{project_info.src_dir}_workspace/{workspace_tag}"
-        logger.start_log(workspace)
 
-        p = Project(workspace=workspace, opts=opts, project_info=project_info)
-        p.process_every_configuraion()
+        hash_workspace = workspace + "_hash"
+        logger.start_log(hash_workspace)
+        p = Project(workspace=hash_workspace, opts=opts, project_info=project_info)
+        p.determine_chosen_configurations()
+
+        logger.start_log(workspace)
+        tp = Project(workspace=workspace, opts=opts, project_info=project_info)
+        tp.determine_chosen_configurations(p.chosen_config_list)
+        tp.process_every_configuration()
+        tp.clean_workspace_preprocess()
+        with open(tp.workspace + "/chosen_config.json", "w") as f:
+            json.dump(
+                [config.tag for config in tp.chosen_config_list], f, indent=3
+            )
 
 
 class MCArgumentParser:
