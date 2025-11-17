@@ -345,16 +345,36 @@ def handle_project(projects, opts):
         if os.path.exists(p.workspace + "/chosen_config.json"):
             chosen_config_tags = json.load(open(p.workspace + "/chosen_config.json"))
             chosen_configs = []
+            retained_tags = set()
+            for tag in chosen_config_tags:
+                options_path = os.path.join(p.workspace, f"preprocess/{tag}/options.json")
+                if os.path.exists(options_path):
+                    retained_tags.add(tag)
+
             for config in p.config_list:
-                if config.tag not in chosen_config_tags:
+                if config.tag not in retained_tags:
                     shutil.rmtree(config.prep_path, ignore_errors=True)
-            
-            for config in chosen_config_tags:
-                find_config = next((c for c in p.config_list if c.tag == config), None)
-                if find_config is None:
-                    logger.error(f"Cannot find chosen config {config} in {p.workspace}.")
+
+            p.config_list = [c for c in p.config_list if c.tag in retained_tags]
+
+            for tag in chosen_config_tags:
+                existing = next((c for c in p.config_list if c.tag == tag), None)
+                if existing is not None:
+                    chosen_configs.append(existing)
+                    continue
+
+                options_path = os.path.join(p.workspace, f"preprocess/{tag}/options.json")
+                if os.path.exists(options_path):
+                    option_cmd = json.load(open(options_path, "r"))
                 else:
-                    chosen_configs.append(find_config)
+                    logger.warning(
+                        f"Options for config {tag} not found in {options_path}, using empty options list."
+                    )
+                    option_cmd = []
+
+                reconstructed = p.create_configuration(option_cmd, p.workspace, tag)
+                chosen_configs.append(reconstructed)
+
             p.config_list = chosen_configs
 
         time_overview_data = {

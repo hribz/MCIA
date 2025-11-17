@@ -2,9 +2,8 @@ import json
 import os
 import re
 import subprocess
-from typing import Dict, List, Set
-
-from git import Union
+import random
+from typing import Dict, List, Set, Union
 
 from incremental_database import FileLevelCache
 from logger import logger
@@ -200,7 +199,21 @@ class Project:
         if project_info.env:
             self.env.update(project_info.env)
         self.create_dir()
-        self.configuration_sampling()
+        # Strategy selection
+        self.strategy = getattr(self.opts, "strategy", "preset")
+        self.candidate_size = getattr(self.opts, "candidate_size", 5)
+        self.stop_threshold = getattr(self.opts, "stop_threshold", 0)
+        self.stop_patience = getattr(self.opts, "stop_patience", 3)
+        self.random_seed = getattr(self.opts, "random_seed", 0)
+        self.max_round_retries = max(0, getattr(self.opts, "max_round_retries", 3))
+        self.max_random_options = max(1, getattr(self.opts, "max_random_options", 5))
+        self.max_rounds = max(0, getattr(self.opts, "max_rounds", 50))
+        self.rand = random.Random(self.random_seed)
+
+        if self.strategy == "preset":
+            self.configuration_sampling()
+        else:
+            self.configuration_sampling_random_space()
 
     def create_dir(self):
         makedir(self.project_info.build_dir)
@@ -297,6 +310,92 @@ class Project:
         if self.project_info.filter_configs:
             old_list = self.config_list.copy()
             self.config_list = [old_list[idx] for idx in self.project_info.filter_configs]
+
+    def configuration_sampling_random_space(self):
+        # Record options classification like the preset strategy
+        classified_options = {ty: [] for ty in OptionType}
+        for option in self.config_sampler.options:
+            classified_options[option.kind].append(
+                f"{option.option} on:{option.on_value} off:{option.off_value}"
+            )
+        with open(os.path.join(self.workspace, "configure.txt"), "w") as f:
+            for ty in OptionType:
+                f.write(ty.getStr() + "\n")
+                f.writelines([(op_str + "\n") for op_str in classified_options[ty]])
+
+        # Baseline as default configuration (no options)
+        default_configuration = self.get_different_kind_configuration(
+            ConfigType.default, "0_default"
+        )
+        self.baseline = default_configuration
+        self.config_list = [self.baseline]
+        # Used to avoid generating duplicate random option sets
+        self._generated_hashes = set()
+        # Seed hashes with baseline
+        self._generated_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+
+    def _random_option_set(self) -> List[str]:
+        """Generate a random, constraint-aware option list drawn from the full value space."""
+        options: List[str] = []
+        option_to_idx: Dict[str, int] = {}
+        conflict_options = set()
+
+        def add_to_options(op: Union[str, None], overwrite: bool):
+            nonlocal options, option_to_idx
+            if op is None:
+                return
+            key = op.split("=")[0]
+            if key in option_to_idx:
+                if overwrite:
+                    options[option_to_idx[key]] = op
+            else:
+                option_to_idx[key] = len(options)
+                options.append(op)
+
+        def handle_switch(option, turn_on: bool) -> bool:
+            nonlocal conflict_options
+            op, state = (option.positive() if turn_on else option.negative())
+            # state means whether this option is considered "on" semantically
+            if state:
+                if option.option not in conflict_options:
+                    conflict_options = conflict_options.union(option.conflict)
+                    # Check combination conflicts
+                    for com_op in option.combination:
+                        com_key = com_op.split("=")[0]
+                        if com_key in conflict_options and com_op != option.negative()[0]:
+                            return False
+                    add_to_options(op, False)
+                    for com_op in option.combination:
+                        add_to_options(com_op, True)
+                else:
+                    # If in conflict set, try to force negative value
+                    add_to_options(option.negative()[0], True)
+            else:
+                add_to_options(op, False)
+            return True
+
+        # Shuffle options to explore different combinations
+        shuffled = self.project_info.options.copy()
+        self.rand.shuffle(shuffled)
+
+        selected_options = shuffled[: min(len(shuffled), self.max_random_options)]
+
+        for option in selected_options:
+            # Switch options: randomly on/off, try alternative if conflict
+            if option.is_switch():
+                first_try = bool(self.rand.getrandbits(1))
+                if not handle_switch(option, first_try):
+                    # Try the opposite
+                    handle_switch(option, not first_try)
+                continue
+
+            # Multi-value options: choose a random value if available
+            if option.values and len(option.values) > 0:
+                value = self.rand.choice(option.values)
+                add_to_options(f"{option.option}={value}", True)
+            # else: skip if no values
+
+        return options
 
     def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:
@@ -638,7 +737,21 @@ class Project:
             return
         
         choose_process_record = os.path.join(self.workspace, "choose_process.txt")
-        choose_process = []
+        choose_process_details: List[Dict] = []
+
+        def snapshot_options(config: Configuration) -> List[str]:
+            return list(config.config_options)
+
+        def mark_chosen(round_info: Dict, chosen_tag: str, max_dis: int):
+            round_info["chosen"] = chosen_tag
+            round_info["max_distance"] = max_dis
+            for cand in round_info["candidates"]:
+                if cand["tag"] == chosen_tag:
+                    cand["chosen"] = True
+                    break
+
+        def append_stop(reason: str):
+            choose_process_details.append({"type": "stop", "reason": reason})
 
         # Choose configurations through adaptive sampling.
         choice_rounds = 5
@@ -656,48 +769,236 @@ class Project:
         with open(self.overall_cache_file, "w") as f:
             f.write(file_level_cache.model_dump_json(indent=3))
         self.chosen_config_list.append(curr_config)
-        choose_process.append(f"{curr_config.tag}")
+        choose_process_details.append(
+            {
+                "type": "baseline",
+                "tag": curr_config.tag,
+                "options": snapshot_options(curr_config),
+            }
+        )
 
-        while choice_rounds:
-            choice_rounds -= 1
-            candidate_config_list = self.get_candidate_config_list()
-            if not candidate_config_list:
-                break
-            chosen_config = None
-            max_dis = 0
-            choose_process.append("")
-            for config in candidate_config_list:
-                logger.TAG = f"{self.project_name}/{config.tag}"
-                # 1. Calculate incremental database by icebear.
-                process_status = self.prepare_compilation_database(config)
-                if not process_status:
+        round_counter = 0
+        if self.strategy == "preset":
+            while choice_rounds:
+                choice_rounds -= 1
+                candidate_config_list = self.get_candidate_config_list()
+                if not candidate_config_list:
+                    append_stop("No more preset candidates available.")
+                    break
+                round_counter += 1
+                round_info: Dict = {
+                    "type": "round",
+                    "round": round_counter,
+                    "strategy": "preset",
+                    "candidates": [],
+                }
+                chosen_config = None
+                max_dis = 0
+                for config in candidate_config_list:
+                    logger.TAG = f"{self.project_name}/{config.tag}"
+                    # 1. Calculate incremental database by icebear.
+                    process_status = self.prepare_compilation_database(config)
+                    if not process_status:
+                        round_info["candidates"].append(
+                            {
+                                "tag": config.tag,
+                                "result": "prepare-failed",
+                                "options": snapshot_options(config),
+                            }
+                        )
+                        continue
+                    self.icebear_for_fdb(config, self.overall_cache_file)
+                    # 2. Calculate distance.
+                    curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
+                    curr_dis = file_level_cache.distance(curr_flc)
+                    logger.info(f"[Distance] {config.tag}: {curr_dis}")
+                    round_info["candidates"].append(
+                        {
+                            "tag": config.tag,
+                            "result": "distance",
+                            "distance": curr_dis,
+                            "options": snapshot_options(config),
+                        }
+                    )
+                    # 3. Choose the configuration which introduce largest distance.
+                    if curr_dis > max_dis:
+                        max_dis = curr_dis
+                        chosen_config = config
+                    else:
+                        logger.info(f"[Not Chosen] {config.tag}: {curr_dis} < {max_dis}")
+                        if curr_dis == 0:
+                            self.zero_distance_configs.add(config)
+                if chosen_config:
+                    curr_config = chosen_config
+                    self.chosen_config_list.append(chosen_config)
+                    mark_chosen(round_info, chosen_config.tag, max_dis)
+                    chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
+                    file_level_cache.root.update(chosen_flc.root)
+                    with open(self.overall_cache_file, "w") as f:
+                        f.write(file_level_cache.model_dump_json(indent=3))
+                choose_process_details.append(round_info)
+        else:
+            low_rounds = 0
+            round_idx = 0
+            consecutive_failures = 0
+            while True:
+                if self.max_rounds and round_idx >= self.max_rounds:
+                    logger.info(
+                        f"[Random-Space] Stop condition met: reached max rounds limit ({self.max_rounds})."
+                    )
+                    append_stop(
+                        f"Reached max rounds limit ({self.max_rounds})."
+                    )
+                    break
+                round_idx += 1
+                round_counter += 1
+                round_info = {
+                    "type": "round",
+                    "round": round_counter,
+                    "strategy": "random-space",
+                    "candidates": [],
+                }
+
+                # Generate reproducible candidate set for this round
+                candidate_config_list: List[Configuration] = []
+                attempt = 0
+                while len(candidate_config_list) < self.candidate_size and attempt < self.candidate_size * 3:
+                    attempt += 1
+                    options = self._random_option_set()
+                    options_hash = self.config_sampler.get_options_hash(options)
+                    if options_hash in getattr(self, "_generated_hashes", set()):
+                        continue
+                    tag = f"r{round_idx}_c{len(candidate_config_list)}"
+                    cfg = self.create_configuration(options, self.workspace, tag)
+                    self.config_list.append(cfg)  # Track for cleanup
+                    candidate_config_list.append(cfg)
+                    self._generated_hashes.add(options_hash)
+
+                if not candidate_config_list:
+                    logger.info("[Random-Space] No new candidates generated; scheduling retry.")
+                    round_info["note"] = "No candidates generated."
+                    choose_process_details.append(round_info)
+                    consecutive_failures += 1
+                    if consecutive_failures > self.max_round_retries:
+                        append_stop(
+                            f"Exceeded max consecutive failed rounds ({self.max_round_retries}) due to empty candidate sets."
+                        )
+                        break
                     continue
-                self.icebear_for_fdb(config, self.overall_cache_file)
-                # 2. Calculate distance.
-                curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
-                curr_dis = file_level_cache.distance(curr_flc)
-                logger.info(f"[Distance] {config.tag}: {curr_dis}")
-                choose_process[-1] += f"{config.tag}:{curr_dis} "
-                # 3. Choose the configuration which introduce largest distance.
-                if curr_dis > max_dis:
-                    max_dis = file_level_cache.distance(curr_flc)
-                    chosen_config = config
+
+                chosen_config = None
+                max_dis = -1
+                for config in candidate_config_list:
+                    logger.TAG = f"{self.project_name}/{config.tag}"
+                    process_status = self.prepare_compilation_database(config)
+                    if not process_status:
+                        round_info["candidates"].append(
+                            {
+                                "tag": config.tag,
+                                "result": "prepare-failed",
+                                "options": snapshot_options(config),
+                            }
+                        )
+                        continue
+                    self.icebear_for_fdb(config, self.overall_cache_file)
+                    curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
+                    curr_dis = file_level_cache.distance(curr_flc)
+                    logger.info(f"[Distance] {config.tag}: {curr_dis}")
+                    round_info["candidates"].append(
+                        {
+                            "tag": config.tag,
+                            "result": "distance",
+                            "distance": curr_dis,
+                            "options": snapshot_options(config),
+                        }
+                    )
+                    if curr_dis > max_dis:
+                        max_dis = curr_dis
+                        chosen_config = config
+
+                if chosen_config is None:
+                    logger.info("[Random-Space] All candidates failed; scheduling retry.")
+                    round_info["note"] = "All candidates failed to prepare or analyze."
+                    choose_process_details.append(round_info)
+                    consecutive_failures += 1
+                    if consecutive_failures > self.max_round_retries:
+                        append_stop(
+                            f"Exceeded max consecutive failed rounds ({self.max_round_retries}) due to candidate failures."
+                        )
+                        break
+                    continue
+
+                # Successful round resets failure counter
+                consecutive_failures = 0
+
+                if max_dis <= self.stop_threshold:
+                    low_rounds += 1
                 else:
-                    logger.info(f"[Not Chosen] {config.tag}: {curr_dis} < {max_dis}")
-                    if curr_dis == 0:
-                        self.zero_distance_configs.add(config)
-                        print([config.tag for config in self.zero_distance_configs])
-            if chosen_config:
+                    low_rounds = 0
+
                 curr_config = chosen_config
                 self.chosen_config_list.append(chosen_config)
-                choose_process[-1] += f"=> {chosen_config.tag}"
+                mark_chosen(round_info, chosen_config.tag, max_dis)
                 chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
                 file_level_cache.root.update(chosen_flc.root)
                 with open(self.overall_cache_file, "w") as f:
                     f.write(file_level_cache.model_dump_json(indent=3))
-        
-        with open(choose_process_record, "w") as f:
-            f.write("\n".join(choose_process))
+
+                choose_process_details.append(round_info)
+
+                if low_rounds >= self.stop_patience:
+                    logger.info(
+                        f"[Random-Space] Stop condition met: max_dis <= {self.stop_threshold} for {self.stop_patience} consecutive rounds."
+                    )
+                    append_stop(
+                        f"Reached stop condition: max distance <= {self.stop_threshold} for {self.stop_patience} consecutive rounds."
+                    )
+                    break
+
+        def write_choose_process(details: List[Dict], output_path: str):
+            lines: List[str] = []
+
+            def write_options(option_list: List[str], indent: str):
+                if not option_list:
+                    lines.append(f"{indent}(none)")
+                else:
+                    for i in range(0, len(option_list), 5):
+                        chunk = option_list[i:i+5]
+                        lines.append(f"{indent}- {' '.join(chunk)}")
+
+            for entry in details:
+                if entry.get("type") == "baseline":
+                    lines.append("Baseline")
+                    lines.append(f"  tag: {entry['tag']}")
+                    lines.append("  options:")
+                    write_options(entry.get("options", []), "    ")
+                    lines.append("")
+                elif entry.get("type") == "round":
+                    lines.append(f"Round {entry['round']} ({entry['strategy']})")
+                    if entry.get("note"):
+                        lines.append(f"  note: {entry['note']}")
+                    for cand in entry.get("candidates", []):
+                        if cand.get("result") == "prepare-failed":
+                            lines.append(f"  - {cand['tag']}: prepare failed")
+                        else:
+                            status = f"distance={cand.get('distance', 'n/a')}"
+                            if cand.get("chosen"):
+                                status += " [chosen]"
+                            lines.append(f"  - {cand['tag']}: {status}")
+                        lines.append("      options:")
+                        write_options(cand.get("options", []), "        ")
+                    lines.append("")
+                elif entry.get("type") == "stop":
+                    lines.append(f"Stop: {entry['reason']}")
+                    lines.append("")
+
+            if lines and lines[-1] == "":
+                lines.pop()
+
+            with open(output_path, "w") as f:
+                f.write("\n".join(lines))
+
+        write_choose_process(choose_process_details, choose_process_record)
 
     def clean_workspace_preprocess(self):
         chosen_tags = {config.tag for config in self.chosen_config_list}

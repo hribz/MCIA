@@ -158,6 +158,64 @@ class MCArgumentParser:
             action="store_true",
             help="Skip prepare compilation database",
         )
+        # Strategy and sampling controls
+        self.parser.add_argument(
+            "--strategy",
+            type=str,
+            dest="strategy",
+            choices=["preset", "random-space"],
+            default="random-space",
+            help="Configuration selection strategy: preset (existing one_positive/negative) or random-space (sample from full value space).",
+        )
+        self.parser.add_argument(
+            "--candidate-size",
+            type=int,
+            dest="candidate_size",
+            default=5,
+            help="Number of random candidates evaluated per round when using random-space strategy.",
+        )
+        self.parser.add_argument(
+            "--stop-threshold",
+            type=int,
+            dest="stop_threshold",
+            default=0,
+            help="Stop when the max distance in a round is <= this value for N consecutive rounds.",
+        )
+        self.parser.add_argument(
+            "--stop-patience",
+            type=int,
+            dest="stop_patience",
+            default=3,
+            help="Number of consecutive low-distance rounds (<= threshold) before stopping in random-space strategy.",
+        )
+        self.parser.add_argument(
+            "--random-seed",
+            type=int,
+            dest="random_seed",
+            default=0,
+            help="Seed for deterministic candidate sampling when using random-space strategy.",
+        )
+        self.parser.add_argument(
+            "--max-round-retries",
+            type=int,
+            dest="max_round_retries",
+            default=3,
+            help="Maximum consecutive failed sampling rounds before aborting random-space strategy.",
+        )
+        self.parser.add_argument(
+            "--max-random-options",
+            type=int,
+            dest="max_random_options",
+            default=5,
+            help="Upper bound on how many distinct options are toggled per random candidate.",
+        )
+        self.parser.add_argument(
+            "--max-rounds",
+            type=int,
+            dest="max_rounds",
+            default=10,
+            help="Maximum random-space sampling rounds before stopping (0 disables the limit).",
+        )
 
     def parse_args(self, args):
         return self.parser.parse_args(args)
