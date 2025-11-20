@@ -163,9 +163,16 @@ class MCArgumentParser:
             "--strategy",
             type=str,
             dest="strategy",
-            choices=["preset", "random-space"],
-            default="random-space",
+            choices=["preset", "random-space", "twise"],
+            default="twise",
             help="Configuration selection strategy: preset (existing one_positive/negative) or random-space (sample from full value space).",
+        )
+        self.parser.add_argument(
+            "--t-wise",
+            type=int,
+            dest="t_wise",
+            default=2,
+            help="t value for t-wise (interaction) sampling when --strategy twise (default 2 = pairwise).",
         )
         self.parser.add_argument(
             "--candidate-size",

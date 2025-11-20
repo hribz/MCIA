@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import random
+import itertools
 from typing import Dict, List, Set, Union
 
 from incremental_database import FileLevelCache
@@ -177,6 +178,7 @@ class Project:
         self.config_list: List[Configuration] = [] # All sampled configurations.
         self.chosen_config_list: List[Configuration] = [] # Configurations to be analyzed.
         self.zero_distance_configs: Set[Configuration] = set() # Configurations with zero distance.
+        self.prepared_configs: Set[str] = set() # Configurations that have been prepared (by tag).
         self.overall_cache_file = os.path.join(self.workspace, "file_level_cache.json")
 
         self.env = dict(os.environ)
@@ -189,7 +191,7 @@ class Project:
             }
         )
 
-        self.sampling_config = SamplingConfig(self.project_info.options, 15)
+        self.sampling_config = SamplingConfig(self.project_info.options, 1000)
         self.config_sampler = ConfigSampling(
             self.project_info.options, self.sampling_config
         )
@@ -208,12 +210,18 @@ class Project:
         self.max_round_retries = max(0, getattr(self.opts, "max_round_retries", 3))
         self.max_random_options = max(1, getattr(self.opts, "max_random_options", 5))
         self.max_rounds = max(0, getattr(self.opts, "max_rounds", 50))
+        self.t_wise = max(1, getattr(self.opts, "t_wise", 2))
         self.rand = random.Random(self.random_seed)
 
         if self.strategy == "preset":
             self.configuration_sampling()
-        else:
+        elif self.strategy == "random-space":
             self.configuration_sampling_random_space()
+        elif self.strategy == "twise":
+            self.configuration_sampling_twise(self.t_wise)
+        else:
+            # Fallback
+            self.configuration_sampling()
 
     def create_dir(self):
         makedir(self.project_info.build_dir)
@@ -333,6 +341,272 @@ class Project:
         self._generated_hashes = set()
         # Seed hashes with baseline
         self._generated_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+
+    def configuration_sampling_twise(self, t: int):
+        """Generate configurations using standard t-wise covering array algorithm.
+
+        This implementation uses a greedy algorithm to generate a minimal set of configurations
+        that covers all valid t-way interactions between options.
+
+        For each option:
+        - Switch options: on/off states
+        - Multi-value options: all possible values
+        - Conflicts and combination constraints are respected
+        """
+        classified_options = {ty: [] for ty in OptionType}
+        for option in self.config_sampler.options:
+            classified_options[option.kind].append(
+                f"{option.option} on:{option.on_value} off:{option.off_value}"
+            )
+        with open(os.path.join(self.workspace, "configure.txt"), "w") as f:
+            for ty in OptionType:
+                f.write(ty.getStr() + "\n")
+                f.writelines([(op_str + "\n") for op_str in classified_options[ty]])
+
+        # Baseline
+        default_configuration = self.get_different_kind_configuration(
+            ConfigType.default, "0_default"
+        )
+        self.baseline = default_configuration
+        all_configs: List[Configuration] = [self.baseline]
+
+        # Build option value space: each option has a list of possible (token, is_on, opt_obj) values
+        option_value_space: List[List[tuple]] = []  # [(token_str, is_on, opt_obj), ...]
+        for opt in self.project_info.options:
+            values = []
+            if opt.is_switch():
+                pos_token, _ = opt.positive()
+                neg_token, _ = opt.negative()
+                if pos_token:
+                    values.append((pos_token, True, opt))
+                if neg_token:
+                    values.append((neg_token, False, opt))
+            elif opt.values:
+                # All values for multi-value options
+                for val in opt.values:
+                    values.append((f"{opt.option}={val}", True, opt))
+            else:
+                pos, _ = opt.positive()
+                if pos:
+                    values.append((pos, True, opt))
+            if values:
+                option_value_space.append(values)
+
+        if len(option_value_space) < t:
+            logger.warning(f"[T-wise] Not enough options ({len(option_value_space)}) for {t}-wise coverage. Using all options.")
+            t = len(option_value_space)
+
+        # Generate all t-way tuples (combinations of option indices)
+        option_indices = list(range(len(option_value_space)))
+        t_way_option_combos = list(itertools.combinations(option_indices, t))
+
+        # For each t-way option combination, enumerate all value tuples
+        all_tuples_to_cover: Set[tuple] = set()
+        for opt_combo in t_way_option_combos:
+            # Get cartesian product of values for these t options
+            value_lists = [option_value_space[i] for i in opt_combo]
+            for value_tuple in itertools.product(*value_lists):
+                # value_tuple is ((token, is_on, opt_obj), ...) for t options
+                # Check if this combination is valid (no conflicts)
+                if self._is_valid_tuple(value_tuple):
+                    # Store as (opt_idx, token) pairs for uniqueness
+                    tuple_key = tuple((opt_combo[i], value_tuple[i][0]) for i in range(t))
+                    all_tuples_to_cover.add(tuple_key)
+
+        logger.info(f"[T-wise] Generated {len(all_tuples_to_cover)} valid {t}-tuples to cover from {len(t_way_option_combos)} option combinations")
+
+        # Greedy algorithm: iteratively build configurations that cover the most uncovered tuples
+        covered_tuples: Set[tuple] = set()
+        generated_configs: List[List[str]] = []
+        seen_hashes: Set[str] = set()
+        seen_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+
+        iteration = 0
+        max_iterations = min(len(all_tuples_to_cover), self.sampling_config.num * 10)  # Safety limit
+
+        while covered_tuples != all_tuples_to_cover and iteration < max_iterations:
+            iteration += 1
+            
+            # Try to find a configuration that covers the most uncovered tuples
+            best_config = None
+            best_coverage = 0
+            best_covered_tuples = set()
+
+            # Strategy: try random configurations and pick the one with best coverage
+            attempts = min(100, len(all_tuples_to_cover) - len(covered_tuples) + 10)
+            for attempt in range(attempts):
+                # Generate a random valid configuration
+                config_options = self._generate_random_valid_config(option_value_space)
+                if config_options is None:
+                    continue
+                
+                opt_hash = self.config_sampler.get_options_hash(config_options)
+                if opt_hash in seen_hashes:
+                    continue
+
+                # Check how many uncovered tuples this config covers
+                newly_covered = self._count_covered_tuples(config_options, all_tuples_to_cover - covered_tuples, option_value_space)
+                
+                if len(newly_covered) > best_coverage:
+                    best_coverage = len(newly_covered)
+                    best_config = config_options
+                    best_covered_tuples = newly_covered
+
+            if best_config is None or best_coverage == 0:
+                # Can't find any config that covers new tuples - might be due to conflicts
+                logger.info(f"[T-wise] Cannot cover remaining {len(all_tuples_to_cover) - len(covered_tuples)} tuples (possible conflicts)")
+                break
+
+            # Add the best configuration
+            covered_tuples.update(best_covered_tuples)
+            generated_configs.append(best_config)
+            seen_hashes.add(self.config_sampler.get_options_hash(best_config))
+            
+            logger.info(f"[T-wise] Iteration {iteration}: added config covering {best_coverage} new tuples (total: {len(covered_tuples)}/{len(all_tuples_to_cover)})")
+
+            # Stop if we've generated enough configs
+            if len(generated_configs) >= self.sampling_config.num:
+                logger.info(f"[T-wise] Reached configuration limit ({self.sampling_config.num})")
+                break
+
+        coverage_pct = 100.0 * len(covered_tuples) / len(all_tuples_to_cover) if all_tuples_to_cover else 100.0
+        logger.info(f"[T-wise] Final: {len(generated_configs)} configs covering {len(covered_tuples)}/{len(all_tuples_to_cover)} tuples ({coverage_pct:.1f}%)")
+
+        # Materialize configurations
+        for cfg_idx, opt_list in enumerate(generated_configs, start=1):
+            tag = f"tw{t}_{cfg_idx}"
+            all_configs.append(self.create_configuration(opt_list, self.workspace, tag))
+
+        self.config_list = [self.baseline] + [c for c in all_configs if c != self.baseline]
+
+        with open(os.path.join(self.workspace, "configure.txt"), "a") as f:
+            for config in self.config_list:
+                configure_script = commands_to_shell_script(config.config_cmd())
+                f.write(config.tag + "\n")
+                f.write(configure_script + "\n")
+
+    def _is_valid_tuple(self, value_tuple: tuple) -> bool:
+        """Check if a t-tuple of option values is valid (no conflicts)."""
+        conflict_set: Set[str] = set()
+        selected_keys: Set[str] = set()
+        
+        for token, is_on, opt_obj in value_tuple:
+            # Check for duplicate option assignment
+            if opt_obj.option in selected_keys:
+                return False
+            selected_keys.add(opt_obj.option)
+            
+            # Check conflicts
+            if opt_obj.option in conflict_set:
+                return False
+            if any(cf in conflict_set for cf in opt_obj.conflict):
+                return False
+            
+            # Only add conflicts if this option is "on"
+            if is_on:
+                conflict_set.update(opt_obj.conflict)
+                # Check combination conflicts
+                for com in opt_obj.combination:
+                    com_key = com.split("=")[0]
+                    if com_key in conflict_set:
+                        return False
+        
+        return True
+
+    def _generate_random_valid_config(self, option_value_space: List[List[tuple]]) -> Union[List[str], None]:
+        """Generate a random valid configuration from the option value space."""
+        config_options: List[str] = []
+        option_to_idx: Dict[str, int] = {}
+        conflict_set: Set[str] = set()
+        
+        # Shuffle option order for randomness
+        option_order = list(range(len(option_value_space)))
+        self.rand.shuffle(option_order)
+        
+        for opt_idx in option_order:
+            values = option_value_space[opt_idx]
+            if not values:
+                continue
+            
+            # Shuffle values
+            values_shuffled = values.copy()
+            self.rand.shuffle(values_shuffled)
+            
+            # Try each value until we find a valid one
+            added = False
+            for token, is_on, opt_obj in values_shuffled:
+                if token is None:
+                    continue
+                
+                # Check conflicts
+                if opt_obj.option in conflict_set:
+                    continue
+                if any(cf in conflict_set for cf in opt_obj.conflict):
+                    continue
+                
+                # Check combination conflicts
+                if is_on:
+                    combo_conflict = False
+                    for com in opt_obj.combination:
+                        com_key = com.split("=")[0]
+                        if com_key in conflict_set:
+                            combo_conflict = True
+                            break
+                    if combo_conflict:
+                        continue
+                
+                # Add this option
+                option_to_idx[opt_obj.option] = len(config_options)
+                config_options.append(token)
+                
+                # Update conflicts if turning on
+                if is_on:
+                    conflict_set.update(opt_obj.conflict)
+                    # Add combination options
+                    for com in opt_obj.combination:
+                        com_key = com.split("=")[0]
+                        if com_key in option_to_idx:
+                            # Overwrite
+                            config_options[option_to_idx[com_key]] = com
+                        else:
+                            option_to_idx[com_key] = len(config_options)
+                            config_options.append(com)
+                
+                added = True
+                break
+            
+            # If we couldn't add any value for this option, that's ok (it remains unset)
+        
+        return config_options if config_options else None
+
+    def _count_covered_tuples(self, config_options: List[str], tuples_to_check: Set[tuple], option_value_space: List[List[tuple]]) -> Set[tuple]:
+        """Count how many tuples from tuples_to_check are covered by this configuration."""
+        # Build a map of option_idx -> assigned token
+        config_map: Dict[int, str] = {}
+        
+        # Parse config_options to extract option assignments
+        for opt_str in config_options:
+            opt_key = opt_str.split("=")[0]
+            # Find which option index this belongs to
+            for opt_idx, values in enumerate(option_value_space):
+                for token, is_on, opt_obj in values:
+                    if token == opt_str:
+                        config_map[opt_idx] = opt_str
+                        break
+        
+        # Check which tuples are covered
+        covered = set()
+        for tpl in tuples_to_check:
+            # tpl is ((opt_idx, token), ...)
+            is_covered = True
+            for opt_idx, token in tpl:
+                if config_map.get(opt_idx) != token:
+                    is_covered = False
+                    break
+            if is_covered:
+                covered.add(tpl)
+        
+        return covered
 
     def _random_option_set(self) -> List[str]:
         """Generate a random, constraint-aware option list drawn from the full value space."""
@@ -738,6 +1012,7 @@ class Project:
         
         choose_process_record = os.path.join(self.workspace, "choose_process.txt")
         choose_process_details: List[Dict] = []
+        cache_hit_count = 0  # Track cache hits
 
         def snapshot_options(config: Configuration) -> List[str]:
             return list(config.config_options)
@@ -778,18 +1053,18 @@ class Project:
         )
 
         round_counter = 0
-        if self.strategy == "preset":
+        if self.strategy in ("preset", "twise"):
             while choice_rounds:
                 choice_rounds -= 1
                 candidate_config_list = self.get_candidate_config_list()
                 if not candidate_config_list:
-                    append_stop("No more preset candidates available.")
+                    append_stop("No more preset/twise candidates available.")
                     break
                 round_counter += 1
                 round_info: Dict = {
                     "type": "round",
                     "round": round_counter,
-                    "strategy": "preset",
+                    "strategy": self.strategy,
                     "candidates": [],
                 }
                 chosen_config = None
@@ -797,16 +1072,24 @@ class Project:
                 for config in candidate_config_list:
                     logger.TAG = f"{self.project_name}/{config.tag}"
                     # 1. Calculate incremental database by icebear.
-                    process_status = self.prepare_compilation_database(config)
-                    if not process_status:
-                        round_info["candidates"].append(
-                            {
-                                "tag": config.tag,
-                                "result": "prepare-failed",
-                                "options": snapshot_options(config),
-                            }
-                        )
-                        continue
+                    # Check if already prepared
+                    if config.tag not in self.prepared_configs:
+                        process_status = self.prepare_compilation_database(config)
+                        if not process_status:
+                            round_info["candidates"].append(
+                                {
+                                    "tag": config.tag,
+                                    "result": "prepare-failed",
+                                    "options": snapshot_options(config),
+                                }
+                            )
+                            continue
+                        # Mark as prepared
+                        self.prepared_configs.add(config.tag)
+                    else:
+                        logger.info(f"[Cache Hit] {config.tag} already prepared, skipping prepare")
+                        cache_hit_count += 1
+                    # Always run icebear_for_fdb to recalculate with updated overall_cache
                     self.icebear_for_fdb(config, self.overall_cache_file)
                     # 2. Calculate distance.
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
@@ -890,16 +1173,24 @@ class Project:
                 max_dis = -1
                 for config in candidate_config_list:
                     logger.TAG = f"{self.project_name}/{config.tag}"
-                    process_status = self.prepare_compilation_database(config)
-                    if not process_status:
-                        round_info["candidates"].append(
-                            {
-                                "tag": config.tag,
-                                "result": "prepare-failed",
-                                "options": snapshot_options(config),
-                            }
-                        )
-                        continue
+                    # Check if already prepared
+                    if config.tag not in self.prepared_configs:
+                        process_status = self.prepare_compilation_database(config)
+                        if not process_status:
+                            round_info["candidates"].append(
+                                {
+                                    "tag": config.tag,
+                                    "result": "prepare-failed",
+                                    "options": snapshot_options(config),
+                                }
+                            )
+                            continue
+                        # Mark as prepared
+                        self.prepared_configs.add(config.tag)
+                    else:
+                        logger.info(f"[Cache Hit] {config.tag} already prepared, skipping prepare")
+                        cache_hit_count += 1
+                    # Always run icebear_for_fdb to recalculate with updated overall_cache
                     self.icebear_for_fdb(config, self.overall_cache_file)
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
                     curr_dis = file_level_cache.distance(curr_flc)
@@ -998,7 +1289,70 @@ class Project:
             with open(output_path, "w") as f:
                 f.write("\n".join(lines))
 
+        def write_selection_summary(details: List[Dict], output_path: str):
+            # Calculate config space based on current strategy
+            def compute_config_space() -> int:
+                if self.strategy == "random-space":
+                    total = 1
+                    for opt in self.project_info.options:
+                        if opt.is_switch():
+                            card = 2
+                        elif opt.values:
+                            card = len(opt.values)
+                        else:
+                            card = 2
+                        total *= max(1, card)
+                    return total
+                # preset / twise operate on explicit enumerations
+                return max(1, len(self.config_list))
+
+            total_space = compute_config_space()
+            if total_space > 10**18:
+                space_expr = f"{total_space:.2e}"
+            else:
+                space_expr = str(total_space)
+
+            # Count prepare failures
+            prepare_failed_count = 0
+            for entry in details:
+                if entry.get("type") == "round":
+                    for cand in entry.get("candidates", []):
+                        if cand.get("result") == "prepare-failed":
+                            prepare_failed_count += 1
+            
+            # Selected configs and distances
+            selected_configs = []
+            # Baseline
+            selected_configs.append({"tag": self.baseline.tag, "distance": 0}) # Baseline distance 0
+            
+            for entry in details:
+                if entry.get("type") == "round":
+                    chosen_tag = entry.get("chosen")
+                    max_dis = entry.get("max_distance")
+                    if chosen_tag:
+                        selected_configs.append({"tag": chosen_tag, "distance": max_dis})
+
+            lines = []
+            lines.append("# Configuration Selection Summary")
+            lines.append(f"- **Sampling Strategy**: {self.strategy}")
+            lines.append(f"- **Total Options**: {len(self.project_info.options)}")
+            lines.append(f"- **Configuration Space**: `{space_expr}`")
+            lines.append(f"- **Discarded (Zero Distance)**: {len(self.zero_distance_configs)}")
+            lines.append(f"- **Discarded (Prepare Failed)**: {prepare_failed_count}")
+            lines.append(f"- **Cache Hits**: {cache_hit_count}")
+            lines.append(f"- **Selected Configurations**: {len(self.chosen_config_list)}")
+            lines.append("")
+            lines.append("## Selected Configuration Distances")
+            lines.append("| Tag | Distance |")
+            lines.append("| --- | --- |")
+            for cfg in selected_configs:
+                lines.append(f"| {cfg['tag']} | {cfg['distance']} |")
+            
+            with open(output_path, "w") as f:
+                f.write("\n".join(lines))
+
         write_choose_process(choose_process_details, choose_process_record)
+        write_selection_summary(choose_process_details, os.path.join(self.workspace, "selection_summary.md"))
 
     def clean_workspace_preprocess(self):
         chosen_tags = {config.tag for config in self.chosen_config_list}
