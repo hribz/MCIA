@@ -191,7 +191,7 @@ class Project:
             }
         )
 
-        self.sampling_config = SamplingConfig(self.project_info.options, 1000)
+        self.sampling_config = SamplingConfig(self.project_info.options, getattr(self.opts, "max_configs", 1000))
         self.config_sampler = ConfigSampling(
             self.project_info.options, self.sampling_config
         )
@@ -219,6 +219,10 @@ class Project:
             self.configuration_sampling_random_space()
         elif self.strategy == "twise":
             self.configuration_sampling_twise(self.t_wise)
+        elif self.strategy == "pairwise-explicit":
+            self.configuration_sampling_pairwise_explicit()
+        elif self.strategy == "adaptive":
+            self.configuration_sampling_adaptive()
         else:
             # Fallback
             self.configuration_sampling()
@@ -341,6 +345,319 @@ class Project:
         self._generated_hashes = set()
         # Seed hashes with baseline
         self._generated_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+
+    def configuration_sampling_adaptive(self):
+        """Adaptive incremental sampling strategy.
+        
+        Starts with simple configurations (fewer options) and gradually increases
+        complexity based on prepare success rate. This maximizes both coverage
+        and prepare success rate.
+        
+        Strategy:
+        1. Single-option configs (highest success rate)
+        2. Pairwise configs (2 options)
+        3. Triple configs (3 options) - only if pairwise success rate > 70%
+        4. Quad configs (4 options) - only if triple success rate > 60%
+        """
+        classified_options = {ty: [] for ty in OptionType}
+        for option in self.config_sampler.options:
+            classified_options[option.kind].append(
+                f"{option.option} on:{option.on_value} off:{option.off_value}"
+            )
+        with open(os.path.join(self.workspace, "configure.txt"), "w") as f:
+            for ty in OptionType:
+                f.write(ty.getStr() + "\n")
+                f.writelines([(op_str + "\n") for op_str in classified_options[ty]])
+
+        # Baseline
+        default_configuration = self.get_different_kind_configuration(
+            ConfigType.default, "0_default"
+        )
+        self.baseline = default_configuration
+        all_configs: List[Configuration] = [self.baseline]
+
+        # Build option value space
+        option_tokens: List[List[tuple]] = []  # [(token_str, opt_obj), ...]
+        for opt in self.project_info.options:
+            tokens = []
+            if opt.is_switch():
+                pos_token, _ = opt.positive()
+                neg_token, _ = opt.negative()
+                if pos_token:
+                    tokens.append((pos_token, opt))
+                if neg_token:
+                    tokens.append((neg_token, opt))
+            elif opt.values:
+                for val in opt.values:
+                    tokens.append((f"{opt.option}={val}", opt))
+            else:
+                pos, _ = opt.positive()
+                if pos:
+                    tokens.append((pos, opt))
+            if tokens:
+                option_tokens.append(tokens)
+
+        seen_hashes: Set[str] = set()
+        seen_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+        
+        # Budget allocation per complexity level
+        total_budget = self.sampling_config.num
+        budget_per_level = {
+            1: int(total_budget * 0.15),  # 15% for single-option
+            2: int(total_budget * 0.50),  # 50% for pairwise
+            3: int(total_budget * 0.25),  # 25% for triple
+            4: int(total_budget * 0.10),  # 10% for quad
+        }
+        
+        max_complexity = 4
+        
+        for complexity in range(1, max_complexity + 1):
+            logger.info(f"[Adaptive] Generating {complexity}-option configurations")
+            
+            level_configs = self._generate_n_option_configs(
+                option_tokens, complexity, budget_per_level[complexity], seen_hashes
+            )
+            
+            if level_configs:
+                logger.info(f"[Adaptive] Level {complexity}: generated {len(level_configs)} configs")
+                for cfg_idx, opt_list in enumerate(level_configs, start=len(all_configs)):
+                    tag = f"adp{complexity}_{cfg_idx}"
+                    all_configs.append(self.create_configuration(opt_list, self.workspace, tag))
+            else:
+                logger.info(f"[Adaptive] Level {complexity}: no valid configs generated, stopping")
+                break
+
+        self.config_list = [self.baseline] + [c for c in all_configs if c != self.baseline]
+
+        with open(os.path.join(self.workspace, "configure.txt"), "a") as f:
+            for config in self.config_list:
+                configure_script = commands_to_shell_script(config.config_cmd())
+                f.write(config.tag + "\n")
+                f.write(configure_script + "\n")
+
+    def _generate_n_option_configs(
+        self, option_tokens: List[List[tuple]], n: int, budget: int, seen_hashes: Set[str]
+    ) -> List[List[str]]:
+        """Generate configurations with exactly n options."""
+        if n > len(option_tokens):
+            return []
+        
+        option_indices = list(range(len(option_tokens)))
+        n_way_combos = list(itertools.combinations(option_indices, n))
+        
+        # Limit explosion for higher complexity
+        max_combos = min(len(n_way_combos), budget * 10)
+        if len(n_way_combos) > max_combos:
+            # Shuffle for diversity
+            self.rand.shuffle(n_way_combos)
+            n_way_combos = n_way_combos[:max_combos]
+        
+        valid_configs: List[List[str]] = []
+        
+        for combo in n_way_combos:
+            if len(valid_configs) >= budget:
+                break
+            
+            # Try random value assignments for this option combination
+            attempts = min(5, 2 ** n)  # Limit attempts per combo
+            for _ in range(attempts):
+                if len(valid_configs) >= budget:
+                    break
+                
+                # Randomly pick one value for each option in the combo
+                selected_tokens = []
+                selected_objs = []
+                
+                for opt_idx in combo:
+                    tokens = option_tokens[opt_idx]
+                    token, opt_obj = self.rand.choice(tokens)
+                    selected_tokens.append(token)
+                    selected_objs.append(opt_obj)
+                
+                # Check if this combination is valid
+                if self._is_valid_n_tuple(selected_objs, selected_tokens):
+                    config_options = selected_tokens.copy()
+                    
+                    # Add combination side-effects
+                    for opt_obj in selected_objs:
+                        for com in opt_obj.combination:
+                            if com not in config_options:
+                                config_options.append(com)
+                    
+                    # Check for duplicates
+                    opt_hash = self.config_sampler.get_options_hash(config_options)
+                    if opt_hash not in seen_hashes:
+                        seen_hashes.add(opt_hash)
+                        valid_configs.append(config_options)
+        
+        # If we have more than budget, sample equidistantly
+        if len(valid_configs) > budget:
+            valid_configs = get_equidistant_elements(valid_configs, budget)
+        
+        return valid_configs
+
+    def _is_valid_n_tuple(self, opt_objs: List, tokens: List[str]) -> bool:
+        """Check if an n-tuple of options is valid (no conflicts)."""
+        conflict_set: Set[str] = set()
+        selected_keys: Set[str] = set()
+        
+        for i, opt_obj in enumerate(opt_objs):
+            token = tokens[i]
+            
+            # Check for duplicate option assignment
+            if opt_obj.option in selected_keys:
+                return False
+            selected_keys.add(opt_obj.option)
+            
+            # Check conflicts
+            if opt_obj.option in conflict_set:
+                return False
+            if any(cf in conflict_set for cf in opt_obj.conflict):
+                return False
+            
+            # Add conflicts
+            conflict_set.update(opt_obj.conflict)
+            
+            # Check combination conflicts
+            for com in opt_obj.combination:
+                com_key = com.split("=")[0]
+                if com_key in conflict_set:
+                    return False
+                # Check if combination conflicts with other selected options
+                for j, other_obj in enumerate(opt_objs):
+                    if i != j and other_obj.option == com_key and com != tokens[j]:
+                        return False
+        
+        return True
+
+    def configuration_sampling_pairwise_explicit(self):
+        """Generate configurations with exactly 2 explicit options each.
+        
+        This strategy generates all valid pairwise combinations of options,
+        where each configuration explicitly sets exactly 2 options.
+        This minimal approach maximizes the chance of successful prepare.
+        """
+        classified_options = {ty: [] for ty in OptionType}
+        for option in self.config_sampler.options:
+            classified_options[option.kind].append(
+                f"{option.option} on:{option.on_value} off:{option.off_value}"
+            )
+        with open(os.path.join(self.workspace, "configure.txt"), "w") as f:
+            for ty in OptionType:
+                f.write(ty.getStr() + "\n")
+                f.writelines([(op_str + "\n") for op_str in classified_options[ty]])
+
+        # Baseline
+        default_configuration = self.get_different_kind_configuration(
+            ConfigType.default, "0_default"
+        )
+        self.baseline = default_configuration
+        all_configs: List[Configuration] = [self.baseline]
+
+        # Build option value space: each option has a list of possible token values
+        option_tokens: List[List[tuple]] = []  # [(token_str, opt_obj), ...]
+        for opt in self.project_info.options:
+            tokens = []
+            if opt.is_switch():
+                pos_token, _ = opt.positive()
+                neg_token, _ = opt.negative()
+                if pos_token:
+                    tokens.append((pos_token, opt))
+                if neg_token:
+                    tokens.append((neg_token, opt))
+            elif opt.values:
+                # Include all values for multi-value options
+                for val in opt.values:
+                    tokens.append((f"{opt.option}={val}", opt))
+            else:
+                pos, _ = opt.positive()
+                if pos:
+                    tokens.append((pos, opt))
+            if tokens:
+                option_tokens.append(tokens)
+
+        # Generate all pairwise combinations of option indices
+        option_indices = list(range(len(option_tokens)))
+        pairwise_combos = list(itertools.combinations(option_indices, 2))
+        
+        logger.info(f"[Pairwise-Explicit] Generating configs from {len(pairwise_combos)} option pairs")
+
+        generated_configs: List[List[str]] = []
+        seen_hashes: Set[str] = set()
+        seen_hashes.add(self.config_sampler.get_options_hash(self.baseline.config_options))
+        
+        valid_count = 0
+        conflict_count = 0
+
+        # For each pair of options, try all value combinations
+        for opt_idx1, opt_idx2 in pairwise_combos:
+            tokens1 = option_tokens[opt_idx1]
+            tokens2 = option_tokens[opt_idx2]
+            
+            # Try all combinations of values for these two options
+            for token1, opt_obj1 in tokens1:
+                for token2, opt_obj2 in tokens2:
+                    # Check if this pair is valid (no conflicts)
+                    if self._is_valid_pair(opt_obj1, opt_obj2, token1, token2):
+                        config_options = [token1, token2]
+                        
+                        # Add combination side-effects if any
+                        for opt_obj in [opt_obj1, opt_obj2]:
+                            for com in opt_obj.combination:
+                                if com not in config_options:
+                                    config_options.append(com)
+                        
+                        # Check for duplicates
+                        opt_hash = self.config_sampler.get_options_hash(config_options)
+                        if opt_hash not in seen_hashes:
+                            seen_hashes.add(opt_hash)
+                            generated_configs.append(config_options)
+                            valid_count += 1
+                    else:
+                        conflict_count += 1
+
+        logger.info(f"[Pairwise-Explicit] Generated {valid_count} valid configs, {conflict_count} conflicting pairs")
+
+        # Down-select if too many configs
+        if len(generated_configs) > self.sampling_config.num:
+            logger.info(f"[Pairwise-Explicit] Down-selecting from {len(generated_configs)} to {self.sampling_config.num} configs")
+            generated_configs = get_equidistant_elements(generated_configs, self.sampling_config.num)
+
+        # Materialize configurations
+        for cfg_idx, opt_list in enumerate(generated_configs, start=1):
+            tag = f"pair_{cfg_idx}"
+            all_configs.append(self.create_configuration(opt_list, self.workspace, tag))
+
+        self.config_list = [self.baseline] + [c for c in all_configs if c != self.baseline]
+
+        with open(os.path.join(self.workspace, "configure.txt"), "a") as f:
+            for config in self.config_list:
+                configure_script = commands_to_shell_script(config.config_cmd())
+                f.write(config.tag + "\n")
+                f.write(configure_script + "\n")
+
+    def _is_valid_pair(self, opt_obj1, opt_obj2, token1: str, token2: str) -> bool:
+        """Check if a pair of options is valid (no conflicts)."""
+        # Same option cannot be set twice
+        if opt_obj1.option == opt_obj2.option:
+            return False
+        
+        # Check if they conflict with each other
+        if opt_obj1.option in opt_obj2.conflict or opt_obj2.option in opt_obj1.conflict:
+            return False
+        
+        # Check combination conflicts
+        for com in opt_obj1.combination:
+            com_key = com.split("=")[0]
+            if com_key == opt_obj2.option and com != token2:
+                return False
+        
+        for com in opt_obj2.combination:
+            com_key = com.split("=")[0]
+            if com_key == opt_obj1.option and com != token1:
+                return False
+        
+        return True
 
     def configuration_sampling_twise(self, t: int):
         """Generate configurations using standard t-wise covering array algorithm.
@@ -1053,12 +1370,12 @@ class Project:
         )
 
         round_counter = 0
-        if self.strategy in ("preset", "twise"):
+        if self.strategy in ("preset", "twise", "pairwise-explicit", "adaptive"):
             while choice_rounds:
                 choice_rounds -= 1
                 candidate_config_list = self.get_candidate_config_list()
                 if not candidate_config_list:
-                    append_stop("No more preset/twise candidates available.")
+                    append_stop("No more candidates available.")
                     break
                 round_counter += 1
                 round_info: Dict = {
@@ -1303,7 +1620,7 @@ class Project:
                             card = 2
                         total *= max(1, card)
                     return total
-                # preset / twise operate on explicit enumerations
+                # preset / twise / pairwise-explicit / adaptive operate on explicit enumerations
                 return max(1, len(self.config_list))
 
             total_space = compute_config_space()

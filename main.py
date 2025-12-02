@@ -163,9 +163,9 @@ class MCArgumentParser:
             "--strategy",
             type=str,
             dest="strategy",
-            choices=["preset", "random-space", "twise"],
-            default="twise",
-            help="Configuration selection strategy: preset (existing one_positive/negative) or random-space (sample from full value space).",
+            choices=["preset", "random-space", "twise", "pairwise-explicit", "adaptive"],
+            default="adaptive",
+            help="Configuration selection strategy: preset, random-space, twise, pairwise-explicit (2-option only), or adaptive (incremental complexity).",
         )
         self.parser.add_argument(
             "--t-wise",
@@ -213,7 +213,7 @@ class MCArgumentParser:
             "--max-random-options",
             type=int,
             dest="max_random_options",
-            default=5,
+            default=3,
             help="Upper bound on how many distinct options are toggled per random candidate.",
         )
         self.parser.add_argument(
@@ -222,6 +222,13 @@ class MCArgumentParser:
             dest="max_rounds",
             default=10,
             help="Maximum random-space sampling rounds before stopping (0 disables the limit).",
+        )
+        self.parser.add_argument(
+            "--max-configs",
+            type=int,
+            dest="max_configs",
+            default=200,
+            help="Maximum number of configurations to generate (for adaptive, twise, pairwise-explicit strategies).",
         )
 
     def parse_args(self, args):
