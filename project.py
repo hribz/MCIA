@@ -308,7 +308,6 @@ class Project:
             )
             all_config.append(one_negative)
 
-
         self.config_list = [self.baseline] + [
             config for config in all_config if config != self.baseline
         ]
@@ -1272,12 +1271,12 @@ class Project:
             return dry_run(make_n_commands)
         return True
 
-    def icebear(self, config: Configuration, cache_file):
+    def icebear(self, config: Configuration, cache_file, prep_only):
         if config == self.baseline:
-            icebear_cmd = config.icebear_cmd(update_cache=True)
+            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True)
         else:
             # Only record one config as baseline cache.
-            icebear_cmd = config.icebear_cmd(update_cache=True, cache_file=cache_file)
+            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, cache_file=cache_file)
         run(icebear_cmd, self.src_dir, "IceBear Running")
 
     def icebear_for_fdb(self, config: Configuration, cache_file):
@@ -1438,129 +1437,199 @@ class Project:
                         f.write(file_level_cache.model_dump_json(indent=3))
                 choose_process_details.append(round_info)
         else:
+            # Adaptive Random Strategy (Replacing Random-Space)
+            # 1. Collect all option values (OV)
+            all_option_values: List[str] = []
+            ov_to_opt_name: Dict[str, str] = {}
+            
+            for opt in self.project_info.options:
+                tokens = []
+                if opt.is_switch():
+                    pos, _ = opt.positive()
+                    neg, _ = opt.negative()
+                    if pos: tokens.append(pos)
+                    if neg: tokens.append(neg)
+                elif opt.values:
+                    for val in opt.values:
+                        tokens.append(f"{opt.option}={val}")
+                else:
+                    pos, _ = opt.positive()
+                    if pos: tokens.append(pos)
+                
+                for t in tokens:
+                    ov_to_opt_name[t] = opt.option
+                    all_option_values.append(t)
+
+            # 2. Initialize population
+            m = self.candidate_size
+            # Population stores the current option set for each of the m slots
+            population_options: List[List[str]] = [self.baseline.config_options.copy() for _ in range(m)]
+            blacklisted_ov: Set[str] = set()
+            
             low_rounds = 0
             round_idx = 0
-            consecutive_failures = 0
+            
+            def update_options_list(current_opts: List[str], new_ov: str) -> List[str]:
+                target_opt_name = ov_to_opt_name.get(new_ov)
+                if not target_opt_name:
+                    return current_opts + [new_ov]
+                
+                new_list = []
+                # Remove existing values for this option
+                for op in current_opts:
+                    op_name = ov_to_opt_name.get(op)
+                    if op_name != target_opt_name:
+                        new_list.append(op)
+                new_list.append(new_ov)
+                return new_list
+
             while True:
                 if self.max_rounds and round_idx >= self.max_rounds:
                     logger.info(
-                        f"[Random-Space] Stop condition met: reached max rounds limit ({self.max_rounds})."
+                        f"[Adaptive-Random] Stop condition met: reached max rounds limit ({self.max_rounds})."
                     )
                     append_stop(
                         f"Reached max rounds limit ({self.max_rounds})."
                     )
                     break
+
+                if len(blacklisted_ov) >= len(all_option_values):
+                    logger.info("[Adaptive-Random] All option values blacklisted, stopping generation.")
+                    append_stop("All option values blacklisted.")
+                    break
+                
                 round_idx += 1
                 round_counter += 1
                 round_info = {
                     "type": "round",
                     "round": round_counter,
-                    "strategy": "random-space",
+                    "strategy": "adaptive-random",
                     "candidates": [],
                 }
 
-                # Generate reproducible candidate set for this round
-                candidate_config_list: List[Configuration] = []
-                attempt = 0
-                while len(candidate_config_list) < self.candidate_size and attempt < self.candidate_size * 3:
-                    attempt += 1
-                    options = self._random_option_set()
-                    options_hash = self.config_sampler.get_options_hash(options)
-                    if options_hash in getattr(self, "_generated_hashes", set()):
-                        continue
-                    tag = f"r{round_idx}_c{len(candidate_config_list)}"
-                    cfg = self.create_configuration(options, self.workspace, tag)
-                    self.config_list.append(cfg)  # Track for cleanup
-                    candidate_config_list.append(cfg)
-                    self._generated_hashes.add(options_hash)
+                current_round_configs: List[Configuration] = []
+                
+                # Generate m configurations
+                for i in range(m):
+                    base_opts = population_options[i]
+                    
+                    # Retry loop for this slot
+                    slot_success = False
+                    attempts = 0
+                    max_attempts = len(all_option_values) * 2 
+                    
+                    while not slot_success and attempts < max_attempts:
+                        attempts += 1
+                        
+                        # Pick random OV not in blacklist
+                        valid_ovs = [ov for ov in all_option_values if ov not in blacklisted_ov]
+                        if not valid_ovs:
+                            logger.info("[Adaptive-Random] No valid options left!")
+                            break
+                        
+                        picked_ov = self.rand.choice(valid_ovs)
+                        
+                        # Superimpose
+                        new_opts = update_options_list(base_opts, picked_ov)
+                        
+                        # Create config
+                        tag = f"r{round_idx}_s{i}_try{attempts}"
+                        cfg = self.create_configuration(new_opts, self.workspace, tag)
+                        self.config_list.append(cfg)
 
-                if not candidate_config_list:
-                    logger.info("[Random-Space] No new candidates generated; scheduling retry.")
-                    round_info["note"] = "No candidates generated."
-                    choose_process_details.append(round_info)
-                    consecutive_failures += 1
-                    if consecutive_failures > self.max_round_retries:
-                        append_stop(
-                            f"Exceeded max consecutive failed rounds ({self.max_round_retries}) due to empty candidate sets."
-                        )
+                        # Prepare
+                        if cfg.tag not in self.prepared_configs:
+                            process_status = self.prepare_compilation_database(cfg)
+                            if process_status:
+                                # Success
+                                self.prepared_configs.add(cfg.tag)
+                                population_options[i] = new_opts # Update population
+                                current_round_configs.append(cfg)
+                                slot_success = True
+                            else:
+                                # Fail
+                                logger.info(f"[Adaptive-Random] Config {tag} failed prepare. Blacklisting {picked_ov}")
+                                round_info["candidates"].append({
+                                    "tag": cfg.tag,
+                                    "result": "prepare-failed",
+                                    "options": snapshot_options(cfg)
+                                })
+                        else:
+                             # Should not happen with unique tags
+                             cache_hit_count += 1
+                             population_options[i] = new_opts
+                             current_round_configs.append(cfg)
+                             slot_success = True
+                        
+                        # Blacklist the picked OV to avoid retrying it
+                        blacklisted_ov.add(picked_ov)
+                    
+                    if not slot_success:
+                        logger.info(f"[Adaptive-Random] Slot {i} failed to find valid config after retries.")
+
+                    if len(blacklisted_ov) >= len(all_option_values):
+                        logger.info("[Adaptive-Random] All option values blacklisted during generation, stopping slot attempts.")
                         break
-                    continue
 
+                if not current_round_configs:
+                    logger.info("[Adaptive-Random] No valid configs generated in this round.")
+                    append_stop("No valid configs generated.")
+                    break
+
+                # Selection Phase
                 chosen_config = None
                 max_dis = -1
-                for config in candidate_config_list:
-                    logger.TAG = f"{self.project_name}/{config.tag}"
-                    # Check if already prepared
-                    if config.tag not in self.prepared_configs:
-                        process_status = self.prepare_compilation_database(config)
-                        if not process_status:
-                            round_info["candidates"].append(
-                                {
-                                    "tag": config.tag,
-                                    "result": "prepare-failed",
-                                    "options": snapshot_options(config),
-                                }
-                            )
-                            continue
-                        # Mark as prepared
-                        self.prepared_configs.add(config.tag)
-                    else:
-                        logger.info(f"[Cache Hit] {config.tag} already prepared, skipping prepare")
-                        cache_hit_count += 1
-                    # Always run icebear_for_fdb to recalculate with updated overall_cache
+                
+                for config in current_round_configs:
+                    # Icebear
                     self.icebear_for_fdb(config, self.overall_cache_file)
+                    
+                    # Distance
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
                     curr_dis = file_level_cache.distance(curr_flc)
+                    
                     logger.info(f"[Distance] {config.tag}: {curr_dis}")
-                    round_info["candidates"].append(
-                        {
-                            "tag": config.tag,
-                            "result": "distance",
-                            "distance": curr_dis,
-                            "options": snapshot_options(config),
-                        }
-                    )
+                    
+                    if curr_dis == 0:
+                        self.zero_distance_configs.add(config)
+
+                    round_info["candidates"].append({
+                        "tag": config.tag,
+                        "result": "distance",
+                        "distance": curr_dis,
+                        "options": snapshot_options(config)
+                    })
+                    
                     if curr_dis > max_dis:
                         max_dis = curr_dis
                         chosen_config = config
+                
+                if max_dis == 0:
+                    logger.info(f"[Adaptive-Random] Max distance is 0. No config chosen for round {round_counter}.")
+                    chosen_config = None
 
-                if chosen_config is None:
-                    logger.info("[Random-Space] All candidates failed; scheduling retry.")
-                    round_info["note"] = "All candidates failed to prepare or analyze."
-                    choose_process_details.append(round_info)
-                    consecutive_failures += 1
-                    if consecutive_failures > self.max_round_retries:
-                        append_stop(
-                            f"Exceeded max consecutive failed rounds ({self.max_round_retries}) due to candidate failures."
-                        )
-                        break
-                    continue
-
-                # Successful round resets failure counter
-                consecutive_failures = 0
-
+                # Update chosen
+                if chosen_config:
+                    curr_config = chosen_config
+                    self.chosen_config_list.append(chosen_config)
+                    mark_chosen(round_info, chosen_config.tag, max_dis)
+                    chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
+                    file_level_cache.root.update(chosen_flc.root)
+                    with open(self.overall_cache_file, "w") as f:
+                        f.write(file_level_cache.model_dump_json(indent=3))
+                else:
+                    round_info["note"] = "No config chosen (max distance 0)"
+                
+                choose_process_details.append(round_info)
+                
+                # Stop condition check
                 if max_dis <= self.stop_threshold:
                     low_rounds += 1
                 else:
                     low_rounds = 0
-
-                curr_config = chosen_config
-                self.chosen_config_list.append(chosen_config)
-                mark_chosen(round_info, chosen_config.tag, max_dis)
-                chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
-                file_level_cache.root.update(chosen_flc.root)
-                with open(self.overall_cache_file, "w") as f:
-                    f.write(file_level_cache.model_dump_json(indent=3))
-
-                choose_process_details.append(round_info)
-
+                
                 if low_rounds >= self.stop_patience:
-                    logger.info(
-                        f"[Random-Space] Stop condition met: max_dis <= {self.stop_threshold} for {self.stop_patience} consecutive rounds."
-                    )
-                    append_stop(
-                        f"Reached stop condition: max distance <= {self.stop_threshold} for {self.stop_patience} consecutive rounds."
-                    )
+                    append_stop(f"Reached stop condition: max distance <= {self.stop_threshold} for {self.stop_patience} consecutive rounds.")
                     break
 
         def write_choose_process(details: List[Dict], output_path: str):
@@ -1610,16 +1679,7 @@ class Project:
             # Calculate config space based on current strategy
             def compute_config_space() -> int:
                 if self.strategy == "random-space":
-                    total = 1
-                    for opt in self.project_info.options:
-                        if opt.is_switch():
-                            card = 2
-                        elif opt.values:
-                            card = len(opt.values)
-                        else:
-                            card = 2
-                        total *= max(1, card)
-                    return total
+                    return len(all_option_values)
                 # preset / twise / pairwise-explicit / adaptive operate on explicit enumerations
                 return max(1, len(self.config_list))
 
@@ -1708,4 +1768,4 @@ class Project:
             #     shutil.copyfile(
             #         config.cache_file, os.path.join(config.prep_path, os.path.basename(config.cache_file))
             #     )
-            self.icebear(config, self.overall_cache_file)
+            self.icebear(config, self.overall_cache_file, prep_only=self.opts.prep_only)

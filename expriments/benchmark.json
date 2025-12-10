@@ -113,7 +113,7 @@
     {
         "project": "FFmpeg/FFmpeg",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "954d55c2a4244b366ae97d09546ba8ce2534892b",
         "switch_values": {
@@ -170,6 +170,9 @@
             "--disable-os2threads",
             "--enable-hardcoded-tables",
             "--enable-vulkan-static"
+        ],
+        "prerequisites": [
+            ["make", "distclean"]
         ],
         "config_options": [
             {
@@ -2781,13 +2784,16 @@
     {
         "project": "sqlite/sqlite",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "version-3.41.0",
         "switch_values": {
             "positive": {"on": "yes", "off": "no"},
             "negative": {"on": ""}
         },
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "make": true,
         "ignore_options": [
             "--enable-FEATURE", 
@@ -4423,7 +4429,7 @@
     {
         "project": "php/php-src",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "f75dd82866382bf5511193a77d8391639652607f",
         "make": true,
@@ -4431,6 +4437,9 @@
             "positive": {"on": "yes", "off": "no"},
             "negative": {"on": ""}
         },
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "ignore_options": [
             "--enable-fd-setsize",
             "--with-ndbm",
@@ -6126,13 +6135,16 @@
     {
         "project": "curl/curl",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "c799f608f2a063b25af28042d76a1a841e30a0df",
         "switch_values": {
             "positive": {"on": ""},
             "negative": {"on": ""}
         },
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "ignore_options": [
             "CURL_USE_BEARSSL",
             "CURL_USE_RUSTLS",
@@ -12261,7 +12273,7 @@
     {
         "project": "tmux/tmux",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "94783addfc476e3ae3012da80723b6020b1f629c",
         "make": true,
@@ -12271,6 +12283,9 @@
         },
         "ignore_options": [
             "--with-TERM"
+        ],
+        "prerequisites": [
+            ["make", "distclean"]
         ],
         "config_options": [
             {
@@ -14032,10 +14047,13 @@
     {
         "project": "GNOME/libxml2",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "v2.13.6",
         "make": true,
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "switch_values": {
             "positive": {"on": "", "off": "no"},
             "negative": {"on": ""}
@@ -14660,11 +14678,14 @@
     {
         "project": "apache/httpd",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "303ca688472ff3769740a9a24b9b928383893ee1",
         "make": true,
         "ignore make error": true,
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "switch_values": {
             "positive": {"on": ""},
             "negative": {"on": ""}
@@ -20263,10 +20284,13 @@
     {
         "project": "allinurl/goaccess",
         "build_type": "autoconf",
-        "out_of_tree": false,
+        "out_of_tree": true,
         "language": "C",
         "shallow": "master",
         "make": true,
+        "prerequisites": [
+            ["make", "distclean"]
+        ],
         "switch_values": {
             "positive": {"on": ""},
             "negative": {"on": ""}

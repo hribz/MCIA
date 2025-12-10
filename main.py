@@ -164,7 +164,7 @@ class MCArgumentParser:
             type=str,
             dest="strategy",
             choices=["preset", "random-space", "twise", "pairwise-explicit", "adaptive"],
-            default="adaptive",
+            default="random-space",
             help="Configuration selection strategy: preset, random-space, twise, pairwise-explicit (2-option only), or adaptive (incremental complexity).",
         )
         self.parser.add_argument(
