@@ -67,16 +67,18 @@ def handle_project(projects, opts):
         workspace_tag = (opts.tag if opts.tag else opts.inc)
         workspace = f"{project_info.src_dir}_workspace/{workspace_tag}"
 
-        hash_workspace = workspace + "_hash"
-        logger.start_log(hash_workspace)
-        p = Project(workspace=hash_workspace, opts=opts, project_info=project_info)
-        p.determine_chosen_configurations()
+        # hash_workspace = workspace + "_hash"
+        # logger.start_log(hash_workspace)
+        # p = Project(workspace=hash_workspace, opts=opts, project_info=project_info)
+        # p.determine_chosen_configurations()
 
         logger.start_log(workspace)
         tp = Project(workspace=workspace, opts=opts, project_info=project_info)
-        tp.determine_chosen_configurations(p.chosen_config_list)
-        tp.process_every_configuration()
-        tp.clean_workspace_preprocess()
+        # tp.determine_chosen_configurations(p.chosen_config_list)
+        tp.clean_before_analysis()
+        tp.determine_chosen_configurations()
+        # tp.process_every_configuration()
+        # tp.clean_workspace_preprocess(tp.config_list)
         with open(tp.workspace + "/chosen_config.json", "w") as f:
             json.dump(
                 [config.tag for config in tp.chosen_config_list], f, indent=3
@@ -139,6 +141,12 @@ class MCArgumentParser:
             action="store_true",
             dest="clean_cache",
             help="Clean the cache before analysis.",
+        )
+        self.parser.add_argument(
+            "--clean-preprocess-cache",
+            action="store_true",
+            dest="clean_preprocess_cache",
+            help="Clean the preprocess files before analysis.",
         )
         self.parser.add_argument(
             "--basic-info",

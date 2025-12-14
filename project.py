@@ -51,6 +51,25 @@ class Configuration:
         self.cache_file = os.path.join(self.prep_path, "file_level_cache.json")
         makedir(self.prep_path)
         self.compile_database = os.path.join(self.prep_path, "compile_commands.json")
+    
+    def set_build_dir(self, build_tag):
+        self.build_dir = os.path.join(self.project_info.build_dir, build_tag)
+        makedir(self.build_dir)
+        # If in-tree build, and build dir is empty, copy source code
+        if not self.project_info.out_of_tree and len(os.listdir(self.build_dir)) == 0:
+            # In-tree build, copy source code to build dir
+            cmd = ["rsync", "-a", 
+                   "--exclude", ".git", 
+                   "--exclude", ".cache",
+                   f"{self.project_info.src_dir}/", 
+                   f"{self.build_dir}/"
+                ]
+            logger.info(f"[Setup In-tree Build] {' '.join(cmd)}")
+            run(
+                cmd,
+                cwd=".",
+                tag="Setup In-tree Build",
+            )
 
     def option_cmd(self):
         cmd = self.project_info.constant_options.copy()
@@ -83,20 +102,22 @@ class Configuration:
         return cmd
 
     def config_cmd(self):
+        if "build_dir" not in self.__dict__:
+            self.build_dir = self.project_info.build_dir
         cmd = []
         if self.project_info.build_type == BuildType.CMake:
             cmd = [GlobalConfig.cmake]
             cmd.extend(["-S", self.project_info.src_dir])
-            cmd.extend(["-B", self.project_info.build_dir])
+            cmd.extend(["-B", self.build_dir])
         elif self.project_info.build_type == BuildType.AutoConf:
             # Some projects should customize compiler by --cc/cxx, some projects don't support
             # these parameters, so we specify them in config_options.json.
             cmd = [f"{self.project_info.src_dir}/configure"]
-            # cmd.append(f"--prefix={self.project_info.build_dir}")
+            # cmd.append(f"--prefix={self.build_dir}")
         elif self.project_info.build_type == BuildType.Meson:
             cmd = ["meson"]
             cmd.extend(
-                ["setup", self.project_info.build_dir, self.project_info.src_dir]
+                ["setup", self.build_dir, self.project_info.src_dir]
             )
             if self.project_info.meson_native:
                 cmd.extend(
@@ -113,25 +134,27 @@ class Configuration:
         return cmd
 
     def build_cmd(self):
+        assert hasattr(self, "build_dir")
         cmd = []
         if self.project_info.build_type == BuildType.CMake:
             cmd = ["cmake"]
-            cmd.extend(["--build", f"{self.project_info.build_dir}"])
+            cmd.extend(["--build", f"{self.build_dir}"])
             cmd.append(f"-j{GlobalConfig.build_jobs}")
         elif self.project_info.build_type == BuildType.AutoConf:
             cmd = ["make", f"-j{GlobalConfig.build_jobs}"]
         elif self.project_info.build_type == BuildType.Meson:
             cmd = ["ninja"]
-            cmd.extend(["-C", self.project_info.build_dir])
+            cmd.extend(["-C", self.build_dir])
             cmd.append(f"-j{GlobalConfig.build_jobs}")
         if self.project_info.ignore_make_error:
             if self.project_info.build_type.useMake():
                 cmd.append("-i")
         return cmd
 
-    def icebear_cmd(self, prep_only=False, update_cache=True, cache_file=None):
+    def icebear_cmd(self, prep_only=False, update_cache=True, cache_file=None, clean_prep_cache=True):
         if not cache_file:
             cache_file = self.cache_file
+        assert hasattr(self, "build_dir")
         cmd = [GlobalConfig.icebear]
         cmd.extend(["-f", self.compile_database])
         cmd.extend(["-o", self.workspace])
@@ -145,7 +168,8 @@ class Configuration:
         cmd.append(f"--file-identifier={self.opts.file_identifier}")
         cmd.append(f"--tag={self.tag}")
         cmd.extend(["--report-hash", "context"])
-        cmd.extend(["--no-clean-inc"])
+        if not clean_prep_cache:
+            cmd.extend(["--no-clean-inc"])
         if self.opts.basic_info:
             cmd.append(f"--basic-info={global_config.basic_info_extractor}")
         if self.opts.verbose:
@@ -180,6 +204,7 @@ class Project:
         self.zero_distance_configs: Set[Configuration] = set() # Configurations with zero distance.
         self.prepared_configs: Set[str] = set() # Configurations that have been prepared (by tag).
         self.overall_cache_file = os.path.join(self.workspace, "file_level_cache.json")
+        self.explored_candidate_configs: Set[str] = set() # Configurations explored (by tag).
 
         self.env = dict(os.environ)
         # O0 optimization level and no debug information.
@@ -253,7 +278,8 @@ class Project:
         options = self.config_sampler.get_different_kind_configuration(kind)
         if options is None:
             return None
-        return self.create_configuration(options, self.workspace, tag)
+        config = self.create_configuration(options, self.workspace, tag)
+        return config
 
     def configuration_sampling(self):
         classified_options = {ty: [] for ty in OptionType}
@@ -989,13 +1015,13 @@ class Project:
 
     def execute_prerequisites(self, config: Configuration):
         for prerequisite in self.project_info.prerequisites:
-            run(prerequisite, config.project_info.build_dir, "Prerequisite", self.env)
+            run(prerequisite, config.build_dir, "Prerequisite", self.env)
         if self.project_info.must_make:
             self.build_clean(config)
         if self.project_info.build_type == BuildType.CMake:
             run_without_check(
-                ["rm", os.path.join(config.project_info.build_dir, "CMakeCache.txt")],
-                config.project_info.build_dir,
+                ["rm", os.path.join(config.build_dir, "CMakeCache.txt")],
+                config.build_dir,
                 tag="RM CMakeCache",
                 env=self.env,
             )
@@ -1004,13 +1030,13 @@ class Project:
                 [
                     "rm",
                     os.path.join(
-                        config.project_info.build_dir, "meson-private", "cmd_line.txt"
+                        config.build_dir, "meson-private", "cmd_line.txt"
                     ),
                     os.path.join(
-                        config.project_info.build_dir, "meson-private", "coredata.dat"
+                        config.build_dir, "meson-private", "coredata.dat"
                     ),
                 ],
-                config.project_info.build_dir,
+                config.build_dir,
                 tag="RM Meson Build Cache",
                 env=self.env,
             )
@@ -1018,14 +1044,14 @@ class Project:
     def configure(self, config: Configuration) -> bool:
         configure_script = commands_to_shell_script(config.config_cmd())
         logger.info(f"[Configure Script] {configure_script}")
-        if not os.path.exists(config.project_info.build_dir):
+        if not os.path.exists(config.build_dir):
             logger.error(
-                f"[Configure Script] Please make sure {config.project_info.build_dir} exists!"
+                f"[Configure Script] Please make sure {config.build_dir} exists!"
             )
             return False
         process = subprocess.run(
             config.config_cmd(),
-            cwd=config.project_info.build_dir,
+            cwd=config.build_dir,
             env=self.env,
             capture_output=True,
             text=True,
@@ -1039,7 +1065,7 @@ class Project:
             if self.project_info.build_type.notNeedBear():
                 shutil.copy(
                     os.path.join(
-                        config.project_info.build_dir, "compile_commands.json"
+                        config.build_dir, "compile_commands.json"
                     ),
                     config.compile_database,
                 )
@@ -1056,7 +1082,7 @@ class Project:
         logger.info(f"[Building] {commands_to_shell_script(cmd)}")
         process = subprocess.run(
             cmd,
-            cwd=config.project_info.build_dir,
+            cwd=config.build_dir,
             env=self.env,
             capture_output=True,
             text=True,
@@ -1075,11 +1101,11 @@ class Project:
     def build_clean(self, config: Configuration):
         if config.project_info.build_type.useMake():
             run(
-                ["make", "clean"], config.project_info.build_dir, "Make Clean"
+                ["make", "clean"], config.build_dir, "Make Clean"
             )
         else:
             run(
-                ["ninja", "clean"], config.project_info.build_dir, "Ninja Clean"
+                ["ninja", "clean"], config.build_dir, "Ninja Clean"
             )
 
     def parse_makefile(self, config: Configuration):
@@ -1101,7 +1127,7 @@ class Project:
             ["make", "-n", "-i"],
             capture_output=True,
             text=True,
-            cwd=config.project_info.build_dir,
+            cwd=config.build_dir,
             env=self.env,
         )
         # compiledb arguments:
@@ -1113,7 +1139,7 @@ class Project:
             compiledb_cmd,
             capture_output=True,
             text=True,
-            cwd=config.project_info.build_dir,
+            cwd=config.build_dir,
             input=make_n.stdout,
             timeout=60,  # Set timeout to avoid make execute recursively.
         )
@@ -1225,7 +1251,7 @@ class Project:
                 r"\b(make|info|warning)\b",  # Ignore Makefile function(e.g. $(info ...))
                 r"^\s*\$\(",  # Ignore variable expansion(e.g. $(RM) file.o)
             ]
-            dir_stack = [config.project_info.build_dir]
+            dir_stack = [config.build_dir]
 
             for cmd in commands:
                 skip = False
@@ -1273,18 +1299,18 @@ class Project:
 
     def icebear(self, config: Configuration, cache_file, prep_only):
         if config == self.baseline:
-            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True)
+            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, clean_prep_cache=self.opts.clean_preprocess_cache)
         else:
             # Only record one config as baseline cache.
-            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, cache_file=cache_file)
+            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, cache_file=cache_file, clean_prep_cache=self.opts.clean_preprocess_cache)
         run(icebear_cmd, self.src_dir, "IceBear Running")
 
     def icebear_for_fdb(self, config: Configuration, cache_file):
         if config == self.baseline:
-            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=True)
+            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=True, clean_prep_cache=True)
         else:
             # Don't update cache for non-baseline configurations.
-            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=False, cache_file=cache_file)
+            icebear_cmd = config.icebear_cmd(prep_only=True, update_cache=False, cache_file=cache_file, clean_prep_cache=True)
         run(icebear_cmd, self.src_dir, "IceBear Pre-Analysis Running")
 
     def prepare_compilation_database(self, config):
@@ -1317,7 +1343,10 @@ class Project:
         all_candidates = list(filter(
             lambda c: c not in self.zero_distance_configs, configs_not_chosen
         ))
-        return get_equidistant_elements(all_candidates, 5)
+        candidate_configs = get_equidistant_elements(all_candidates, self.candidate_size)
+        for i, config in enumerate(candidate_configs):
+            config.set_build_dir(f"s{i}")
+        return candidate_configs
 
     def determine_chosen_configurations(self, chosen_configs: Union[None, List[Configuration]]=None):
         if chosen_configs is not None:
@@ -1349,13 +1378,15 @@ class Project:
 
         # Start from baseline configuration.
         curr_config = self.baseline
+        curr_config.set_build_dir("0_default")
+        logger.TAG = f"{self.project_name}/{curr_config.tag}"
         process_status = self.prepare_compilation_database(curr_config)
         if not process_status:
             logger.error(
                 f"[Prepare {curr_config.tag}] Prepare compilation database failed! Stop subsequent jobs."
             )
             return
-        self.icebear_for_fdb(curr_config, None)
+        self.icebear(curr_config, self.overall_cache_file, prep_only=self.opts.prep_only)
         file_level_cache = FileLevelCache.model_validate(json.load(open(curr_config.cache_file)))
         with open(self.overall_cache_file, "w") as f:
             f.write(file_level_cache.model_dump_json(indent=3))
@@ -1387,6 +1418,7 @@ class Project:
                 max_dis = 0
                 for config in candidate_config_list:
                     logger.TAG = f"{self.project_name}/{config.tag}"
+                    self.explored_candidate_configs.add(config.tag)
                     # 1. Calculate incremental database by icebear.
                     # Check if already prepared
                     if config.tag not in self.prepared_configs:
@@ -1421,20 +1453,27 @@ class Project:
                     )
                     # 3. Choose the configuration which introduce largest distance.
                     if curr_dis > max_dis:
+                        logger.info(f"[Chosen] {config.tag}: {curr_dis} > {max_dis}")
                         max_dis = curr_dis
                         chosen_config = config
                     else:
-                        logger.info(f"[Not Chosen] {config.tag}: {curr_dis} < {max_dis}")
+                        logger.info(f"[Not Chosen] {config.tag}: {curr_dis} <= {max_dis}")
                         if curr_dis == 0:
                             self.zero_distance_configs.add(config)
                 if chosen_config:
                     curr_config = chosen_config
                     self.chosen_config_list.append(chosen_config)
                     mark_chosen(round_info, chosen_config.tag, max_dis)
-                    chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
-                    file_level_cache.root.update(chosen_flc.root)
-                    with open(self.overall_cache_file, "w") as f:
-                        f.write(file_level_cache.model_dump_json(indent=3))
+                    logger.TAG = f"{self.project_name}/{chosen_config.tag}"
+                    
+                    # chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
+                    # file_level_cache.root.update(chosen_flc.root)
+                    # with open(self.overall_cache_file, "w") as f:
+                    #     f.write(file_level_cache.model_dump_json(indent=3))
+                    
+                    # execute icebear incremental analysis and update overall cache
+                    self.icebear(chosen_config, self.overall_cache_file, prep_only=self.opts.prep_only)
+                    file_level_cache = FileLevelCache.model_validate(json.load(open(self.overall_cache_file)))
                 choose_process_details.append(round_info)
         else:
             # Adaptive Random Strategy (Replacing Random-Space)
@@ -1493,7 +1532,7 @@ class Project:
                     )
                     break
 
-                if len(blacklisted_ov) >= len(all_option_values):
+                if len([item for item in all_option_values if item not in blacklisted_ov]) == 0:
                     logger.info("[Adaptive-Random] All option values blacklisted, stopping generation.")
                     append_stop("All option values blacklisted.")
                     break
@@ -1535,7 +1574,10 @@ class Project:
                         # Create config
                         tag = f"r{round_idx}_s{i}_try{attempts}"
                         cfg = self.create_configuration(new_opts, self.workspace, tag)
+                        cfg.set_build_dir(f"s{i}")                    
+                        logger.TAG = f"{self.project_name}/{cfg.tag}"
                         self.config_list.append(cfg)
+                        self.explored_candidate_configs.add(cfg.tag)
 
                         # Prepare
                         if cfg.tag not in self.prepared_configs:
@@ -1543,6 +1585,7 @@ class Project:
                             if process_status:
                                 # Success
                                 self.prepared_configs.add(cfg.tag)
+                                self.icebear_for_fdb(cfg, self.overall_cache_file)
                                 population_options[i] = new_opts # Update population
                                 current_round_configs.append(cfg)
                                 slot_success = True
@@ -1555,11 +1598,11 @@ class Project:
                                     "options": snapshot_options(cfg)
                                 })
                         else:
-                             # Should not happen with unique tags
-                             cache_hit_count += 1
-                             population_options[i] = new_opts
-                             current_round_configs.append(cfg)
-                             slot_success = True
+                            # Should not happen with unique tags
+                            cache_hit_count += 1
+                            population_options[i] = new_opts
+                            current_round_configs.append(cfg)
+                            slot_success = True
                         
                         # Blacklist the picked OV to avoid retrying it
                         blacklisted_ov.add(picked_ov)
@@ -1567,7 +1610,7 @@ class Project:
                     if not slot_success:
                         logger.info(f"[Adaptive-Random] Slot {i} failed to find valid config after retries.")
 
-                    if len(blacklisted_ov) >= len(all_option_values):
+                    if len([item for item in all_option_values if item not in blacklisted_ov]) == 0:
                         logger.info("[Adaptive-Random] All option values blacklisted during generation, stopping slot attempts.")
                         break
 
@@ -1575,15 +1618,13 @@ class Project:
                     logger.info("[Adaptive-Random] No valid configs generated in this round.")
                     append_stop("No valid configs generated.")
                     break
+                logger.TAG = f"{self.project_name}"
 
                 # Selection Phase
                 chosen_config = None
-                max_dis = -1
+                max_dis = 0
                 
                 for config in current_round_configs:
-                    # Icebear
-                    self.icebear_for_fdb(config, self.overall_cache_file)
-                    
                     # Distance
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
                     curr_dis = file_level_cache.distance(curr_flc)
@@ -1601,6 +1642,7 @@ class Project:
                     })
                     
                     if curr_dis > max_dis:
+                        logger.info(f"[Chosen] {config.tag}: {curr_dis} > {max_dis}")
                         max_dis = curr_dis
                         chosen_config = config
                 
@@ -1613,15 +1655,22 @@ class Project:
                     curr_config = chosen_config
                     self.chosen_config_list.append(chosen_config)
                     mark_chosen(round_info, chosen_config.tag, max_dis)
-                    chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
-                    file_level_cache.root.update(chosen_flc.root)
-                    with open(self.overall_cache_file, "w") as f:
-                        f.write(file_level_cache.model_dump_json(indent=3))
+                    logger.TAG = f"{self.project_name}/{chosen_config.tag}"
+
+                    # chosen_flc = FileLevelCache.model_validate(json.load(open(chosen_config.cache_file)))
+                    # file_level_cache.root.update(chosen_flc.root)
+                    # with open(self.overall_cache_file, "w") as f:
+                    #     f.write(file_level_cache.model_dump_json(indent=3))
+                    
+                    # execute icebear incremental analysis and update overall cache
+                    self.icebear(chosen_config, self.overall_cache_file, prep_only=self.opts.prep_only)
+                    file_level_cache = FileLevelCache.model_validate(json.load(open(self.overall_cache_file)))
                 else:
                     round_info["note"] = "No config chosen (max distance 0)"
                 
                 choose_process_details.append(round_info)
-                
+                logger.TAG = f"{self.project_name}"
+
                 # Stop condition check
                 if max_dis <= self.stop_threshold:
                     low_rounds += 1
@@ -1714,6 +1763,7 @@ class Project:
             lines.append(f"- **Sampling Strategy**: {self.strategy}")
             lines.append(f"- **Total Options**: {len(self.project_info.options)}")
             lines.append(f"- **Configuration Space**: `{space_expr}`")
+            lines.append(f"- **Explored Configurations**: {len(self.explored_candidate_configs)}")
             lines.append(f"- **Discarded (Zero Distance)**: {len(self.zero_distance_configs)}")
             lines.append(f"- **Discarded (Prepare Failed)**: {prepare_failed_count}")
             lines.append(f"- **Cache Hits**: {cache_hit_count}")
@@ -1731,13 +1781,14 @@ class Project:
         write_choose_process(choose_process_details, choose_process_record)
         write_selection_summary(choose_process_details, os.path.join(self.workspace, "selection_summary.md"))
 
-    def clean_workspace_preprocess(self):
+    def clean_workspace_preprocess(self, config_list: List[Configuration]):
         chosen_tags = {config.tag for config in self.chosen_config_list}
-        for config in self.config_list:
+        for config in config_list:
             if config.tag not in chosen_tags:
                 shutil.rmtree(config.prep_path, ignore_errors=True)
 
-    def process_every_configuration(self):
+    def clean_before_analysis(self):
+        # Clean previous analysis results
         if not self.opts.prep_only:
             inc_levels = [self.opts.inc]
             if self.opts.inc == "all":
@@ -1759,6 +1810,7 @@ class Project:
             )
             logger.info(f"[Clean Cache] {self.overall_cache_file}")
 
+    def process_every_configuration(self):
         for config in self.chosen_config_list:
             logger.TAG = f"{self.project_name}/{config.tag}"
             process_status = self.prepare_compilation_database(config)

@@ -49,6 +49,9 @@ def parse_options(options, switch_values, build_type):
     for option in options:
         if option["kind"] == "ignore":
             continue
+        for op in ret:
+            if option["key"] == op.option:
+                continue
         switch_values_of_this_option = (
             switch_values.get(option["kind"], None) if switch_values else None
         )
@@ -102,5 +105,6 @@ class ProjectInfo:
         )
 
         self.build_dir = (
-            f"{self.src_dir}_build" if self.out_of_tree else self.src_dir
+            f"{self.src_dir}_build" 
+            # if self.out_of_tree else self.src_dir
         )  # The directory to build project.
