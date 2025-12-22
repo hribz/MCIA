@@ -4,7 +4,7 @@ import re
 import subprocess
 import random
 import itertools
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Set, Union, Tuple
 
 from incremental_database import FileLevelCache
 from logger import logger
@@ -213,6 +213,7 @@ class Project:
                 "CFLAGS": f"{self.env.get('CFLAGS', '')} -O0 -g0".strip(),
                 "CXXFLAGS": f"{self.env.get('CXXFLAGS', '')} -O0 -g0".strip(),
                 "OPTFLAGS": "-O0 -g0",
+                "PYTHON": "/usr/bin/python3"
             }
         )
 
@@ -1298,11 +1299,7 @@ class Project:
         return True
 
     def icebear(self, config: Configuration, cache_file, prep_only):
-        if config == self.baseline:
-            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, clean_prep_cache=self.opts.clean_preprocess_cache)
-        else:
-            # Only record one config as baseline cache.
-            icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, cache_file=cache_file, clean_prep_cache=self.opts.clean_preprocess_cache)
+        icebear_cmd = config.icebear_cmd(prep_only=prep_only, update_cache=True, cache_file=cache_file, clean_prep_cache=self.opts.clean_preprocess_cache)
         run(icebear_cmd, self.src_dir, "IceBear Running")
 
     def icebear_for_fdb(self, config: Configuration, cache_file):
@@ -1388,8 +1385,6 @@ class Project:
             return
         self.icebear(curr_config, self.overall_cache_file, prep_only=self.opts.prep_only)
         file_level_cache = FileLevelCache.model_validate(json.load(open(curr_config.cache_file)))
-        with open(self.overall_cache_file, "w") as f:
-            f.write(file_level_cache.model_dump_json(indent=3))
         self.chosen_config_list.append(curr_config)
         choose_process_details.append(
             {
@@ -1505,6 +1500,20 @@ class Project:
             population_options: List[List[str]] = [self.baseline.config_options.copy() for _ in range(m)]
             blacklisted_ov: Set[str] = set()
             
+            # Load persistent failed OVs
+            failed_ov_path = os.path.join(os.path.dirname(self.workspace), "failed_options.json")
+            persistent_failed_ovs: Set[str] = set()
+            if os.path.exists(failed_ov_path):
+                try:
+                    persistent_failed_ovs = set(json.load(open(failed_ov_path)))
+                    logger.info(f"[Adaptive-Random] Loaded {len(persistent_failed_ovs)} persistent failed OVs.")
+                except Exception as e:
+                    logger.warning(f"[Adaptive-Random] Failed to load persistent failed OVs: {e}")
+
+            # Track slot usage
+            chosen_slots: Set[int] = set()
+            last_slot_configs: Dict[int, Configuration] = {}
+
             low_rounds = 0
             round_idx = 0
             
@@ -1546,7 +1555,7 @@ class Project:
                     "candidates": [],
                 }
 
-                current_round_configs: List[Configuration] = []
+                current_round_configs: List[Tuple[Configuration, int]] = []
                 
                 # Generate m configurations
                 for i in range(m):
@@ -1568,6 +1577,19 @@ class Project:
                         
                         picked_ov = self.rand.choice(valid_ovs)
                         
+                        # Check persistent failed OVs
+                        if picked_ov in persistent_failed_ovs:
+                            logger.info(f"[Adaptive-Random] Skipping persistent failed OV: {picked_ov}")
+                            # Treat as prepare failed
+                            tag = f"r{round_idx}_s{i}_try{attempts}"
+                            round_info["candidates"].append({
+                                "tag": tag,
+                                "result": "prepare-failed",
+                                "options": update_options_list(base_opts, picked_ov)
+                            })
+                            blacklisted_ov.add(picked_ov)
+                            continue
+
                         # Superimpose
                         new_opts = update_options_list(base_opts, picked_ov)
                         
@@ -1587,7 +1609,8 @@ class Project:
                                 self.prepared_configs.add(cfg.tag)
                                 self.icebear_for_fdb(cfg, self.overall_cache_file)
                                 population_options[i] = new_opts # Update population
-                                current_round_configs.append(cfg)
+                                current_round_configs.append((cfg, i))
+                                last_slot_configs[i] = cfg
                                 slot_success = True
                             else:
                                 # Fail
@@ -1597,11 +1620,19 @@ class Project:
                                     "result": "prepare-failed",
                                     "options": snapshot_options(cfg)
                                 })
+                                # Add to persistent failed OVs
+                                persistent_failed_ovs.add(picked_ov)
+                                try:
+                                    with open(failed_ov_path, "w") as f:
+                                        json.dump(list(persistent_failed_ovs), f)
+                                except Exception as e:
+                                    logger.warning(f"[Adaptive-Random] Failed to save persistent failed OVs: {e}")
                         else:
                             # Should not happen with unique tags
                             cache_hit_count += 1
                             population_options[i] = new_opts
-                            current_round_configs.append(cfg)
+                            current_round_configs.append((cfg, i))
+                            last_slot_configs[i] = cfg
                             slot_success = True
                         
                         # Blacklist the picked OV to avoid retrying it
@@ -1624,7 +1655,7 @@ class Project:
                 chosen_config = None
                 max_dis = 0
                 
-                for config in current_round_configs:
+                for config, slot_idx in current_round_configs:
                     # Distance
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
                     curr_dis = file_level_cache.distance(curr_flc)
@@ -1654,6 +1685,13 @@ class Project:
                 if chosen_config:
                     curr_config = chosen_config
                     self.chosen_config_list.append(chosen_config)
+                    
+                    # Find slot index for chosen config
+                    for cfg, s_idx in current_round_configs:
+                        if cfg == chosen_config:
+                            chosen_slots.add(s_idx)
+                            break
+
                     mark_chosen(round_info, chosen_config.tag, max_dis)
                     logger.TAG = f"{self.project_name}/{chosen_config.tag}"
 
@@ -1680,6 +1718,44 @@ class Project:
                 if low_rounds >= self.stop_patience:
                     append_stop(f"Reached stop condition: max distance <= {self.stop_threshold} for {self.stop_patience} consecutive rounds.")
                     break
+
+            # Post-loop: Ensure coverage of all slots
+            for i in range(m):
+                if i not in chosen_slots and i in last_slot_configs:
+                    config = last_slot_configs[i]
+                    
+                    # Calculate distance first
+                    curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
+                    curr_dis = file_level_cache.distance(curr_flc)
+                    
+                    if curr_dis == 0:
+                        logger.info(f"[Adaptive-Random] Skipping force choice for slot {i} ({config.tag}) due to zero distance.")
+                        self.zero_distance_configs.add(config)
+                        continue
+
+                    logger.info(f"[Adaptive-Random] Force choosing config for unused slot {i}: {config.tag}")
+                    
+                    # Add to chosen list
+                    self.chosen_config_list.append(config)
+
+                    # Run icebear (analysis phase preparation)
+                    logger.TAG = f"{self.project_name}/{config.tag}"
+                    self.icebear(config, self.overall_cache_file, prep_only=self.opts.prep_only)
+                    
+                    # Update cache (though strictly not needed if we just want to analyze it)
+                    file_level_cache = FileLevelCache.model_validate(json.load(open(self.overall_cache_file)))
+                    
+                    # Log as a special "Force Chosen" entry? 
+                    # Or just let it be in the final list. 
+                    # The user asked to "choose" it.
+                    choose_process_details.append({
+                        "type": "force-chosen",
+                        "tag": config.tag,
+                        "slot": i,
+                        "distance": curr_dis,
+                        "reason": "Unused slot coverage",
+                        "options": snapshot_options(config)
+                    })
 
         def write_choose_process(details: List[Dict], output_path: str):
             lines: List[str] = []
@@ -1717,6 +1793,14 @@ class Project:
                 elif entry.get("type") == "stop":
                     lines.append(f"Stop: {entry['reason']}")
                     lines.append("")
+                elif entry.get("type") == "force-chosen":
+                    lines.append(f"Force Chosen (Slot {entry['slot']})")
+                    lines.append(f"  tag: {entry['tag']}")
+                    lines.append(f"  distance: {entry.get('distance', 'n/a')}")
+                    lines.append(f"  reason: {entry['reason']}")
+                    lines.append("  options:")
+                    write_options(entry.get("options", []), "    ")
+                    lines.append("")
 
             if lines and lines[-1] == "":
                 lines.pop()
@@ -1751,12 +1835,17 @@ class Project:
             # Baseline
             selected_configs.append({"tag": self.baseline.tag, "distance": 0}) # Baseline distance 0
             
+            force_chosen_count = 0
+
             for entry in details:
                 if entry.get("type") == "round":
                     chosen_tag = entry.get("chosen")
                     max_dis = entry.get("max_distance")
                     if chosen_tag:
                         selected_configs.append({"tag": chosen_tag, "distance": max_dis})
+                elif entry.get("type") == "force-chosen":
+                    force_chosen_count += 1
+                    selected_configs.append({"tag": entry["tag"], "distance": entry.get("distance", 0)})
 
             lines = []
             lines.append("# Configuration Selection Summary")
@@ -1768,6 +1857,7 @@ class Project:
             lines.append(f"- **Discarded (Prepare Failed)**: {prepare_failed_count}")
             lines.append(f"- **Cache Hits**: {cache_hit_count}")
             lines.append(f"- **Selected Configurations**: {len(self.chosen_config_list)}")
+            lines.append(f"- **Force Chosen Configurations**: {force_chosen_count}")
             lines.append("")
             lines.append("## Selected Configuration Distances")
             lines.append("| Tag | Distance |")

@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 import sys
+import re
+import csv
 from typing import Dict, List
 
 from pydantic import BaseModel, Field
@@ -259,6 +261,110 @@ def analyzer_statistics_analysis(project: Project, specific):
     return datas
 
 
+def exploration_statistics_analysis(project: Project):
+    log_path = os.path.join(project.workspace, "logs")
+    if not os.path.exists(log_path):
+        return []
+
+    total_preprocess_time = 0.0
+    rounds_seen = set()
+    
+    total_analysis_time = 0.0
+    total_files = 0
+    total_diff_files = 0
+    selected_count = 0
+    
+    row_0_default = None
+    
+    # Get selected tags
+    selected_tags = set(c.tag for c in project.config_list)
+    
+    # Column name for analysis time
+    analyze_col = f"analyze ({project.opts.inc})"
+    
+    for filename in os.listdir(log_path):
+        if not filename.endswith("_specific.csv"):
+            continue
+            
+        # Parse tag from filename: {project}_{inc}_{tag}_specific.csv
+        prefix = f"{project.project_name}_{project.opts.inc}_"
+        if not filename.startswith(prefix):
+            continue
+            
+        tag_part = filename[len(prefix):-len("_specific.csv")]
+        
+        filepath = os.path.join(log_path, filename)
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                row = next(reader, None)
+                if not row:
+                    continue
+        except Exception as e:
+            print(f"Error reading {filepath}: {e}")
+            continue
+
+        if tag_part == "0_default":
+            row_0_default = row
+            row_0_default["version"] = "0_default"
+            continue
+            
+        # Check if it is a candidate tag (rX_sY_tryZ)
+        match = re.match(r"r(\d+)_s(\d+)_try(\d+)", tag_part)
+        if match:
+            round_num = int(match.group(1))
+            rounds_seen.add(round_num)
+            
+            # Preprocess time
+            try:
+                preprocess = float(row.get("preprocess_repo", 0))
+            except ValueError:
+                preprocess = 0.0
+            total_preprocess_time += preprocess
+            
+            # If selected
+            if tag_part in selected_tags:
+                selected_count += 1
+                try:
+                    total_analysis_time += float(row.get(analyze_col, 0))
+                    total_files += int(row.get("files", 0))
+                    total_diff_files += int(row.get("diff files", 0))
+                except ValueError:
+                    pass
+
+    datas = []
+    if row_0_default:
+        datas.append(row_0_default)
+        
+    # Calculate averages
+    num_rounds = len(rounds_seen)
+    avg_preprocess = total_preprocess_time / num_rounds if num_rounds > 0 else 0
+    
+    avg_analysis = total_analysis_time / selected_count if selected_count > 0 else 0
+    avg_files = total_files / selected_count if selected_count > 0 else 0
+    avg_diff_files = total_diff_files / selected_count if selected_count > 0 else 0
+    
+    # Create ave row
+    if row_0_default:
+        row_ave = row_0_default.copy()
+        for k in row_ave:
+            if k not in ["project", "version"]:
+                row_ave[k] = 0
+    else:
+        row_ave = {}
+        
+    row_ave["project"] = project.project_name
+    row_ave["version"] = "ave"
+    row_ave["preprocess_repo"] = avg_preprocess
+    row_ave[analyze_col] = avg_analysis
+    row_ave["files"] = avg_files
+    row_ave["diff files"] = avg_diff_files
+    
+    datas.append(row_ave)
+    
+    return datas
+
+
 def ave_for_datas(datas: List[Dict], key):
     if len(datas) < 1:
         return None
@@ -318,6 +424,7 @@ def handle_project(projects, opts):
     analyzers_statistics_specific_csv = (
         projects_root_dir + "/analyzers_statistics_specific.csv"
     )
+    exploration_statistics_csv = projects_root_dir + "/exploration_statistics.csv"
     time_overview = projects_root_dir + f"/time_overview.csv"
     reports_overview = projects_root_dir + "/reports_overview.csv"
     first_in = True
@@ -437,6 +544,16 @@ def handle_project(projects, opts):
             )
             if not opts.repo:
                 add_to_csv(datas, analyzers_statistics_specific_csv, first_in)
+
+            # Add exploration summary
+            exp_datas = exploration_statistics_analysis(p)
+            if exp_datas:
+                add_to_csv(
+                    exp_datas, 
+                    os.path.join(workspace, "exploration_statistics.csv")
+                )
+                if not opts.repo:
+                    add_to_csv(exp_datas, exploration_statistics_csv, write_headers=first_in)
 
             keys = analyzers.copy()
             keys.extend([f"analyze ({inc_level})" for inc_level in inc_levels])
