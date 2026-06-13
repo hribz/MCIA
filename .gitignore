@@ -175,6 +175,7 @@ cython_debug/
 expriments/*
 !expriments/benchmark.json
 !expriments/config_options.json
+!expriments/cleaned_options.json
 !expriments/script/
 
 *.pp

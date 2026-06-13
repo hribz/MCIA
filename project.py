@@ -1436,7 +1436,7 @@ class Project:
                     self.icebear_for_fdb(config, self.overall_cache_file)
                     # 2. Calculate distance.
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
-                    curr_dis = file_level_cache.distance(curr_flc)
+                    curr_dis = file_level_cache.distance(curr_flc, self.project_info.build_dir)
                     logger.info(f"[Distance] {config.tag}: {curr_dis}")
                     round_info["candidates"].append(
                         {
@@ -1658,7 +1658,7 @@ class Project:
                 for config, slot_idx in current_round_configs:
                     # Distance
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
-                    curr_dis = file_level_cache.distance(curr_flc)
+                    curr_dis = file_level_cache.distance(curr_flc, self.project_info.build_dir)
                     
                     logger.info(f"[Distance] {config.tag}: {curr_dis}")
                     
@@ -1726,7 +1726,7 @@ class Project:
                     
                     # Calculate distance first
                     curr_flc = FileLevelCache.model_validate(json.load(open(config.cache_file)))
-                    curr_dis = file_level_cache.distance(curr_flc)
+                    curr_dis = file_level_cache.distance(curr_flc, self.project_info.build_dir)
                     
                     if curr_dis == 0:
                         logger.info(f"[Adaptive-Random] Skipping force choice for slot {i} ({config.tag}) due to zero distance.")

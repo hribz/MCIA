@@ -427,10 +427,12 @@ def handle_project(projects, opts):
     exploration_statistics_csv = projects_root_dir + "/exploration_statistics.csv"
     time_overview = projects_root_dir + f"/time_overview.csv"
     reports_overview = projects_root_dir + "/reports_overview.csv"
+    reports_diff_summary_csv = projects_root_dir + "/reports_diff_summary.csv"
     first_in = True
 
     time_overview_datas = []
     reports_overview_datas = []
+    reports_diff_summary_datas = []
 
     for project in projects:
         if (
@@ -520,6 +522,34 @@ def handle_project(projects, opts):
             ]
             calculate_overview_data(keys, reports_overview_data, datas)
 
+            # Calculate diff summary for this project
+            default_row = next((d for d in datas if d["version"] == "0_default"), None)
+            if default_row:
+                default_reports = 0
+                for analyzer in analyzers:
+                    val = default_row.get(analyzer, 0)
+                    if isinstance(val, (int, float)):
+                        default_reports += val
+                
+                diff_reports_sum = 0
+                for row in datas:
+                    for analyzer in analyzers:
+                        diff_key = analyzer + " (diff)"
+                        val = row.get(diff_key, 0)
+                        if isinstance(val, (int, float)):
+                            diff_reports_sum += val
+                
+                selected_configs_count = len(datas)
+                diff_ratio = (diff_reports_sum / default_reports) if default_reports > 0 else 0
+                
+                reports_diff_summary_datas.append({
+                    "project": p.project_name,
+                    "default_reports": default_reports,
+                    "selected_configs_count": selected_configs_count,
+                    "diff_reports_sum": diff_reports_sum,
+                    "diff_ratio": f"{diff_ratio:.2%}"
+                })
+
         datas = projects_statistics_analysis(p)
         if datas:
             # Single project statistics.
@@ -569,6 +599,7 @@ def handle_project(projects, opts):
     if not opts.repo:
         add_to_csv(time_overview_datas, time_overview, True)
         add_to_csv(reports_overview_datas, reports_overview, True)
+        add_to_csv(reports_diff_summary_datas, reports_diff_summary_csv, True)
 
 
 class PSArgumentParser:
