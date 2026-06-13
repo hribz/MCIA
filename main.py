@@ -115,7 +115,12 @@ class MCArgumentParser:
             "--preprocess-only",
             dest="prep_only",
             action="store_true",
-            help="Only preprocess and diff",
+            help="Only preprocess and diff.",
+        )
+        self.parser.add_argument(
+            "--icebear",
+            type=Path,
+            help="Specify icebear executable path.",
         )
         self.parser.add_argument(
             "--inc",

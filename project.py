@@ -155,7 +155,10 @@ class Configuration:
         if not cache_file:
             cache_file = self.cache_file
         assert hasattr(self, "build_dir")
-        cmd = [GlobalConfig.icebear]
+        if self.opts.icebear:
+            cmd = [str(self.opts.icebear)]
+        else:
+            cmd = [GlobalConfig.icebear]
         cmd.extend(["-f", self.compile_database])
         cmd.extend(["-o", self.workspace])
         cmd.extend(["-j", GlobalConfig.build_jobs])
@@ -164,6 +167,7 @@ class Configuration:
         cmd.extend(["--cache", cache_file])
         cmd.extend(["--cc", self.opts.cc])
         cmd.extend(["--cxx", self.opts.cxx])
+        cmd.extend(["--clang", self.opts.cc])
         cmd.extend(["--gcc", GlobalConfig.inc_gcc])
         cmd.append(f"--file-identifier={self.opts.file_identifier}")
         cmd.append(f"--tag={self.tag}")
